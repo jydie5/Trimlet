@@ -17,7 +17,7 @@ This is an engineering compliance gate, not legal advice.
 - [x] Dependency inspection shows no Swift package dependency.
 - [x] Mac and Windows implementation boundaries are documented.
 - [x] Initial GitHub ownership is assigned to `@jydie5` in `.github/CODEOWNERS`.
-- [ ] Private vulnerability reporting is enabled after the GitHub repository is created.
+- [x] GitHub private vulnerability reporting is enabled.
 - [x] Dated preliminary name/trademark search record is present.
 - [ ] Commercial trademark review is completed if the first release is commercial or materially promoted.
 - [x] The final staged commit is rescanned before push.
