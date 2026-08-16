@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "errors": [
+    { "id": "source_unreadable", "retryable": true },
+    { "id": "unsupported_streams", "retryable": false },
+    { "id": "proxy_failed", "retryable": true },
+    { "id": "invalid_range", "retryable": false },
+    { "id": "output_conflict", "retryable": true },
+    { "id": "insufficient_space", "retryable": true },
+    { "id": "export_cancelled", "retryable": true },
+    { "id": "export_failed", "retryable": true },
+    { "id": "output_validation_failed", "retryable": true }
+  ]
+}

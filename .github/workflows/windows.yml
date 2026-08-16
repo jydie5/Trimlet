@@ -1,0 +1,34 @@
+name: Windows
+
+on:
+  push:
+    paths:
+      - "apps/windows/**"
+      - "contracts/**"
+      - "scripts/validate-contracts.ps1"
+      - ".github/workflows/windows.yml"
+  pull_request:
+    paths:
+      - "apps/windows/**"
+      - "contracts/**"
+      - "scripts/validate-contracts.ps1"
+      - ".github/workflows/windows.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate shared contracts
+        shell: pwsh
+        run: ./scripts/validate-contracts.ps1
+      - name: Restore Windows solution
+        if: ${{ hashFiles('apps/windows/*.sln') != '' }}
+        run: dotnet restore apps/windows/*.sln
+      - name: Test Windows solution
+        if: ${{ hashFiles('apps/windows/*.sln') != '' }}
+        run: dotnet test apps/windows/*.sln --no-restore

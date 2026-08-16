@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "fast-h264-aac",
+      "input": {
+        "schemaVersion": 1,
+        "mode": "fast",
+        "range": {
+          "in": { "value": 90000, "timescale": 60000 },
+          "out": { "value": 240000, "timescale": 60000 }
+        },
+        "output": {
+          "container": "mp4",
+          "videoCodec": "copy",
+          "audioCodec": "copy"
+        }
+      }
+    },
+    {
+      "id": "accurate-h264-aac",
+      "input": {
+        "schemaVersion": 1,
+        "mode": "accurate",
+        "range": {
+          "in": { "value": 90000, "timescale": 60000 },
+          "out": { "value": 240000, "timescale": 60000 }
+        },
+        "output": {
+          "container": "mp4",
+          "videoCodec": "h264",
+          "audioCodec": "aac"
+        }
+      }
+    }
+  ]
+}

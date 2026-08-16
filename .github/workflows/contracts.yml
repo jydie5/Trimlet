@@ -1,0 +1,24 @@
+name: Shared contracts
+
+on:
+  push:
+    paths:
+      - "contracts/**"
+      - "scripts/validate-contracts.*"
+      - ".github/workflows/contracts.yml"
+  pull_request:
+    paths:
+      - "contracts/**"
+      - "scripts/validate-contracts.*"
+      - ".github/workflows/contracts.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate shared fixtures
+        run: scripts/validate-contracts.sh

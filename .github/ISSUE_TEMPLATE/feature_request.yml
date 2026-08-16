@@ -1,0 +1,24 @@
+name: Feature request
+description: Propose behavior for one or both native applications.
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options: ["Shared behavior", "macOS", "Windows", "Unsure"]
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed result
+    validations:
+      required: true

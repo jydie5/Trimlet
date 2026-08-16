@@ -1,0 +1,9 @@
+# Copy this file to .github/CODEOWNERS after replacing the placeholders.
+
+* @release-owner
+/apps/macos/ @macos-owner
+/apps/windows/ @windows-owner
+/contracts/ @macos-owner @windows-owner
+/docs/PLATFORM_CONTRACT.md @macos-owner @windows-owner
+/docs/REQUIREMENTS.md @macos-owner @windows-owner
+/docs/legal/ @release-owner

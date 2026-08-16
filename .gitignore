@@ -1,0 +1,41 @@
+# macOS
+.DS_Store
+
+# Xcode
+DerivedData/
+build/
+dist/
+*.xcuserstate
+xcuserdata/
+*.xccheckout
+*.moved-aside
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Visual Studio / .NET
+.vs/
+bin/
+obj/
+*.user
+*.suo
+
+# Local app data
+*.trimlet-project
+.trimlet-cache/
+proxies/
+thumbnails/
+
+# Bundled or downloaded media tools
+Tools/ffmpeg
+Tools/ffprobe
+
+# Locally supplied platform tools must never enter a release archive
+apps/*/Tools/
+
+# Test media must not be committed
+TestMedia/
+*.m2ts
+*.mts

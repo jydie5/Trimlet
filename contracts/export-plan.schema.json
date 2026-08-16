@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trimlet.dev/contracts/export-plan.schema.json",
+  "title": "Trimlet export plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "range", "output"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "mode": { "enum": ["fast", "accurate"] },
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["in", "out"],
+      "properties": {
+        "in": { "$ref": "#/$defs/timestamp" },
+        "out": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["container", "videoCodec", "audioCodec"],
+      "properties": {
+        "container": { "const": "mp4" },
+        "videoCodec": { "enum": ["copy", "h264", "hevc"] },
+        "audioCodec": { "enum": ["copy", "aac"] }
+      }
+    }
+  },
+  "$defs": {
+    "timestamp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "timescale"],
+      "properties": {
+        "value": { "type": "integer", "minimum": 0 },
+        "timescale": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}
