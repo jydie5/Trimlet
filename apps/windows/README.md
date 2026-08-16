@@ -4,12 +4,15 @@
 
 The Windows implementation has not started in code. This directory is its ownership boundary inside the Trimlet monorepo. The first Windows contributor should create the solution here without changing the macOS package.
 
+Start with [the Windows implementation handover](handover.md).
+
 ## Recommended native stack
 
 - C# and .NET
 - WinUI 3 with Windows App SDK
 - Windows-native playback APIs for preview
 - `ffprobe` and FFmpeg as managed child processes for media inspection and export parity
+- `.resw` resources for English and Japanese user-facing text from the first change
 
 Pin exact SDK and package versions in the first Windows implementation change. Do not silently depend on a developer-machine FFmpeg build in distributable artifacts.
 

@@ -1,6 +1,8 @@
 # Trimlet
 
-必要なところだけ、すばやく正確に。
+[English](README.md) | [日本語](README.ja.md)
+
+Only what you need, quickly and precisely.
 
 Trimlet is a lightweight, frame-accurate video trimming application with separate native implementations for macOS and Windows.
 
@@ -23,7 +25,9 @@ Priority inputs are MP4, MOV, M2TS, and MTS.
 
 - macOS: native PoC 0.2, ready for the next human evaluation.
 - Windows: implementation workspace and shared contracts are ready for a Windows contributor; application code has not yet been added.
-- Public source release: ready under the MIT License after automated checks pass.
+- Public source release: published under the MIT License.
+
+Public PoC source release: [v0.2.0-poc](https://github.com/jydie5/Trimlet/releases/tag/v0.2.0-poc)
 
 This repository does **not** contain or redistribute FFmpeg, ffprobe, sample videos, or generated application bundles. The current PoC uses a separately installed FFmpeg executable.
 
@@ -47,7 +51,7 @@ See [Repository structure](docs/architecture/REPOSITORY_STRUCTURE.md) and the [p
 Prerequisites:
 
 - Apple silicon Mac
-- Swift toolchain compatible with Swift tools 6.2
+- Swift toolchain compatible with Swift tools 6.1
 - Separately installed `ffmpeg` and `ffprobe` in `/opt/homebrew/bin` or `/usr/local/bin`
 
 Double-click `run-poc.command` to build an ad-hoc local application at `dist/Trimlet.app` and open it. Nothing is installed globally or uploaded.
@@ -64,7 +68,9 @@ Generated media and `dist/` are local-only and ignored by Git.
 
 Trimlet is free, MIT-licensed software. If it is useful, you may **[voluntarily support continued development on Buy Me a Coffee](https://buymeacoffee.com/jydie5)**.
 
-Support is optional. Payment does not unlock features, change the license, or give paying users priority. Stars, sharing, reproducible bug reports, testing on different machines, and code or documentation improvements are also welcome. See [Supporting Trimlet](DONATIONS.md).
+Support helps with code signing, Windows/macOS hardware validation, build services, and development AI/API costs. It is optional: payment does not unlock features, change the license, or give paying users priority.
+
+You can also help at no cost by starring or sharing the repository, reporting reproducible bugs, testing on different machines, or improving code and documentation. See [Supporting Trimlet](DONATIONS.md) and [how project reach and support are measured](docs/development/project-sustainability.md). Trust only funding links published in this repository.
 
 ## Documentation
 
@@ -73,6 +79,7 @@ Support is optional. Payment does not unlock features, change the license, or gi
 - [Open questions](docs/OPEN_QUESTIONS.md)
 - [Mac/Windows platform contract](docs/PLATFORM_CONTRACT.md)
 - [Windows implementation handoff](apps/windows/README.md)
+- [Windows author handover](apps/windows/handover.md)
 - [Mac PoC scope](docs/POC.md)
 - [Human-check guide](docs/HUMAN_CHECK.md)
 - [Verified environment](docs/ENVIRONMENT.md)
@@ -81,6 +88,7 @@ Support is optional. Payment does not unlock features, change the license, or gi
 - [Release compliance checklist](docs/legal/RELEASE_COMPLIANCE.md)
 - [Name/trademark search record](docs/legal/TRADEMARK_SEARCH_2026-08-16.md)
 - [Project license recommendation](docs/legal/LICENSE_DECISION.md)
+- [Project sustainability and reach](docs/development/project-sustainability.md)
 - [Development backlog](docs/BACKLOG.md)
 
 ## Privacy and safety
