@@ -6,7 +6,7 @@
 
 Trimletは、macOSとWindowsでそれぞれネイティブ実装する、軽量でフレーム正確な動画切り出しアプリです。
 
-macOS PoCはSwiftUIで実装済みです。Windows版はWindowsネイティブのAPIとC#を使用しながら、同じ製品仕様とメディア処理契約に従います。
+macOS PoCはSwiftUIで実装済みです。Windows版もC#／WinUI 3によるネイティブ実装として、同じ製品仕様とメディア処理契約に従うEarly Access段階へ進みました。
 
 ## 目的
 
@@ -23,9 +23,12 @@ macOS PoCはSwiftUIで実装済みです。Windows版はWindowsネイティブ�
 
 ## 現在の状態
 
-- macOS：ネイティブPoC 0.2。次のヒューマンチェックが可能です。
-- Windows：担当者向けの作業領域、共有契約、handoverを用意済み。アプリコードは未着手です。
-- 公開：[v0.2.0-poc](https://github.com/jydie5/Trimlet/releases/tag/v0.2.0-poc)をMIT Licenseでソース公開しています。
+- macOS：ネイティブPoC 0.2。直接再生、自動プレビュー用プロキシ、範囲選択、高速／正確書き出しを実装済みです。
+- Windows：ソース配布のEarly Access。ネイティブ再生、範囲選択、音声ストリーム選択、検証付きの高速／正確書き出しを実装済みです。
+- 同等性：動画を開く → IN／OUTを選ぶ → 書き出す、という主要フローは揃いました。Windowsの自動プレビュー用プロキシと可変フレームレート動画のPTS基準移動は未実装です。
+- macOS最新版：[v0.2.1-poc](https://github.com/jydie5/Trimlet/releases/tag/v0.2.1-poc)をMIT Licenseでソース公開しています。
+
+Windows Early Access：[v0.3.0-early-access.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-early-access.1)（ソースのみ。インストーラーやビルド済み実行ファイルはありません）
 
 このリポジトリはFFmpeg、ffprobe、テスト動画、生成済みアプリを同梱・再配布しません。現在のPoCは利用者が別途インストールしたFFmpegを使用します。
 
@@ -62,6 +65,24 @@ swift run --package-path apps/macos TrimletCoreChecks
 
 生成動画と`dist/`はGitの対象外です。
 
+## Windows Early Accessを試す
+
+必要なもの：
+
+- Windows 10 build 17763以降
+- .NET SDK 10.0.400
+- `PATH`、`TRIMLET_FFMPEG`／`TRIMLET_FFPROBE`、またはビルド済みアプリの隣に置いた`ffmpeg`と`ffprobe`
+
+PowerShellで実行します。
+
+```powershell
+git clone https://github.com/jydie5/Trimlet.git
+Set-Location .\Trimlet
+.\apps\windows\run-human-check.ps1
+```
+
+共有契約、テスト、合成動画による書き出しを検証してから、未パッケージの開発用アプリを起動します。[Windows Early Accessガイド](apps/windows/README.md)と[ヒューマンチェック手順](apps/windows/HUMAN_CHECK.md)を参照してください。
+
 ## Trimletの開発継続を支援する
 
 TrimletはMIT Licenseの無料ソフトウェアです。役立った場合は、**[Buy Me a Coffeeで今後の開発を任意で支援](https://buymeacoffee.com/jydie5)**できます。
@@ -76,8 +97,10 @@ TrimletはMIT Licenseの無料ソフトウェアです。役立った場合は�
 - [設計・製品判断](docs/DECISIONS.md)
 - [未決事項](docs/OPEN_QUESTIONS.md)
 - [Mac／Windows共通契約](docs/PLATFORM_CONTRACT.md)
-- [Windows実装の入口](apps/windows/README.md)
-- [Windows作者へのhandover](apps/windows/handover.md)
+- [製品・インターフェース設計原則](docs/PRODUCT_DESIGN.md)
+- [Windows Early Accessガイド](apps/windows/README.md)
+- [Windows保守担当へのhandover](apps/windows/handover.md)
+- [WindowsからmacOS担当へのhandover](apps/macos/WINDOWS_EARLY_ACCESS_HANDOVER.md)
 - [Mac PoCの範囲](docs/POC.md)
 - [ヒューマンチェック手順](docs/HUMAN_CHECK.md)
 - [検証環境](docs/ENVIRONMENT.md)

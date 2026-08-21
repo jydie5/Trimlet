@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Trimlet.Windows (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Trimlet.Windows (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

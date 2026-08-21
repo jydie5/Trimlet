@@ -100,6 +100,37 @@ This log records decisions that define Trimlet. Change a decision by adding a ne
 - Invariant: Payment is never required, unlocks no feature, changes no license term, and gives no product or support priority.
 - Reason: The author intends the application to be a free entry point for voluntary support and does not require personal attribution or royalties.
 
+### D-013: First Windows native stack and developer packaging
+
+- Date: 2026-08-20
+- Status: Accepted for the first Windows human-check slice
+- Decision: Use C# on .NET SDK 10.0.400, WinUI 3, and Windows App SDK 2.4.0. Target Windows SDK 26100 APIs while preserving Windows 10 build 17763 as the declared minimum.
+- Playback: Use `Windows.Media.Playback.MediaPlayer` hosted by WinUI `MediaPlayerElement` for the first direct-preview slice.
+- Localization: Use English (`en-US`) as fallback and provide equivalent Japanese (`ja-JP`) `.resw` resources from the first implementation.
+- Packaging: Build an unpackaged, framework-dependent developer application for the first human check. Do not produce or imply a signed distributable binary.
+- FFmpeg: Require separately installed `ffmpeg` and `ffprobe` executables for the developer slice; no third-party executable is added to the repository.
+- Known limitation: Frame movement uses the inspected nominal rational frame rate. Source-PTS stepping for variable-frame-rate media and automatic preview proxies remain future work.
+
+### D-014: Windows FFmpeg discovery, export safety, and H.264 selection
+
+- Date: 2026-08-20
+- Status: Accepted for the Windows human-check slice
+- Discovery: Find `ffmpeg` and `ffprobe` through `TRIMLET_FFMPEG` / `TRIMLET_FFPROBE`, beside the application, or on `PATH`, and verify the executables before use.
+- Process safety: Pass each argument through `ProcessStartInfo.ArgumentList`; never construct a shell command from media paths.
+- Encoder selection: For Accurate mode, probe candidate Windows hardware encoders and software encoders with a real one-frame encode, selecting the first usable H.264 implementation.
+- Output safety: Write a unique `.partial.mp4` in the chosen destination, validate its streams and duration with `ffprobe`, then atomically move it to the unique final name. Cancellation and failure remove the partial file.
+- Interlace policy: Apply `bwdif` before Accurate H.264 output when the source is reported as interlaced. Fast mode keeps the original video stream.
+
+### D-015: Publish the first Windows version as source-only Early Access
+
+- Date: 2026-08-21
+- Status: Accepted
+- Release: `v0.3.0-early-access.1`
+- Decision: Publish the implemented Windows workflow as a GitHub prerelease containing source code only. Do not attach an installer, application executable, FFmpeg/ffprobe binary, generated media, or developer cache.
+- Parity claim: The primary open, navigate, IN/OUT, preview-range, and Fast/Accurate export workflow is aligned with the macOS PoC. Complete feature parity is not claimed because Windows lacks automatic preview proxies and source-PTS frame movement for variable-frame-rate media.
+- Interface: Treat the application as a focused desktop work surface. Keep public taglines and general product explanations in README, release, or About material unless the text changes the user's next action. See `docs/PRODUCT_DESIGN.md`.
+- Consequence: A future Windows binary remains blocked on packaging, dependency provenance and notices, original artwork, signing, an SBOM, and clean-machine verification.
+
 ## Proposed decisions awaiting validation
 
 ### P-001: Project structure

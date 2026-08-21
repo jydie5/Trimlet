@@ -31,9 +31,14 @@ Windows:
 
 ```powershell
 ./scripts/validate-contracts.ps1
+dotnet restore apps/windows/Trimlet.sln --configfile apps/windows/NuGet.Config
+dotnet restore apps/windows/src/Trimlet.Windows/Trimlet.Windows.csproj --runtime win-x64 --configfile apps/windows/NuGet.Config
+dotnet restore apps/windows/checks/Trimlet.IntegrationChecks/Trimlet.IntegrationChecks.csproj --configfile apps/windows/NuGet.Config
+dotnet test apps/windows/Trimlet.sln --configuration Release --no-restore
+dotnet build apps/windows/src/Trimlet.Windows/Trimlet.Windows.csproj --configuration Release --runtime win-x64 --no-restore
+dotnet run --project apps/windows/checks/Trimlet.IntegrationChecks/Trimlet.IntegrationChecks.csproj --configuration Release --no-restore -- --require-tools
+./apps/windows/run-human-check.ps1
 ```
-
-Windows build and test commands must be added here with the first Windows solution.
 
 ## Pull requests
 
