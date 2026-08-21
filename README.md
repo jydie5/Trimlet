@@ -6,7 +6,7 @@ Only what you need, quickly and precisely.
 
 Trimlet is a lightweight, frame-accurate video trimming application with separate native implementations for macOS and Windows.
 
-The macOS proof of concept is implemented in SwiftUI. Windows development follows the same product and media-processing contracts while remaining free to use Windows-native APIs and C#.
+The macOS proof of concept is implemented in SwiftUI. A native C#/WinUI 3 Windows Early Access implementation now follows the same product and media-processing contracts.
 
 ## Product goal
 
@@ -23,11 +23,14 @@ Priority inputs are MP4, MOV, M2TS, and MTS.
 
 ## Repository status
 
-- macOS: native PoC 0.2, ready for the next human evaluation.
-- Windows: implementation workspace and shared contracts are ready for a Windows contributor; application code has not yet been added.
-- Public source release: published under the MIT License.
+- macOS: native PoC 0.2 with direct preview, automatic preview proxies, range selection, and Fast/Accurate export.
+- Windows: source-only Early Access with native preview, range selection, audio-stream selection, and validated Fast/Accurate export.
+- Parity: the primary open → select IN/OUT → export workflow is aligned. Windows automatic preview proxies and source-PTS stepping for variable-frame-rate media remain open.
+- Public source releases are published under the MIT License.
 
-Public PoC source release: [v0.2.0-poc](https://github.com/jydie5/Trimlet/releases/tag/v0.2.0-poc)
+Latest macOS PoC source release: [v0.2.1-poc](https://github.com/jydie5/Trimlet/releases/tag/v0.2.1-poc)
+
+Windows Early Access: [v0.3.0-early-access.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-early-access.1) (source only; no installer or prebuilt executable)
 
 This repository does **not** contain or redistribute FFmpeg, ffprobe, sample videos, or generated application bundles. The current PoC uses a separately installed FFmpeg executable.
 
@@ -64,6 +67,24 @@ swift run --package-path apps/macos TrimletCoreChecks
 
 Generated media and `dist/` are local-only and ignored by Git.
 
+## Try Windows Early Access
+
+Prerequisites:
+
+- Windows 10 build 17763 or later
+- .NET SDK 10.0.400
+- Separately installed `ffmpeg` and `ffprobe` on `PATH`, in `TRIMLET_FFMPEG` / `TRIMLET_FFPROBE`, or beside the built app
+
+From PowerShell:
+
+```powershell
+git clone https://github.com/jydie5/Trimlet.git
+Set-Location .\Trimlet
+.\apps\windows\run-human-check.ps1
+```
+
+This validates contracts, tests, and synthetic exports before launching the unpackaged developer build. See the [Windows Early Access guide](apps/windows/README.md) and [human-check steps](apps/windows/HUMAN_CHECK.md).
+
 ## Support development
 
 Trimlet is free, MIT-licensed software. If it is useful, you may **[voluntarily support continued development on Buy Me a Coffee](https://buymeacoffee.com/jydie5)**.
@@ -78,8 +99,10 @@ You can also help at no cost by starring or sharing the repository, reporting re
 - [Technical decisions](docs/DECISIONS.md)
 - [Open questions](docs/OPEN_QUESTIONS.md)
 - [Mac/Windows platform contract](docs/PLATFORM_CONTRACT.md)
-- [Windows implementation handoff](apps/windows/README.md)
-- [Windows author handover](apps/windows/handover.md)
+- [Product and interface design principles](docs/PRODUCT_DESIGN.md)
+- [Windows Early Access guide](apps/windows/README.md)
+- [Windows maintainer handover](apps/windows/handover.md)
+- [Windows-to-macOS owner handover](apps/macos/WINDOWS_EARLY_ACCESS_HANDOVER.md)
 - [Mac PoC scope](docs/POC.md)
 - [Human-check guide](docs/HUMAN_CHECK.md)
 - [Verified environment](docs/ENVIRONMENT.md)

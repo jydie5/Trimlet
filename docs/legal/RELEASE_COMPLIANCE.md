@@ -1,7 +1,7 @@
 # GitHub release compliance checklist
 
-- Status: Source-only PoC release approved when the automated gate passes
-- Updated: 2026-08-16
+- Status: Windows source-only Early Access approved when the automated gate passes
+- Updated: 2026-08-21
 
 This is an engineering compliance gate, not legal advice.
 
@@ -23,6 +23,12 @@ This is an engineering compliance gate, not legal advice.
 - [x] The final staged commit is rescanned before push.
 
 Run `scripts/check-release-readiness.sh` before creating a tag.
+
+## Windows Early Access publication record
+
+Release `v0.3.0-early-access.1` is approved only as a GitHub source prerelease. It may include the C#/WinUI source, tests, workflows, and documentation. It must not attach an installer, `.exe`, MSIX, FFmpeg/ffprobe binary, generated test media, or build output.
+
+The release notes and README must state that this is an unpackaged developer build, describe the separately installed FFmpeg requirement, and name the automatic-proxy and VFR-navigation limitations. Creating the tag remains conditional on the final repository readiness scan and Windows CI passing.
 
 ## Initial publication policy
 

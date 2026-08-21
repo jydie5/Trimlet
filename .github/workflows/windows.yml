@@ -23,12 +23,21 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.400"
       - name: Validate shared contracts
         shell: pwsh
         run: ./scripts/validate-contracts.ps1
       - name: Restore Windows solution
-        if: ${{ hashFiles('apps/windows/*.sln') != '' }}
-        run: dotnet restore apps/windows/*.sln
+        run: dotnet restore apps/windows/Trimlet.sln --configfile apps/windows/NuGet.Config
+      - name: Restore Windows human-check app
+        run: dotnet restore apps/windows/src/Trimlet.Windows/Trimlet.Windows.csproj --runtime win-x64 --configfile apps/windows/NuGet.Config
+      - name: Restore Windows integration checks
+        run: dotnet restore apps/windows/checks/Trimlet.IntegrationChecks/Trimlet.IntegrationChecks.csproj --configfile apps/windows/NuGet.Config
       - name: Test Windows solution
-        if: ${{ hashFiles('apps/windows/*.sln') != '' }}
-        run: dotnet test apps/windows/*.sln --no-restore
+        run: dotnet test apps/windows/Trimlet.sln --configuration Release --no-restore
+      - name: Build Windows human-check app
+        run: dotnet build apps/windows/src/Trimlet.Windows/Trimlet.Windows.csproj --configuration Release --runtime win-x64 --no-restore
+      - name: Run Windows FFmpeg integration checks when tools are available
+        run: dotnet run --project apps/windows/checks/Trimlet.IntegrationChecks/Trimlet.IntegrationChecks.csproj --configuration Release --no-restore

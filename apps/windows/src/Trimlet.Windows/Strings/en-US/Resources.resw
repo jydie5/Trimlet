@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="OpenButton.Content" xml:space="preserve"><value>Open video</value></data>
+  <data name="NoMediaTitle.Text" xml:space="preserve"><value>Open a video to begin</value></data>
+  <data name="DropHint.Text" xml:space="preserve"><value>or drop MP4, MOV, M2TS, or MTS here</value></data>
+  <data name="BackFiveButton.Content" xml:space="preserve"><value>−5 s</value></data>
+  <data name="BackTenFrameButton.Content" xml:space="preserve"><value>−10 frames</value></data>
+  <data name="BackFrameButton.Content" xml:space="preserve"><value>−1 frame</value></data>
+  <data name="PlayButton.Content" xml:space="preserve"><value>Play</value></data>
+  <data name="ForwardFrameButton.Content" xml:space="preserve"><value>+1 frame</value></data>
+  <data name="ForwardFiveButton.Content" xml:space="preserve"><value>+5 s</value></data>
+  <data name="ForwardTenFrameButton.Content" xml:space="preserve"><value>+10 frames</value></data>
+  <data name="MediaInfoHeading.Text" xml:space="preserve"><value>Source</value></data>
+  <data name="AudioStreamLabel.Text" xml:space="preserve"><value>Primary audio</value></data>
+  <data name="NoFileSelected.Text" xml:space="preserve"><value>No file selected</value></data>
+  <data name="RangeHeading.Text" xml:space="preserve"><value>Selection</value></data>
+  <data name="MarkInButton.Content" xml:space="preserve"><value>Set IN</value></data>
+  <data name="MarkOutButton.Content" xml:space="preserve"><value>Set OUT</value></data>
+  <data name="RangeGuide.Text" xml:space="preserve"><value>Open a video, then set IN → move → set OUT.</value></data>
+  <data name="GoToInButton.Content" xml:space="preserve"><value>Go to IN</value></data>
+  <data name="PreviewRangeButton.Content" xml:space="preserve"><value>Preview</value></data>
+  <data name="GoToOutButton.Content" xml:space="preserve"><value>Go to OUT</value></data>
+  <data name="InLabel.Text" xml:space="preserve"><value>IN</value></data>
+  <data name="OutLabel.Text" xml:space="preserve"><value>OUT</value></data>
+  <data name="RangeNotReady.Text" xml:space="preserve"><value>—</value></data>
+  <data name="ExportHeading.Text" xml:space="preserve"><value>Export</value></data>
+  <data name="ExportDescription.Text" xml:space="preserve"><value>Fast keeps compatible streams; Accurate re-encodes H.264/AAC at the selected timestamps.</value></data>
+  <data name="FastModeButton.Content" xml:space="preserve"><value>Fast</value></data>
+  <data name="FastModeDescription.Text" xml:space="preserve"><value>Stream-copy plan. Boundaries may move to compatible keyframes.</value></data>
+  <data name="AccurateModeButton.Content" xml:space="preserve"><value>Accurate</value></data>
+  <data name="ExportModeHint.Text" xml:space="preserve"><value>Fast favors speed; Accurate favors the selected range</value></data>
+  <data name="AccurateModeDescription.Text" xml:space="preserve"><value>Re-encode plan that prioritizes selected timestamps.</value></data>
+  <data name="ExportButton.Content" xml:space="preserve"><value>Export MP4…</value></data>
+  <data name="CancelExportButton.Content" xml:space="preserve"><value>Cancel</value></data>
+  <data name="RevealOutputButton.Content" xml:space="preserve"><value>Show output</value></data>
+  <data name="ReadyStatus.Title" xml:space="preserve"><value>Ready for a video</value></data>
+  <data name="ReadyStatus.Message" xml:space="preserve"><value>All processing stays on this PC. The source is never modified.</value></data>
+  <data name="SupportButton.Content" xml:space="preserve"><value>Support development</value></data>
+  <data name="DropCaption" xml:space="preserve"><value>Open in Trimlet</value></data>
+  <data name="UnsupportedTitle" xml:space="preserve"><value>Unsupported file type</value></data>
+  <data name="UnsupportedMessage" xml:space="preserve"><value>Choose an MP4, MOV, M2TS, or MTS file.</value></data>
+  <data name="LoadingTitle" xml:space="preserve"><value>Opening video</value></data>
+  <data name="FileDetailsFormat" xml:space="preserve"><value>{0} · {1} · {2}</value></data>
+  <data name="OpenFailedTitle" xml:space="preserve"><value>Could not open this video</value></data>
+  <data name="OpenFailedFormat" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="DurationUnavailable" xml:space="preserve"><value>The video duration is unavailable.</value></data>
+  <data name="LoadedTitle" xml:space="preserve"><value>Video ready</value></data>
+  <data name="LoadedMessage" xml:space="preserve"><value>Playback, seeking, and IN/OUT selection are available.</value></data>
+  <data name="PauseButtonText" xml:space="preserve"><value>Pause</value></data>
+  <data name="PlayButtonText" xml:space="preserve"><value>Play</value></data>
+  <data name="InvalidRangeTitle" xml:space="preserve"><value>Invalid range</value></data>
+  <data name="InvalidInMessage" xml:space="preserve"><value>IN must be earlier than OUT.</value></data>
+  <data name="InvalidOutMessage" xml:space="preserve"><value>OUT must be later than IN.</value></data>
+  <data name="PlanDialogTitle" xml:space="preserve"><value>Shared export-plan contract</value></data>
+  <data name="CloseButtonText" xml:space="preserve"><value>Close</value></data>
+  <data name="PlanReadyTitle" xml:space="preserve"><value>Plan validated</value></data>
+  <data name="PlanReadyMessage" xml:space="preserve"><value>The displayed JSON conforms to Trimlet's schema-version 1 behavior.</value></data>
+  <data name="RangeDurationFormat" xml:space="preserve"><value>{0}</value></data>
+  <data name="RangeNotReadyText" xml:space="preserve"><value>—</value></data>
+  <data name="RangeGuideOpen" xml:space="preserve"><value>Open a video, then set IN → move → set OUT.</value></data>
+  <data name="RangeGuideSetIn" xml:space="preserve"><value>① Move to the start, then choose Set IN.</value></data>
+  <data name="RangeGuideMoveLater" xml:space="preserve"><value>IN is set. Move the timeline to a later position.</value></data>
+  <data name="RangeGuideSetOut" xml:space="preserve"><value>② To end here, choose Set OUT.</value></data>
+  <data name="RangeGuideComplete" xml:space="preserve"><value>The range is ready. Use Preview range to check it.</value></data>
+  <data name="InSetTitle" xml:space="preserve"><value>IN set</value></data>
+  <data name="InSetMessage" xml:space="preserve"><value>Move the timeline later, then set OUT.</value></data>
+  <data name="OutSetTitle" xml:space="preserve"><value>OUT set</value></data>
+  <data name="OutSetMessage" xml:space="preserve"><value>You can now preview the selected range.</value></data>
+  <data name="KeyframePending.Text" xml:space="preserve"><value>Open a video to inspect keyframes.</value></data>
+  <data name="KeyframePendingText" xml:space="preserve"><value>Open a video to inspect keyframes.</value></data>
+  <data name="KeyframeScanning" xml:space="preserve"><value>Inspecting source keyframes…</value></data>
+  <data name="KeyframeUnavailable" xml:space="preserve"><value>Keyframes could not be inspected; Accurate mode is recommended.</value></data>
+  <data name="KeyframeCountFormat" xml:space="preserve"><value></value></data>
+  <data name="FastCandidateFormat" xml:space="preserve"><value>Fast export range {0}–{1}</value></data>
+  <data name="ToolchainMissingTitle" xml:space="preserve"><value>FFmpeg tools not found</value></data>
+  <data name="ToolchainMissingMessage" xml:space="preserve"><value>Playback remains available. Install ffmpeg and ffprobe on PATH, or set TRIMLET_FFMPEG and TRIMLET_FFPROBE, to inspect and export.</value></data>
+  <data name="InspectionUnavailable" xml:space="preserve"><value>Stream inspection requires ffprobe.</value></data>
+  <data name="InspectionFailed" xml:space="preserve"><value>Detailed stream information is unavailable.</value></data>
+  <data name="InspectionFailedTitle" xml:space="preserve"><value>Source inspection needs attention</value></data>
+  <data name="MediaDetailsFormat" xml:space="preserve"><value>{0} · {1}×{2} · {3} · {4}</value></data>
+  <data name="AudioStreamFormat" xml:space="preserve"><value>Audio {0}: {1}, {2} ch</value></data>
+  <data name="AudioStreamWithLanguageFormat" xml:space="preserve"><value>Audio {0}: {1}, {2} ch, {3}</value></data>
+  <data name="LanguageUnknown" xml:space="preserve"><value>language unknown</value></data>
+  <data name="NoAudioStream" xml:space="preserve"><value>No audio stream</value></data>
+  <data name="InterlacedFormat" xml:space="preserve"><value>interlaced ({0})</value></data>
+  <data name="ProgressiveLabel" xml:space="preserve"><value>progressive</value></data>
+  <data name="FrameRateUnknown" xml:space="preserve"><value>frame rate unknown</value></data>
+  <data name="SubtitlePresent" xml:space="preserve"><value>subtitles present (not exported)</value></data>
+  <data name="SubtitleAbsent" xml:space="preserve"><value>no subtitles</value></data>
+  <data name="ExportStarting" xml:space="preserve"><value>Preparing the export…</value></data>
+  <data name="ExportRunningTitle" xml:space="preserve"><value>Exporting MP4</value></data>
+  <data name="ExportRunningMessage" xml:space="preserve"><value>The source remains read-only. You can cancel at any time.</value></data>
+  <data name="ExportProgressFormat" xml:space="preserve"><value>{0}% · processed {1}</value></data>
+  <data name="ExportValidating" xml:space="preserve"><value>Validating video, audio, and duration before finalizing…</value></data>
+  <data name="ExportCompletedFormat" xml:space="preserve"><value>Completed: {0}</value></data>
+  <data name="ExportCompletedTitle" xml:space="preserve"><value>MP4 export completed</value></data>
+  <data name="ExportCompletedMessage" xml:space="preserve"><value>{0} · video {1} · audio {2}</value></data>
+  <data name="ExportCancelledTitle" xml:space="preserve"><value>Export cancelled</value></data>
+  <data name="ExportCancelledMessage" xml:space="preserve"><value>No completed-looking output was left behind.</value></data>
+  <data name="ExportCancelling" xml:space="preserve"><value>Stopping FFmpeg and cleaning the temporary file…</value></data>
+  <data name="ExportFailedTitle" xml:space="preserve"><value>Export failed safely</value></data>
+</root>
