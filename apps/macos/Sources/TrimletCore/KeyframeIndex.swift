@@ -37,4 +37,8 @@ public struct KeyframeIndex: Equatable, Sendable {
             requestedEnd: requestedEnd
         )
     }
+
+    public func fastCandidates(for editList: EditList) -> [FastCutCandidate?] {
+        editList.segments.map { fastCandidate(for: $0.trimRange) }
+    }
 }

@@ -11,12 +11,14 @@ The PoC validates whether the basic Trimlet interaction feels understandable and
 - Open a local MP4, MOV, M2TS, or MTS file through a dialog or drag and drop.
 - Play, pause, scrub, jump five seconds, and step one or ten frames in either direction.
 - View the current position as `HH:MM:SS:FF`.
-- Mark one IN and OUT point.
-- See and preview the selected range.
-- Export the range to MP4 using Fast or Accurate mode through the locally installed FFmpeg.
-- See keyframe marks and the Fast-mode candidate range before export.
+- Mark a draft IN and OUT point and add multiple retained edit segments.
+- Select, update, remove, reorder, undo, and redo retained segments.
+- See and preview the draft, one segment, or the full ordered edit list.
+- Select one inspected source audio stream.
+- Export the edit list as one MP4 using Fast or Accurate mode through the locally installed FFmpeg.
+- See keyframe marks and every Fast-mode candidate range before export.
 - See percentage progress for export, cancel it, and verify that the UI stays responsive.
-- Validate video, expected audio, and duration before exposing the completed file.
+- Validate video, selected audio, and combined duration before exposing the completed file.
 
 ## Build and launch without Xcode
 
@@ -45,4 +47,4 @@ The script does not install anything globally and does not publish anything to G
 
 These limitations are visible boundaries of the PoC, not the final product requirements.
 
-Human feedback and the next iteration are tracked in `HUMAN_CHECK_2026-08-14.md` and `BACKLOG.md`.
+Human feedback and the next iteration are tracked in `HUMAN_CHECK.md` and `BACKLOG.md`.

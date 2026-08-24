@@ -10,20 +10,21 @@ The macOS proof of concept is implemented in SwiftUI. A native C#/WinUI 3 Window
 
 ## Product goal
 
-Trimlet opens large video files without loading the whole file into memory, lets the user mark one IN/OUT range, and exports the selected range as MP4.
+Trimlet opens large video files without loading the whole file into memory, lets the user collect and order multiple IN/OUT ranges, and exports one combined MP4.
 
 It intentionally focuses on one workflow:
 
 1. Open or drop a video.
 2. Find the desired range quickly.
-3. Mark IN and OUT precisely.
-4. Export in Fast or Accurate mode.
+3. Mark, add, and reorder retained IN/OUT ranges.
+4. Continuously preview the sequence and choose an audio stream.
+5. Export one combined file in Fast or Accurate mode.
 
 Priority inputs are MP4, MOV, M2TS, and MTS.
 
 ## Repository status
 
-- macOS: native PoC 0.2 with direct preview, automatic preview proxies, range selection, and Fast/Accurate export.
+- macOS: native 0.3 development milestone with multiple retained ranges, sequence preview, audio selection, and combined Fast/Accurate export.
 - Windows: source-only Early Access with native preview, range selection, audio-stream selection, and validated Fast/Accurate export.
 - Parity: the primary open → select IN/OUT → export workflow is aligned. Windows automatic preview proxies and source-PTS stepping for variable-frame-rate media remain open.
 - Public source releases are published under the MIT License.
@@ -63,6 +64,7 @@ Core checks can be run with:
 
 ```bash
 swift run --package-path apps/macos TrimletCoreChecks
+swift run --package-path apps/macos TrimletIntegrationChecks
 ```
 
 Generated media and `dist/` are local-only and ignored by Git.

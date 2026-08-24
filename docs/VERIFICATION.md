@@ -1,4 +1,38 @@
-# Mac PoC verification record
+# Mac verification record
+
+## Mac multi-range 0.3 developer verification
+
+- Verified: 2026-08-24
+- Host: Apple silicon (`arm64`), macOS 26.5.2
+- Toolchain: Apple Swift 6.3
+- Local FFmpeg: 7.1.1 with VideoToolbox enabled
+
+### Automated result
+
+- Release build passed.
+- `TrimletCoreChecks` passed integer timestamp, ordered edit-list, overlap rejection, mutation, Fast-candidate, selected-audio mapping, VideoToolbox, M2TS audio conversion, and MOV PCM-to-AAC compatibility checks.
+- `TrimletIntegrationChecks` generated a 12-second H.264 source with three visible color sections and two audio streams, then exported three non-chronological retained ranges in edit-list order.
+- Accurate combined output passed video/audio presence, `3.800 s` duration, blue → red → green order, and selected `880 Hz` audio checks.
+- Fast combined output passed video/audio presence, `10.000 s` candidate duration, blue → red → green order, and selected `880 Hz` audio checks.
+- Shared shell contract validation passed 2 export cases, 2 edit-list cases, and 9 shared error codes.
+- Release-readiness, shell syntax, and whitespace checks passed.
+- Release application bundle build, ad-hoc signing, launch, and initial multi-range UI rendering passed.
+
+Run the principal checks with:
+
+```text
+swift build -c release --package-path apps/macos
+swift run -c release --package-path apps/macos TrimletCoreChecks
+swift run -c release --package-path apps/macos TrimletIntegrationChecks
+scripts/validate-contracts.sh
+scripts/check-release-readiness.sh
+```
+
+### Remaining 0.3 gate
+
+Automated and developer-side verification is complete for the Mac 0.3 implementation. The remaining gate is the user's interaction and media-quality evaluation using `HUMAN_CHECK.md`, including repeated playback, edit-list timing, M2TS proxy behavior, long-media responsiveness, A/V sync, cancellation, and visual density.
+
+## Mac PoC 0.1/0.2 verification
 
 - Verified: 2026-08-14
 - Host: Apple silicon, macOS 26.5.2

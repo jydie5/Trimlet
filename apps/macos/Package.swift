@@ -9,7 +9,8 @@ let package = Package(
     ],
     products: [
         .executable(name: "Trimlet", targets: ["Trimlet"]),
-        .executable(name: "TrimletCoreChecks", targets: ["TrimletCoreChecks"])
+        .executable(name: "TrimletCoreChecks", targets: ["TrimletCoreChecks"]),
+        .executable(name: "TrimletIntegrationChecks", targets: ["TrimletIntegrationChecks"])
     ],
     targets: [
         .target(
@@ -25,6 +26,11 @@ let package = Package(
             name: "TrimletCoreChecks",
             dependencies: ["TrimletCore"],
             path: "Checks/TrimletCoreChecks"
+        ),
+        .executableTarget(
+            name: "TrimletIntegrationChecks",
+            dependencies: ["TrimletCore"],
+            path: "Checks/TrimletIntegrationChecks"
         )
     ]
 )

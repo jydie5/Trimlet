@@ -1,16 +1,16 @@
 # Trimlet product requirements
 
-- Status: Draft 0.1
-- Updated: 2026-08-16
-- Target: Shared product behavior and the first native Mac MVP
+- Status: Draft 0.2
+- Updated: 2026-08-24
+- Target: Shared product behavior and the native Mac multi-range milestone
 
 ## 1. Product definition
 
-Trimlet is a native Mac utility for quickly extracting a section from a large video file. It combines simple IN/OUT operation with two export modes: fast lossless trimming and frame-accurate encoding.
+Trimlet is a focused native desktop utility for quickly extracting one or more useful sections from one large video file. It combines simple IN/OUT marking with an ordered edit list and two export modes: fast video stream-copy cutting and frame-accurate encoding.
 
 The Windows version is planned as a separate implementation by another team member. Unless a requirement is explicitly labeled Mac-only, functional behavior in this document is the shared product target for both platforms. Platform-specific implementation details are defined separately.
 
-The product is successful when a user can open a multi-gigabyte recording, locate and mark a range without learning a full video editor, and obtain a usable MP4 without risking the source file.
+The product is successful when a user can open a multi-gigabyte recording, collect several useful ranges without learning a full video editor, preview their sequence, and obtain one usable MP4 without risking the source file.
 
 ## 2. Target users
 
@@ -37,11 +37,12 @@ The MVP does not target multi-track editors, colorists, motion-graphics creators
 3. The video becomes operable as soon as practical.
 4. If direct playback is unsuitable, Trimlet offers or starts proxy generation according to the chosen policy.
 5. The user plays, seeks, scrubs, or steps frame by frame.
-6. The user marks one IN point and one OUT point.
-7. Trimlet validates the range and shows its duration.
-8. The user chooses Fast or Accurate export.
-9. Trimlet writes a new MP4, showing progress and allowing cancellation.
-10. On success, Trimlet reveals the output in Finder or offers to open it.
+6. The user marks an IN point and an OUT point and adds that range to the edit list.
+7. The user repeats marking as needed, then adjusts, removes, or reorders ranges.
+8. Trimlet shows every retained range, total output duration, and a continuous sequence preview.
+9. The user chooses Fast or Accurate export.
+10. Trimlet joins the ordered retained ranges into one new MP4, showing progress and allowing cancellation.
+11. On success, Trimlet validates and reveals the output in Finder or offers to open it.
 
 ## 5. MVP functional requirements
 
@@ -71,13 +72,16 @@ Requirement keywords follow MUST, SHOULD, and MAY.
 
 ### 5.3 Range selection
 
-- FR-020: The app MUST allow exactly one IN and one OUT point in the MVP.
-- FR-021: The user MUST be able to set IN and OUT with both buttons and keyboard shortcuts.
-- FR-022: The selected range MUST be visible on the timeline.
-- FR-023: The app MUST show the selected range duration.
-- FR-024: Export MUST be disabled when IN is not earlier than OUT.
-- FR-025: The user MUST be able to preview the selected range.
-- FR-026: Range positions MUST be stored using source-media timestamps.
+- FR-020: The app MUST provide one draft IN/OUT selection used to create or update an edit segment.
+- FR-021: The user MUST be able to set draft IN and OUT with both buttons and keyboard shortcuts.
+- FR-022: The app MUST maintain an ordered edit list containing zero or more retained source ranges.
+- FR-023: Every retained range MUST be visible on the timeline and in a compact segment list.
+- FR-024: A segment MUST be rejected when IN is not earlier than OUT, lies outside the source, or overlaps another retained source range.
+- FR-025: The app MUST show draft duration, each segment duration, and total output duration.
+- FR-026: Retained range positions MUST be stored using integer source-media timestamps plus a timescale; floating-point seconds are a playback adapter only.
+- FR-027: The user MUST be able to add, select, update, remove, and reorder retained ranges.
+- FR-028: Edit-list mutations MUST support undo and redo without changing the source file.
+- FR-029: The user MUST be able to preview one retained range and continuously preview the ordered edit list, skipping gaps between retained ranges.
 
 ### 5.4 Proxy handling
 
@@ -106,6 +110,11 @@ Requirement keywords follow MUST, SHOULD, and MAY.
 - FR-052: If the requested output exists, the app MUST ask for another name or receive explicit replacement confirmation.
 - FR-053: A cancelled or failed export MUST NOT leave a file that appears complete.
 - FR-054: The user MUST be able to choose the primary audio stream for M2TS/MTS input when more than one is present.
+- FR-055: Accurate mode MUST join every retained range, in edit-list order, into one H.264/AAC MP4.
+- FR-056: Fast mode MUST join every retained range, in edit-list order, without video re-encoding when all stages are stream-copy compatible.
+- FR-057: Fast mode MUST display a keyframe-expanded candidate for every retained range and MUST refuse a misleading lossless claim when a valid stream-copy plan cannot be formed.
+- FR-058: Multi-range export MUST keep audio continuous across segment boundaries and validate the combined duration against the sum of retained ranges or Fast candidates.
+- FR-059: Exporting each retained range as a separate file MAY be added later; it is not required for this milestone.
 
 ### 5.6 M2TS/MTS behavior
 
@@ -165,6 +174,10 @@ The MVP is complete only when all applicable scenarios pass on an Apple silicon 
 6. Cancel proxy generation and export; confirm that the app remains usable and no apparently complete output is left behind.
 7. Attempt to export over the source and confirm that the app prevents it.
 8. Open a broken or unsupported file and receive a recoverable, understandable error.
+9. Add at least three non-overlapping ranges in a non-chronological edit order, continuously preview them, and export one combined file in Accurate mode.
+10. Export the same three ranges in Fast mode, see the candidate boundary difference for each range, and verify the combined output order and duration.
+11. Select a non-default audio stream from a multi-audio source and confirm that the chosen stream is present in the combined output.
+12. Add, update, remove, reorder, undo, and redo ranges without changing the source file or losing playback responsiveness.
 
 ## 8. Explicitly out of scope for MVP
 
@@ -172,7 +185,7 @@ The MVP is complete only when all applicable scenarios pass on an Apple silicon 
 - Joining multiple source clips.
 - Transitions, titles, effects, filters, and color correction.
 - Audio mixing or independent audio trimming.
-- Multiple simultaneous export ranges or a batch queue.
+- Multiple source files, a multi-track timeline, or a cross-source batch queue.
 - Subtitle editing or burn-in.
 - Smart rendering that re-encodes only boundary GOPs.
 - Cloud storage, collaboration, user accounts, and telemetry.

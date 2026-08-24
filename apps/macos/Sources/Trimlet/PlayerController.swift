@@ -19,11 +19,14 @@ final class PlayerController: ObservableObject {
     @Published private(set) var statusMessage = "動画をドロップするか、「動画を開く」を選んでください。"
     @Published private(set) var keyframeIndex: KeyframeIndex?
     @Published private(set) var activeOperation: OperationStatus?
+    @Published private(set) var editList = EditList()
+    @Published private(set) var selectedSegmentID: UUID?
+    @Published private(set) var audioStreams: [MediaProbe.AudioStreamInfo] = []
     @Published var trimRange = TrimRange()
     @Published var exportMode: ExportMode = .fast
+    @Published var selectedAudioStreamIndex: Int?
 
     private var progressTask: Task<Void, Never>?
-    private var shouldStopAtOutPoint = false
     private var playbackIntent = false
     private var exportProcess: Process?
     private var exportWasCancelled = false
@@ -32,16 +35,26 @@ final class PlayerController: ObservableObject {
     private var analysisProcess: Process?
     private var operationProgressURL: URL?
     private var operationExpectedDuration: Double?
+    private var operationStageDetail: String?
     private var sourceHasAudio = false
     private var exportTemporaryURL: URL?
     private var exportDestinationURL: URL?
+    private var exportWorkingDirectory: URL?
+    private var exportCompletedDuration = 0.0
+    private var editUndoStack: [EditList] = []
+    private var editRedoStack: [EditList] = []
+    private var previewRanges: [TrimRange] = []
+    private var previewRangeIndex: Int?
 
     var hasMedia: Bool {
         currentURL != nil && durationSeconds > 0
     }
 
     var canExport: Bool {
-        hasMedia && trimRange.isValid && !isExporting
+        hasMedia
+            && !editList.isEmpty
+            && !isExporting
+            && (exportMode == .accurate || fastCandidates.values.allSatisfy { $0 != nil })
     }
 
     var isPlaybackActive: Bool { playbackIntent }
@@ -49,6 +62,16 @@ final class PlayerController: ObservableObject {
     var fastCandidate: FastCutCandidate? {
         keyframeIndex?.fastCandidate(for: trimRange)
     }
+
+    var fastCandidates: [UUID: FastCutCandidate?] {
+        Dictionary(uniqueKeysWithValues: editList.segments.map { segment in
+            (segment.id, keyframeIndex?.fastCandidate(for: segment.trimRange))
+        })
+    }
+
+    var selectedSegment: EditSegment? { editList.segment(id: selectedSegmentID) }
+    var canUndoEdit: Bool { !editUndoStack.isEmpty }
+    var canRedoEdit: Bool { !editRedoStack.isEmpty }
 
     var currentTimecode: String {
         TimecodeFormatter.string(seconds: currentSeconds, framesPerSecond: nominalFrameRate)
@@ -61,6 +84,13 @@ final class PlayerController: ObservableObject {
     var selectedDurationText: String {
         guard let selectedDuration = trimRange.duration else { return "--:--:--:--" }
         return TimecodeFormatter.string(seconds: selectedDuration, framesPerSecond: nominalFrameRate)
+    }
+
+    var totalDurationText: String {
+        TimecodeFormatter.string(
+            seconds: editList.totalDurationSeconds,
+            framesPerSecond: nominalFrameRate
+        )
     }
 
     init() {
@@ -79,6 +109,10 @@ final class PlayerController: ObservableObject {
     }
 
     func open(_ url: URL) {
+        guard !isExporting else {
+            statusMessage = "書き出し完了後に別の動画を開いてください。"
+            return
+        }
         guard url.isFileURL else {
             statusMessage = "ローカル動画ファイルを選んでください。"
             return
@@ -87,14 +121,21 @@ final class PlayerController: ObservableObject {
         player.pause()
         playbackIntent = false
         playbackState = .paused
+        cancelPreviewSequence()
         cancelAnalysis()
         isLoading = true
         statusMessage = "動画を解析しています…"
         trimRange.reset()
+        editList = EditList()
+        selectedSegmentID = nil
+        editUndoStack.removeAll()
+        editRedoStack.removeAll()
         currentSeconds = 0
         durationSeconds = 0
         nominalFrameRate = 30
         sourceHasAudio = false
+        audioStreams = []
+        selectedAudioStreamIndex = nil
         keyframeIndex = nil
 
         let extensionName = url.pathExtension.lowercased()
@@ -134,11 +175,20 @@ final class PlayerController: ObservableObject {
                 }
 
                 self.currentURL = sourceURL
-                self.sourceHasAudio = !audioTracks.isEmpty
                 self.durationSeconds = seconds
                 self.nominalFrameRate = frameRate
                 self.trimRange = TrimRange(inPoint: 0, outPoint: seconds)
                 self.player.replaceCurrentItem(with: AVPlayerItem(asset: asset))
+                if let ffprobeURL = Self.ffprobeURL() {
+                    let streams = await MediaProbe.audioStreams(at: sourceURL, ffprobeURL: ffprobeURL)
+                    self.audioStreams = streams
+                    self.selectedAudioStreamIndex = streams.first?.index
+                    self.sourceHasAudio = !streams.isEmpty
+                } else {
+                    self.audioStreams = []
+                    self.selectedAudioStreamIndex = nil
+                    self.sourceHasAudio = !audioTracks.isEmpty
+                }
                 self.isLoading = false
                 if usesProxy {
                     self.statusMessage = "\(sourceURL.lastPathComponent) — プロキシでプレビュー中（書き出しは原本を使用）"
@@ -265,17 +315,16 @@ final class PlayerController: ObservableObject {
 
     func togglePlayback() {
         guard hasMedia else { return }
+        cancelPreviewSequence()
 
         if playbackIntent {
             player.pause()
             playbackIntent = false
             playbackState = .paused
-            shouldStopAtOutPoint = false
         } else {
             if currentSeconds >= durationSeconds - 0.01 {
-                seek(to: 0)
+                seekWithoutCancellingPreview(to: 0)
             }
-            shouldStopAtOutPoint = false
             playbackIntent = true
             playbackState = .waiting
             player.play()
@@ -284,15 +333,20 @@ final class PlayerController: ObservableObject {
 
     func step(by count: Int) {
         guard hasMedia, let item = player.currentItem else { return }
+        cancelPreviewSequence()
         player.pause()
         playbackIntent = false
         playbackState = .paused
-        shouldStopAtOutPoint = false
         item.step(byCount: count)
         refreshPlaybackPosition()
     }
 
     func seek(to seconds: Double) {
+        cancelPreviewSequence()
+        seekWithoutCancellingPreview(to: seconds)
+    }
+
+    private func seekWithoutCancellingPreview(to seconds: Double) {
         guard hasMedia else { return }
         let clamped = min(max(0, seconds), durationSeconds)
         let time = CMTime(seconds: clamped, preferredTimescale: 60_000)
@@ -328,115 +382,311 @@ final class PlayerController: ObservableObject {
         seek(to: outPoint)
     }
 
+    func addDraftSegment() {
+        do {
+            let segment = try EditSegment(range: trimRange)
+            var next = editList
+            try next.append(segment, sourceDuration: MediaTimestamp(seconds: durationSeconds))
+            commitEditList(next)
+            selectedSegmentID = segment.id
+            statusMessage = "編集区間 \(editList.segments.count) を追加しました。"
+        } catch {
+            statusMessage = error.localizedDescription
+        }
+    }
+
+    func updateSelectedSegment() {
+        guard let selectedSegmentID else {
+            statusMessage = "更新する編集区間を選択してください。"
+            return
+        }
+        do {
+            let segment = try EditSegment(id: selectedSegmentID, range: trimRange)
+            var next = editList
+            try next.update(segment, sourceDuration: MediaTimestamp(seconds: durationSeconds))
+            commitEditList(next)
+            statusMessage = "選択した編集区間を更新しました。"
+        } catch {
+            statusMessage = error.localizedDescription
+        }
+    }
+
+    func selectSegment(_ id: UUID) {
+        guard let segment = editList.segment(id: id) else { return }
+        selectedSegmentID = id
+        trimRange = segment.trimRange
+        statusMessage = "編集区間を選択しました。"
+    }
+
+    func removeSelectedSegment() {
+        guard let selectedSegmentID else { return }
+        do {
+            var next = editList
+            try next.remove(id: selectedSegmentID)
+            commitEditList(next)
+            self.selectedSegmentID = nil
+            statusMessage = "編集区間を削除しました。"
+        } catch {
+            statusMessage = error.localizedDescription
+        }
+    }
+
+    func moveSelectedSegment(by offset: Int) {
+        guard let selectedSegmentID else { return }
+        do {
+            var next = editList
+            try next.move(id: selectedSegmentID, by: offset)
+            guard next != editList else { return }
+            commitEditList(next)
+            statusMessage = "出力順を変更しました。"
+        } catch {
+            statusMessage = error.localizedDescription
+        }
+    }
+
+    func undoEdit() {
+        guard let previous = editUndoStack.popLast() else { return }
+        editRedoStack.append(editList)
+        editList = previous
+        if editList.segment(id: selectedSegmentID) == nil { selectedSegmentID = nil }
+        cancelPreviewSequence()
+        statusMessage = "区間編集を取り消しました。"
+    }
+
+    func redoEdit() {
+        guard let next = editRedoStack.popLast() else { return }
+        editUndoStack.append(editList)
+        editList = next
+        if editList.segment(id: selectedSegmentID) == nil { selectedSegmentID = nil }
+        cancelPreviewSequence()
+        statusMessage = "区間編集をやり直しました。"
+    }
+
+    private func commitEditList(_ next: EditList) {
+        editUndoStack.append(editList)
+        if editUndoStack.count > 100 { editUndoStack.removeFirst() }
+        editRedoStack.removeAll()
+        editList = next
+        cancelPreviewSequence()
+    }
+
     func previewSelection() {
-        guard let inPoint = trimRange.inPoint,
-              let outPoint = trimRange.outPoint,
-              outPoint > inPoint else {
+        guard trimRange.isValid else {
             statusMessage = "IN点をOUT点より前に設定してください。"
             return
         }
 
-        seek(to: inPoint)
-        shouldStopAtOutPoint = true
+        startPreview(ranges: [trimRange], message: "選択範囲をプレビューしています。")
+    }
+
+    func previewSelectedSegment() {
+        guard let selectedSegment else {
+            statusMessage = "プレビューする編集区間を選択してください。"
+            return
+        }
+        startPreview(ranges: [selectedSegment.trimRange], message: "編集区間をプレビューしています。")
+    }
+
+    func previewAllSegments() {
+        guard !editList.isEmpty else {
+            statusMessage = "プレビューする編集区間がありません。"
+            return
+        }
+        startPreview(
+            ranges: editList.segments.map(\.trimRange),
+            message: "区間リストを連続プレビューしています。"
+        )
+    }
+
+    private func startPreview(ranges: [TrimRange], message: String) {
+        guard let first = ranges.first, let inPoint = first.inPoint else { return }
+        player.pause()
+        previewRanges = ranges
+        previewRangeIndex = 0
+        seekWithoutCancellingPreview(to: inPoint)
         playbackIntent = true
         playbackState = .waiting
         player.play()
-        statusMessage = "選択範囲をプレビューしています。"
+        statusMessage = message
+    }
+
+    private func cancelPreviewSequence() {
+        previewRanges.removeAll()
+        previewRangeIndex = nil
     }
 
     func export(to destination: URL) {
         guard let source = currentURL,
-              let inPoint = trimRange.inPoint,
-              let selectedDuration = trimRange.duration,
               let ffmpegURL = Self.ffmpegURL(),
               let ffprobeURL = Self.ffprobeURL() else {
             statusMessage = "書き出し条件またはFFmpegを確認できません。"
             return
         }
 
+        guard !editList.isEmpty else {
+            statusMessage = "書き出す編集区間を追加してください。"
+            return
+        }
+        if sourceHasAudio && selectedAudioStreamIndex == nil {
+            statusMessage = "音声ストリームを確認できません。動画を開き直してください。"
+            return
+        }
+
         let temporaryURL = destination.deletingLastPathComponent()
             .appendingPathComponent(".\(destination.deletingPathExtension().lastPathComponent)-trimlet-\(UUID().uuidString)")
             .appendingPathExtension("mp4")
-        let progressURL = Self.temporaryURL(extension: "progress")
-        let expectsAudio = sourceHasAudio
-        let process = Process()
-        process.executableURL = ffmpegURL
-        let plan = FFmpegExportPlan(
-            source: source,
-            destination: temporaryURL,
-            inPoint: inPoint,
-            duration: selectedDuration,
-            mode: exportMode,
-            progressURL: progressURL
-        )
-        process.arguments = plan.arguments
+        let workingDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("trimlet-export-\(UUID().uuidString)", isDirectory: true)
 
-        let errorPipe = Pipe()
-        process.standardError = errorPipe
-        process.standardOutput = FileHandle.nullDevice
+        let plan: MultiRangeExportPlan
+        do {
+            try FileManager.default.createDirectory(
+                at: workingDirectory,
+                withIntermediateDirectories: true
+            )
+            plan = try MultiRangeExportPlan(
+                source: source,
+                incompleteDestination: temporaryURL,
+                workingDirectory: workingDirectory,
+                editList: editList,
+                mode: exportMode,
+                selectedAudioStreamIndex: selectedAudioStreamIndex,
+                selectedAudioCodecName: audioStreams.first {
+                    $0.index == selectedAudioStreamIndex
+                }?.codecName,
+                keyframeIndex: keyframeIndex
+            )
+            try plan.concatListContents.write(
+                to: plan.concatListURL,
+                atomically: true,
+                encoding: .utf8
+            )
+        } catch {
+            try? FileManager.default.removeItem(at: workingDirectory)
+            statusMessage = error.localizedDescription
+            return
+        }
 
         isExporting = true
         exportWasCancelled = false
+        exportCompletedDuration = 0
         statusMessage = "\(exportMode.title)モードで書き出しています…"
-        exportProcess = process
         exportTemporaryURL = temporaryURL
         exportDestinationURL = destination
+        exportWorkingDirectory = workingDirectory
         beginOperation(
             kind: .export,
             title: "MP4を書き出し中",
-            detail: "\(exportMode.title) — \(destination.lastPathComponent)",
-            progressURL: progressURL,
-            expectedDuration: selectedDuration
+            detail: "\(exportMode.title) — \(plan.segmentURLs.count)区間",
+            progressURL: plan.stages.first?.progressURL,
+            expectedDuration: plan.expectedDuration * 2
         )
+        runExportStage(
+            at: 0,
+            plan: plan,
+            ffmpegURL: ffmpegURL,
+            ffprobeURL: ffprobeURL,
+            destination: destination,
+            temporaryURL: temporaryURL,
+            workingDirectory: workingDirectory
+        )
+    }
+
+    private func runExportStage(
+        at index: Int,
+        plan: MultiRangeExportPlan,
+        ffmpegURL: URL,
+        ffprobeURL: URL,
+        destination: URL,
+        temporaryURL: URL,
+        workingDirectory: URL
+    ) {
+        guard plan.stages.indices.contains(index) else { return }
+        if exportWasCancelled {
+            finishCancelledExport(temporaryURL: temporaryURL, workingDirectory: workingDirectory)
+            return
+        }
+
+        let stage = plan.stages[index]
+        try? FileManager.default.removeItem(at: stage.progressURL)
+        operationProgressURL = stage.progressURL
+        operationStageDetail = switch stage.kind {
+        case .segment(let segmentIndex):
+            "区間 \(segmentIndex + 1) / \(plan.segmentURLs.count)"
+        case .concatenate:
+            "区間を1本に連結中"
+        }
+        if var operation = activeOperation {
+            operation.detail = operationStageDetail ?? operation.detail
+            activeOperation = operation
+        }
+
+        let process = Process()
+        process.executableURL = ffmpegURL
+        process.arguments = stage.arguments
+        let errorPipe = Pipe()
+        process.standardError = errorPipe
+        process.standardOutput = FileHandle.nullDevice
+        exportProcess = process
+        let expectsAudio = selectedAudioStreamIndex != nil
 
         process.terminationHandler = { [weak self] completedProcess in
             let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
             let details = String(data: errorData, encoding: .utf8) ?? ""
-            let validation = completedProcess.terminationStatus == 0
+            let isFinalStage = index == plan.stages.count - 1
+            let validation = completedProcess.terminationStatus == 0 && isFinalStage
                 ? MediaProbe.validateOutput(
                     at: temporaryURL,
-                    expectedDuration: selectedDuration,
+                    expectedDuration: plan.expectedDuration,
                     expectsAudio: expectsAudio,
+                    durationTolerance: plan.mode == .accurate
+                        ? max(0.25, plan.expectedDuration * 0.01)
+                        : max(1, plan.expectedDuration * 0.03),
                     ffprobeURL: ffprobeURL
                 )
                 : nil
             Task { @MainActor in
                 guard let self else { return }
                 self.exportProcess = nil
-                self.isExporting = false
                 if self.exportWasCancelled {
-                    try? FileManager.default.removeItem(at: temporaryURL)
-                    self.statusMessage = "書き出しをキャンセルしました。"
-                    self.finishOperation(.cancelled, detail: self.statusMessage)
-                    self.exportWasCancelled = false
-                } else if let validation, validation.isValid {
-                    do {
-                        if FileManager.default.fileExists(atPath: destination.path) {
-                            try FileManager.default.removeItem(at: destination)
-                        }
-                        try FileManager.default.moveItem(at: temporaryURL, to: destination)
-                        self.statusMessage = "書き出しと検証が完了しました：\(destination.lastPathComponent)"
-                        self.finishOperation(.completed, detail: validation.message, outputURL: destination)
-                    } catch {
-                        try? FileManager.default.removeItem(at: temporaryURL)
-                        self.statusMessage = "完成ファイルを保存できませんでした：\(error.localizedDescription)"
-                        self.finishOperation(.failed, detail: self.statusMessage)
-                    }
-                } else if let validation {
-                    try? FileManager.default.removeItem(at: temporaryURL)
-                    self.statusMessage = "書き出し後の検証に失敗しました：\(validation.message)"
-                    self.finishOperation(.failed, detail: self.statusMessage)
-                } else {
-                    try? FileManager.default.removeItem(at: temporaryURL)
+                    self.finishCancelledExport(temporaryURL: temporaryURL, workingDirectory: workingDirectory)
+                } else if completedProcess.terminationStatus != 0 {
                     let lastLine = details
                         .split(separator: "\n")
                         .last
                         .map(String.init) ?? "不明なエラー"
-                    self.statusMessage = "書き出しに失敗しました：\(lastLine)"
-                    self.finishOperation(.failed, detail: self.statusMessage)
+                    self.finishFailedExport(
+                        "書き出しに失敗しました：\(lastLine)",
+                        temporaryURL: temporaryURL,
+                        workingDirectory: workingDirectory
+                    )
+                } else if let validation {
+                    if validation.isValid {
+                        self.finishSuccessfulExport(
+                            validation: validation,
+                            destination: destination,
+                            temporaryURL: temporaryURL,
+                            workingDirectory: workingDirectory
+                        )
+                    } else {
+                        self.finishFailedExport(
+                            "書き出し後の検証に失敗しました：\(validation.message)",
+                            temporaryURL: temporaryURL,
+                            workingDirectory: workingDirectory
+                        )
+                    }
+                } else {
+                    self.exportCompletedDuration += stage.expectedDuration
+                    self.runExportStage(
+                        at: index + 1,
+                        plan: plan,
+                        ffmpegURL: ffmpegURL,
+                        ffprobeURL: ffprobeURL,
+                        destination: destination,
+                        temporaryURL: temporaryURL,
+                        workingDirectory: workingDirectory
+                    )
                 }
-                self.exportTemporaryURL = nil
-                self.exportDestinationURL = nil
             }
         }
 
@@ -444,11 +694,66 @@ final class PlayerController: ObservableObject {
             try process.run()
         } catch {
             exportProcess = nil
-            isExporting = false
-            try? FileManager.default.removeItem(at: temporaryURL)
-            statusMessage = "FFmpegを開始できませんでした：\(error.localizedDescription)"
-            finishOperation(.failed, detail: statusMessage)
+            finishFailedExport(
+                "FFmpegを開始できませんでした：\(error.localizedDescription)",
+                temporaryURL: temporaryURL,
+                workingDirectory: workingDirectory
+            )
         }
+    }
+
+    private func finishSuccessfulExport(
+        validation: MediaProbe.OutputValidation,
+        destination: URL,
+        temporaryURL: URL,
+        workingDirectory: URL
+    ) {
+        do {
+            if FileManager.default.fileExists(atPath: destination.path) {
+                _ = try FileManager.default.replaceItemAt(destination, withItemAt: temporaryURL)
+            } else {
+                try FileManager.default.moveItem(at: temporaryURL, to: destination)
+            }
+            try? FileManager.default.removeItem(at: workingDirectory)
+            isExporting = false
+            statusMessage = "\(editList.segments.count)区間の書き出しと検証が完了しました：\(destination.lastPathComponent)"
+            finishOperation(.completed, detail: validation.message, outputURL: destination)
+            clearExportState()
+        } catch {
+            finishFailedExport(
+                "完成ファイルを保存できませんでした：\(error.localizedDescription)",
+                temporaryURL: temporaryURL,
+                workingDirectory: workingDirectory
+            )
+        }
+    }
+
+    private func finishFailedExport(_ message: String, temporaryURL: URL, workingDirectory: URL) {
+        try? FileManager.default.removeItem(at: temporaryURL)
+        try? FileManager.default.removeItem(at: workingDirectory)
+        isExporting = false
+        statusMessage = message
+        finishOperation(.failed, detail: message)
+        clearExportState()
+    }
+
+    private func finishCancelledExport(temporaryURL: URL, workingDirectory: URL) {
+        try? FileManager.default.removeItem(at: temporaryURL)
+        try? FileManager.default.removeItem(at: workingDirectory)
+        isExporting = false
+        exportWasCancelled = false
+        statusMessage = "書き出しをキャンセルしました。"
+        finishOperation(.cancelled, detail: statusMessage)
+        clearExportState()
+    }
+
+    private func clearExportState() {
+        exportProcess = nil
+        exportTemporaryURL = nil
+        exportDestinationURL = nil
+        exportWorkingDirectory = nil
+        exportCompletedDuration = 0
+        operationStageDetail = nil
     }
 
     func cancelExport() {
@@ -488,15 +793,27 @@ final class PlayerController: ObservableObject {
             currentSeconds = min(max(0, seconds), durationSeconds)
         }
 
-        if shouldStopAtOutPoint,
-           let outPoint = trimRange.outPoint,
+        if let previewRangeIndex,
+           previewRanges.indices.contains(previewRangeIndex),
+           let outPoint = previewRanges[previewRangeIndex].outPoint,
            currentSeconds >= outPoint {
             player.pause()
-            playbackIntent = false
-            playbackState = .paused
-            shouldStopAtOutPoint = false
-            seek(to: outPoint)
-            statusMessage = "選択範囲のプレビューが終了しました。"
+            let nextIndex = previewRangeIndex + 1
+            if previewRanges.indices.contains(nextIndex),
+               let nextInPoint = previewRanges[nextIndex].inPoint {
+                self.previewRangeIndex = nextIndex
+                seekWithoutCancellingPreview(to: nextInPoint)
+                playbackIntent = true
+                playbackState = .waiting
+                player.play()
+                statusMessage = "区間 \(nextIndex + 1) / \(previewRanges.count) をプレビューしています。"
+            } else {
+                playbackIntent = false
+                playbackState = .paused
+                seekWithoutCancellingPreview(to: outPoint)
+                cancelPreviewSequence()
+                statusMessage = "区間プレビューが終了しました。"
+            }
         } else {
             switch player.timeControlStatus {
             case .playing:
@@ -633,12 +950,23 @@ final class PlayerController: ObservableObject {
               let text = String(data: data, encoding: .utf8) else { return }
 
         guard let seconds = FFmpegProgress.elapsedSeconds(from: text) else { return }
+        let processedSeconds = operation.kind == .export
+            ? exportCompletedDuration + seconds
+            : seconds
         if let expected = operationExpectedDuration, expected > 0 {
-            operation.progress = min(0.99, seconds / expected)
+            operation.progress = min(0.99, processedSeconds / expected)
         }
-        operation.detail = operationExpectedDuration == nil
-            ? String(format: "処理済み %.1f 秒", seconds)
-            : String(format: "%.0f%% — %.1f / %.1f 秒", (operation.progress ?? 0) * 100, seconds, operationExpectedDuration ?? 0)
+        let progressText = operationExpectedDuration == nil
+            ? String(format: "処理済み %.1f 秒", processedSeconds)
+            : String(
+                format: "%.0f%% — %.1f / %.1f 秒",
+                (operation.progress ?? 0) * 100,
+                processedSeconds,
+                operationExpectedDuration ?? 0
+            )
+        operation.detail = [operationStageDetail, progressText]
+            .compactMap { $0 }
+            .joined(separator: " — ")
         activeOperation = operation
     }
 

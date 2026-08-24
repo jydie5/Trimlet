@@ -1,10 +1,48 @@
 # Trimlet development backlog
 
-- Current milestone: Mac PoC 0.2
-- Updated: 2026-08-14
-- Source: `HUMAN_CHECK_2026-08-14.md`
+- Current milestone: Mac multi-range 0.3
+- Updated: 2026-08-24
+- Source: `HUMAN_CHECK.md`
 
 優先度はP0（次回確認を妨げる）、P1（次回確認に必要）、P2（その後の改善）の順。
+
+## Mac multi-range 0.3
+
+### TRIM-010 — 複数の残す区間を編集する
+
+- Priority: P0
+- Status: Implemented; automated checks pass, human check pending
+- Scope: integer timestamp segments, overlap rejection, selection, update, delete, output-order move, Undo/Redo
+
+### TRIM-011 — 区間リストを連続プレビューする
+
+- Priority: P0
+- Status: Implemented; human timing check pending
+- Scope: selected-segment preview, ordered sequence preview, gap skipping, final-OUT stop, manual-operation cancellation
+
+### TRIM-012 — 複数区間を1本へ書き出す
+
+- Priority: P0
+- Status: Implemented; generated-media checks pass locally
+- Scope: Accurate and Fast temporary segments, concat stage, combined progress, cancellation cleanup, output validation
+
+### TRIM-013 — 音声ストリームを選択する
+
+- Priority: P1
+- Status: Implemented; multi-audio human check pending
+- Scope: ffprobe stream inspection, Japanese display labels, absolute FFmpeg stream mapping
+
+### TRIM-014 — 長尺向け専用タイムライン
+
+- Priority: P1
+- Status: Next after the 0.3 human check
+- Scope: zoom, pan, segment-edge dragging, thumbnails or waveform, keyframe snapping
+
+### TRIM-015 — Accurate出力ポリシーを製品化する
+
+- Priority: P1
+- Status: Open
+- Scope: encoder usability probe, quality policy, VFR PTS, interlace, HDR/color/rotation metadata, diagnostics
 
 ## PoC 0.2
 

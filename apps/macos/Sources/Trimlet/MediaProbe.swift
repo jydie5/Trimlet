@@ -2,6 +2,24 @@ import Foundation
 import TrimletCore
 
 enum MediaProbe {
+    struct AudioStreamInfo: Identifiable, Hashable, Sendable {
+        let index: Int
+        let codecName: String
+        let channels: Int?
+        let language: String?
+        let title: String?
+
+        var id: Int { index }
+
+        var displayName: String {
+            var parts = ["音声 \(index)", codecName.uppercased()]
+            if let channels { parts.append("\(channels)ch") }
+            if let language, !language.isEmpty { parts.append(language) }
+            if let title, !title.isEmpty, title != "SoundHandler" { parts.append(title) }
+            return parts.joined(separator: " · ")
+        }
+    }
+
     struct OutputValidation: Sendable {
         let isValid: Bool
         let message: String
@@ -48,6 +66,71 @@ enum MediaProbe {
         let duration: String?
     }
 
+    private struct AudioDocument: Decodable {
+        let streams: [AudioStream]?
+    }
+
+    private struct AudioStream: Decodable {
+        let index: Int
+        let codecName: String?
+        let channels: Int?
+        let tags: AudioTags?
+
+        enum CodingKeys: String, CodingKey {
+            case index
+            case codecName = "codec_name"
+            case channels
+            case tags
+        }
+    }
+
+    private struct AudioTags: Decodable {
+        let language: String?
+        let title: String?
+        let handlerName: String?
+
+        enum CodingKeys: String, CodingKey {
+            case language
+            case title
+            case handlerName = "handler_name"
+        }
+    }
+
+    static func audioStreams(at url: URL, ffprobeURL: URL) async -> [AudioStreamInfo] {
+        await Task.detached(priority: .userInitiated) {
+            let process = Process()
+            process.executableURL = ffprobeURL
+            process.arguments = [
+                "-v", "error",
+                "-select_streams", "a",
+                "-show_entries", "stream=index,codec_name,channels:stream_tags=language,title,handler_name",
+                "-of", "json",
+                url.path
+            ]
+            let output = Pipe()
+            process.standardOutput = output
+            process.standardError = FileHandle.nullDevice
+            do {
+                try process.run()
+                process.waitUntilExit()
+                guard process.terminationStatus == 0 else { return [] }
+                let data = output.fileHandleForReading.readDataToEndOfFile()
+                let document = try JSONDecoder().decode(AudioDocument.self, from: data)
+                return (document.streams ?? []).map { stream in
+                    AudioStreamInfo(
+                        index: stream.index,
+                        codecName: stream.codecName ?? "unknown",
+                        channels: stream.channels,
+                        language: stream.tags?.language,
+                        title: stream.tags?.title ?? stream.tags?.handlerName
+                    )
+                }
+            } catch {
+                return []
+            }
+        }.value
+    }
+
     static func keyframeIndex(from data: Data, duration: Double) throws -> KeyframeIndex {
         let document = try JSONDecoder().decode(PacketDocument.self, from: data)
         let start = document.streams?.first?.startTime.flatMap(Double.init) ?? 0
@@ -63,6 +146,7 @@ enum MediaProbe {
         at url: URL,
         expectedDuration: Double,
         expectsAudio: Bool,
+        durationTolerance: Double = 1,
         ffprobeURL: URL
     ) -> OutputValidation {
         let process = Process()
@@ -98,8 +182,8 @@ enum MediaProbe {
                   let duration = Double(durationText), duration.isFinite, duration > 0.001 else {
                 return OutputValidation(isValid: false, message: "出力時間を確認できません。", duration: nil)
             }
-            let maximumReasonableDuration = max(expectedDuration * 2, expectedDuration + 5)
-            guard duration <= maximumReasonableDuration else {
+            let allowedDifference = max(0.05, durationTolerance)
+            guard abs(duration - expectedDuration) <= allowedDifference else {
                 return OutputValidation(isValid: false, message: "出力時間が指定範囲から大きく外れています。", duration: duration)
             }
             return OutputValidation(isValid: true, message: "映像と出力時間を確認しました。", duration: duration)

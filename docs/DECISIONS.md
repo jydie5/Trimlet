@@ -131,6 +131,16 @@ This log records decisions that define Trimlet. Change a decision by adding a ne
 - Interface: Treat the application as a focused desktop work surface. Keep public taglines and general product explanations in README, release, or About material unless the text changes the user's next action. See `docs/PRODUCT_DESIGN.md`.
 - Consequence: A future Windows binary remains blocked on packaging, dependency provenance and notices, original artwork, signing, an SBOM, and clean-machine verification.
 
+### D-016: Add an ordered multi-range workflow without becoming a general NLE
+
+- Date: 2026-08-24
+- Status: Accepted; supersedes the one-range limit in D-005 while retaining its single-source intent
+- Decision: Keep one source file, but allow multiple non-overlapping retained IN/OUT segments with explicit output order, undo/redo, sequence preview, audio selection, and one combined export.
+- Boundary: Do not add multiple source clips, tracks, transitions, titles, effects, or independent audio editing in this milestone.
+- Fast terminology: Use the user-facing label `Fast` / `高速`, not `lossless` / `無劣化`. Video is stream-copied when compatible, but keyframe expansion and possible audio conversion must remain visible.
+- Shared contract: Store retained boundaries as integer timestamp values plus timescales and expose the edit-list contract to both native implementations.
+- Detail: See `docs/milestones/MAC_MULTI_RANGE_0.3.md` and `docs/architecture/MULTI_RANGE_EDITING.md`.
+
 ## Proposed decisions awaiting validation
 
 ### P-001: Project structure

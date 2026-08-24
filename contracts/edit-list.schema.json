@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trimlet.dev/contracts/edit-list.schema.json",
+  "title": "Trimlet edit list",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "segments"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "segments": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/segment" }
+    }
+  },
+  "$defs": {
+    "timestamp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "timescale"],
+      "properties": {
+        "value": { "type": "integer", "minimum": 0 },
+        "timescale": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "segment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "in", "out"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "in": { "$ref": "#/$defs/timestamp" },
+        "out": { "$ref": "#/$defs/timestamp" }
+      }
+    }
+  }
+}

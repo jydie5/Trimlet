@@ -66,13 +66,8 @@ struct ContentView: View {
                 .font(.title2)
                 .foregroundStyle(.tint)
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text("Trimlet")
-                    .font(.headline)
-                Text("必要なところだけ、すばやく正確に。")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            Text("Trimlet")
+                .font(.headline)
 
             Spacer()
 
@@ -124,6 +119,7 @@ struct ContentView: View {
             playbackButtons
             timeline
             rangeControls
+            editListControls
             exportControls
 
             HStack(spacing: 8) {
@@ -141,7 +137,7 @@ struct ContentView: View {
                 }
                 .font(.caption)
                 .help("任意のカンパです。機能解放や利用条件の変更はありません。")
-                Text("PoC")
+                Text("0.3 開発版")
                     .font(.caption2.weight(.semibold))
                     .padding(.horizontal, 7)
                     .padding(.vertical, 3)
@@ -209,7 +205,7 @@ struct ContentView: View {
                 .font(.system(.body, design: .monospaced))
                 .foregroundStyle(.secondary)
         }
-        .disabled(!controller.hasMedia)
+        .disabled(!controller.hasMedia || controller.isExporting)
     }
 
     private var timeline: some View {
@@ -217,12 +213,14 @@ struct ContentView: View {
             RangeBar(
                 duration: controller.durationSeconds,
                 current: controller.currentSeconds,
-                inPoint: controller.trimRange.inPoint,
-                outPoint: controller.trimRange.outPoint,
+                draftInPoint: controller.trimRange.inPoint,
+                draftOutPoint: controller.trimRange.outPoint,
+                segments: controller.editList.segments,
+                selectedSegmentID: controller.selectedSegmentID,
                 keyframes: controller.keyframeIndex?.keyframes ?? [],
-                fastCandidate: controller.exportMode == .fast ? controller.fastCandidate : nil
+                fastCandidates: controller.exportMode == .fast ? controller.fastCandidates : [:]
             )
-            .frame(height: 20)
+            .frame(height: 28)
 
             Slider(
                 value: Binding(
@@ -237,7 +235,7 @@ struct ContentView: View {
                 if let index = controller.keyframeIndex {
                     Label("キーフレーム \(index.keyframes.count)個", systemImage: "line.3.horizontal.decrease")
                     if controller.exportMode == .fast, let candidate = controller.fastCandidate {
-                        Text("高速候補 \(shortTime(candidate.start))–\(shortTime(candidate.end))")
+                        Text("下書き高速候補 \(shortTime(candidate.start))–\(shortTime(candidate.end))")
                             .foregroundStyle(.orange)
                     } else if controller.exportMode == .fast {
                         Text("この範囲は正確モードを推奨")
@@ -259,48 +257,172 @@ struct ContentView: View {
     }
 
     private var rangeControls: some View {
-        HStack(spacing: 10) {
-            Button("INを設定", systemImage: "inset.filled.leadinghalf.rectangle") {
-                controller.setInPoint()
+        VStack(spacing: 8) {
+            HStack(spacing: 10) {
+                Button("INを設定", systemImage: "inset.filled.leadinghalf.rectangle") {
+                    controller.setInPoint()
+                }
+                .help("現在位置をIN点に設定（I）")
+
+                Button("INへ") {
+                    controller.goToInPoint()
+                }
+
+                Spacer()
+
+                VStack(spacing: 2) {
+                    Text("下書き範囲")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(controller.selectedDurationText)
+                        .font(.system(.body, design: .monospaced).weight(.semibold))
+                        .foregroundStyle(controller.trimRange.isValid ? Color.primary : Color.red)
+                }
+
+                Button("下書きを再生", systemImage: "play.rectangle") {
+                    controller.previewSelection()
+                }
+                .disabled(!controller.trimRange.isValid)
+
+                Spacer()
+
+                Button("OUTへ") {
+                    controller.goToOutPoint()
+                }
+
+                Button("OUTを設定", systemImage: "inset.filled.trailinghalf.rectangle") {
+                    controller.setOutPoint()
+                }
+                .help("現在位置をOUT点に設定（O）")
             }
-            .help("現在位置をIN点に設定（I）")
 
-            Button("INへ") {
-                controller.goToInPoint()
-            }
+            HStack(spacing: 8) {
+                Button("区間に追加", systemImage: "plus") {
+                    controller.addDraftSegment()
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!controller.trimRange.isValid)
 
-            Spacer()
+                Button("選択区間を更新", systemImage: "arrow.triangle.2.circlepath") {
+                    controller.updateSelectedSegment()
+                }
+                .disabled(controller.selectedSegmentID == nil || !controller.trimRange.isValid)
 
-            VStack(spacing: 2) {
-                Text("選択範囲")
-                    .font(.caption)
+                Text("IN/OUTは区間へ追加するまで下書きです")
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
-                Text(controller.selectedDurationText)
-                    .font(.system(.body, design: .monospaced).weight(.semibold))
-                    .foregroundStyle(controller.trimRange.isValid ? Color.primary : Color.red)
+                Spacer()
             }
-
-            Button("選択範囲を再生", systemImage: "play.rectangle") {
-                controller.previewSelection()
-            }
-            .disabled(!controller.trimRange.isValid)
-
-            Spacer()
-
-            Button("OUTへ") {
-                controller.goToOutPoint()
-            }
-
-            Button("OUTを設定", systemImage: "inset.filled.trailinghalf.rectangle") {
-                controller.setOutPoint()
-            }
-            .help("現在位置をOUT点に設定（O）")
         }
-        .disabled(!controller.hasMedia)
+        .disabled(!controller.hasMedia || controller.isExporting)
+    }
+
+    @ViewBuilder
+    private var editListControls: some View {
+        if !controller.editList.isEmpty {
+            VStack(spacing: 8) {
+                HStack(spacing: 8) {
+                    Label("区間リスト", systemImage: "list.number")
+                        .font(.caption.weight(.semibold))
+                    Text("\(controller.editList.segments.count)区間 · 合計 \(controller.totalDurationText)")
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("すべて再生", systemImage: "play.fill") {
+                        controller.previewAllSegments()
+                    }
+                    Button("取り消す", systemImage: "arrow.uturn.backward") {
+                        controller.undoEdit()
+                    }
+                    .labelStyle(.iconOnly)
+                    .keyboardShortcut("z", modifiers: .command)
+                    .disabled(!controller.canUndoEdit)
+                    .help("区間編集を取り消す（⌘Z）")
+                    Button("やり直す", systemImage: "arrow.uturn.forward") {
+                        controller.redoEdit()
+                    }
+                    .labelStyle(.iconOnly)
+                    .keyboardShortcut("z", modifiers: [.command, .shift])
+                    .disabled(!controller.canRedoEdit)
+                    .help("区間編集をやり直す（⇧⌘Z）")
+                }
+
+                ScrollView(.horizontal) {
+                    HStack(spacing: 6) {
+                        ForEach(Array(controller.editList.segments.enumerated()), id: \.element.id) { index, segment in
+                            Button {
+                                controller.selectSegment(segment.id)
+                            } label: {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("\(index + 1)")
+                                        .font(.caption2.weight(.bold))
+                                    Text("\(shortTime(segment.inPoint.seconds))–\(shortTime(segment.outPoint.seconds))")
+                                        .font(.system(.caption2, design: .monospaced))
+                                    Text(TimecodeFormatter.string(seconds: segment.durationSeconds, framesPerSecond: controller.nominalFrameRate))
+                                        .font(.system(.caption2, design: .monospaced))
+                                        .foregroundStyle(.secondary)
+                                    if controller.exportMode == .fast {
+                                        if let candidate = controller.fastCandidates[segment.id] ?? nil {
+                                            Text("高速 \(shortTime(candidate.start))–\(shortTime(candidate.end))")
+                                                .font(.system(.caption2, design: .monospaced))
+                                                .foregroundStyle(.orange)
+                                        } else {
+                                            Text("高速不可")
+                                                .font(.caption2.weight(.semibold))
+                                                .foregroundStyle(.orange)
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal, 9)
+                                .padding(.vertical, 6)
+                                .background(
+                                    controller.selectedSegmentID == segment.id
+                                        ? Color.accentColor.opacity(0.22)
+                                        : Color.secondary.opacity(0.08),
+                                    in: RoundedRectangle(cornerRadius: 7)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+                .scrollIndicators(.hidden)
+
+                HStack(spacing: 8) {
+                    Button("選択区間を再生", systemImage: "play.rectangle") {
+                        controller.previewSelectedSegment()
+                    }
+                    Button("前へ移動", systemImage: "arrow.left") {
+                        controller.moveSelectedSegment(by: -1)
+                    }
+                    Button("後へ移動", systemImage: "arrow.right") {
+                        controller.moveSelectedSegment(by: 1)
+                    }
+                    Button("削除", systemImage: "trash", role: .destructive) {
+                        controller.removeSelectedSegment()
+                    }
+                    Spacer()
+                }
+                .disabled(controller.selectedSegmentID == nil)
+            }
+            .padding(10)
+            .background(.quaternary.opacity(0.45), in: RoundedRectangle(cornerRadius: 10))
+            .disabled(controller.isExporting)
+        }
     }
 
     private var exportControls: some View {
         HStack(alignment: .center, spacing: 12) {
+            if controller.audioStreams.count > 1 {
+                Picker("音声", selection: $controller.selectedAudioStreamIndex) {
+                    ForEach(controller.audioStreams) { stream in
+                        Text(stream.displayName).tag(Optional(stream.index))
+                    }
+                }
+                .frame(maxWidth: 250)
+                .help("書き出しに使用する音声トラック")
+            }
+
             Picker("書き出し", selection: $controller.exportMode) {
                 ForEach(ExportMode.allCases) { mode in
                     Text(mode.title).tag(mode)
@@ -406,20 +528,20 @@ struct ContentView: View {
 private struct RangeBar: View {
     let duration: Double
     let current: Double
-    let inPoint: Double?
-    let outPoint: Double?
+    let draftInPoint: Double?
+    let draftOutPoint: Double?
+    let segments: [EditSegment]
+    let selectedSegmentID: UUID?
     let keyframes: [Double]
-    let fastCandidate: FastCutCandidate?
+    let fastCandidates: [UUID: FastCutCandidate?]
 
     var body: some View {
         GeometryReader { geometry in
             let width = geometry.size.width
             let safeDuration = max(duration, 0.01)
-            let start = min(max((inPoint ?? 0) / safeDuration, 0), 1)
-            let end = min(max((outPoint ?? duration) / safeDuration, 0), 1)
+            let draftStart = min(max((draftInPoint ?? 0) / safeDuration, 0), 1)
+            let draftEnd = min(max((draftOutPoint ?? duration) / safeDuration, 0), 1)
             let playhead = min(max(current / safeDuration, 0), 1)
-            let candidateStart = min(max((fastCandidate?.start ?? 0) / safeDuration, 0), 1)
-            let candidateEnd = min(max((fastCandidate?.end ?? 0) / safeDuration, 0), 1)
             let markStride = max(1, keyframes.count / max(1, Int(width / 5)))
             let visibleKeyframes = Array(keyframes.enumerated()).filter { $0.offset % markStride == 0 }
 
@@ -427,18 +549,34 @@ private struct RangeBar: View {
                 Capsule()
                     .fill(.quaternary)
 
-                if fastCandidate != nil, candidateEnd > candidateStart {
-                    RoundedRectangle(cornerRadius: 5)
-                        .stroke(Color.orange, lineWidth: 2)
-                        .frame(width: width * (candidateEnd - candidateStart), height: 18)
-                        .offset(x: width * candidateStart)
+                ForEach(segments) { segment in
+                    let start = min(max(segment.inPoint.seconds / safeDuration, 0), 1)
+                    let end = min(max(segment.outPoint.seconds / safeDuration, 0), 1)
+                    if let candidate = fastCandidates[segment.id] ?? nil {
+                        let candidateStart = min(max(candidate.start / safeDuration, 0), 1)
+                        let candidateEnd = min(max(candidate.end / safeDuration, 0), 1)
+                        RoundedRectangle(cornerRadius: 5)
+                            .stroke(Color.orange, lineWidth: 2)
+                            .frame(width: width * (candidateEnd - candidateStart), height: 24)
+                            .offset(x: width * candidateStart)
+                    }
+                    if end > start {
+                        RoundedRectangle(cornerRadius: 5)
+                            .fill(
+                                segment.id == selectedSegmentID
+                                    ? Color.accentColor.opacity(0.85)
+                                    : Color.accentColor.opacity(0.48)
+                            )
+                            .frame(width: width * (end - start), height: 18)
+                            .offset(x: width * start)
+                    }
                 }
 
-                if end > start {
-                    Capsule()
-                        .fill(Color.accentColor.opacity(0.55))
-                        .frame(width: width * (end - start))
-                        .offset(x: width * start)
+                if draftEnd > draftStart {
+                    RoundedRectangle(cornerRadius: 5)
+                        .stroke(Color.white.opacity(0.9), style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+                        .frame(width: width * (draftEnd - draftStart), height: 26)
+                        .offset(x: width * draftStart)
                 }
 
                 Rectangle()
