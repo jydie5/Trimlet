@@ -17,6 +17,7 @@
 - Shared shell contract validation passed 2 export cases, 2 edit-list cases, and 9 shared error codes.
 - Release-readiness, shell syntax, and whitespace checks passed.
 - Release application bundle build, ad-hoc signing, launch, and initial multi-range UI rendering passed.
+- GitHub Draft PR #4 passed both macOS build/integration jobs, both Windows validation jobs, shared contract validation, and repository security checks.
 
 Run the principal checks with:
 
