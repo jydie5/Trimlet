@@ -1,6 +1,6 @@
 # Mac multi-range milestone 0.3
 
-- Status: Implemented; range-flow redesign awaiting human check
+- Status: Implemented; professional terminology and drag reorder awaiting human check
 - Defined: 2026-08-24
 - Goal: Reach the next human check with useful multi-cut editing while preserving Trimlet's focused single-source product.
 
@@ -12,14 +12,15 @@ This milestone does not attempt to become a general non-linear editor. It adds n
 
 ## Required user behavior
 
-1. Follow the visible `1 Start → 2 End → 3 Keep this range` sequence.
-2. See the editor clear after the retained segment appears in the always-visible output section.
-3. Select a segment to enter a distinct edit state, then update it, remove it, or move it earlier/later in output order.
-4. Undo and redo edit-list changes.
-5. See retained segments, the active draft, playhead, keyframes, and Fast candidates on one timeline.
-6. Preview the draft, one selected segment, or all retained segments continuously.
-7. Select the source audio stream when more than one exists.
-8. Export all retained segments to one destination.
+1. Follow the visible `1 IN → 2 OUT → 3 Add to Sequence` flow to create a subclip.
+2. See the editor clear after the clip appears in the always-visible editing sequence.
+3. Select a clip to enter a distinct trim state, then apply the trim, remove it, or move it earlier/later in sequence order.
+4. Drag clips directly to rearrange the editing sequence; use earlier/later buttons as an equivalent alternative.
+5. Undo and redo sequence changes.
+6. See retained clips, the active draft, playhead, keyframes, and Fast candidates on the source timeline.
+7. Preview the draft, one selected clip, or the complete sequence continuously.
+8. Select the source audio stream when more than one exists.
+9. Export all retained clips to one destination.
 
 ## Export policy
 

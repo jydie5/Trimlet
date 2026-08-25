@@ -19,15 +19,17 @@ SwiftUI and AVFoundation use seconds only at their adapter boundary. The retaine
 The Mac controller keeps:
 
 - one mutable draft `TrimRange` for the current IN/OUT controls;
-- one canonical `EditList` for retained output segments;
-- an optional selected segment identifier;
+- one canonical `EditList` backing the user-visible editing sequence;
+- an optional selected clip identifier;
 - undo and redo stacks containing prior edit-list snapshots;
 - an optional preview sequence cursor;
 - inspected audio streams and the selected absolute FFmpeg stream index.
 
 Opening a new source resets all of this state. Loading a segment into the draft does not mutate the edit list until Update is chosen.
 
-New-segment mode starts with both draft boundaries unset. Adding a valid segment clears the draft and selection so the next action is unambiguously the start of another segment. Selecting a retained segment changes the editor to edit mode; Add is removed from that state and Update becomes the only commit action.
+New-subclip mode starts with both draft boundaries unset. Adding a valid subclip clears the draft and selection so the next action is unambiguously the start of another subclip. Selecting a retained clip changes the editor to trim mode; Add to Sequence is removed from that state and Apply Trim becomes the only commit action.
+
+Each newly created segment also receives a monotonically increasing `clipNumber`. This is creation identity for display, not sequence position: moving `クリップ 003` to the first slot displays `順番 1・クリップ 003`. Trimming and reordering preserve that number. A UUID remains the machine identity.
 
 ## Preview state machine
 
@@ -48,13 +50,19 @@ Progress is weighted by retained source duration across segment stages. The fina
 The media-first layout remains, but the editing hierarchy is explicit:
 
 1. the source timeline renders the playhead, retained segments, start/end markers, keyframes, and Fast candidates in one place;
-2. new-segment mode is a left-to-right `1 Start → 2 End → 3 Keep this range` flow;
+2. new-subclip mode is a left-to-right `1 IN → 2 OUT → 3 Add to Sequence` flow;
 3. start and end are unset on source open, step 2 is unavailable before step 1, and step 3 is unavailable until the range is valid;
 4. the output section is always visible, including an empty state that points back to steps 1–3;
-5. retained cards are arranged in output order and selecting one visibly changes the range editor into Update mode;
-6. Add and Update are never presented as simultaneous primary actions;
-7. audio selection appears only when the source has multiple audio streams.
+5. clip cards are arranged in sequence order; selecting one visibly changes the editor into Trim mode;
+6. a clip can be dragged directly to another position, while earlier/later buttons provide the same order change without dragging;
+7. clip cards show stable incremental clip names separately from their current sequence position;
+8. Add to Sequence and Apply Trim are never presented as simultaneous primary actions;
+9. audio selection appears only when the source has multiple audio streams.
 
 This borrows AviUtl/ExEdit2's useful principle that the time-axis object and the operation result remain visually connected. It does not copy the multi-layer NLE surface, because Trimlet still has one source and one retained-output sequence.
+
+The current editing sequence is order-based and contiguous. Dragging changes clip order; it does not store an absolute sequence start time, create empty space, overlap clips, or move a clip between tracks. Those interactions require a sequence-time model and are a separate professional-timeline milestone.
+
+Representative thumbnails are intentionally separate from identity. They should be generated near each IN point asynchronously, cached by source identity and timestamp, and never block opening, scrubbing, or reordering long media.
 
 No permanent tutorial paragraph is added to the work surface.

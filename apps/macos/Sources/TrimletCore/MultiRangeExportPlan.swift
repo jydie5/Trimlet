@@ -160,9 +160,9 @@ public enum MultiRangeExportPlanError: LocalizedError, Equatable, Sendable {
     public var errorDescription: String? {
         switch self {
         case .emptyEditList:
-            "書き出す編集区間がありません。"
+            "書き出すクリップがありません。"
         case .invalidRange:
-            "編集区間が正しくありません。"
+            "クリップのIN／OUTが正しくありません。"
         case .keyframesUnavailable:
             "高速モードに必要なキーフレーム解析が完了していません。"
         case .noFastCandidate:

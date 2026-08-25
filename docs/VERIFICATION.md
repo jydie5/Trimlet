@@ -18,7 +18,9 @@
 - Release-readiness, shell syntax, and whitespace checks passed.
 - Release application bundle build, ad-hoc signing, launch, and initial multi-range UI rendering passed.
 - GitHub Draft PR #4 passed both macOS build/integration jobs, both Windows validation jobs, shared contract validation, and repository security checks.
-- The 2026-08-25 range-flow redesign opened with both boundaries unset and steps 2/3 unavailable. An accessibility-driven UI check set Start at 0 s, moved to 5 s, set End, committed the range, observed the output card, and confirmed that the editor reset to empty new-segment mode. Selecting the card visibly entered Update mode.
+- The 2026-08-25 range-flow redesign opened with both boundaries unset and steps 2/3 unavailable. An accessibility-driven UI check set IN at 0 s, moved to 5 s, set OUT, added the subclip to the editing sequence, and confirmed that the editor reset to empty new-subclip mode. Selecting the clip visibly entered Trim mode.
+- The professional terminology pass rendered Source Timeline, Subclip, Clip, Editing Sequence, and Trim consistently. A three-clip UI exercise dragged a clip to a new position; the cards reordered immediately, the moved clip remained selected, and the trim controls stayed usable.
+- Stable clip labels were verified with two created clips: after dragging the second clip before the first, the cards displayed `順番 1・クリップ 002` followed by `順番 2・クリップ 001`. Core checks also preserve the creation number through reorder and trim mutations.
 
 Run the principal checks with:
 

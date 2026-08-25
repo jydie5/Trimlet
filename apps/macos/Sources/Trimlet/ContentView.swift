@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     @StateObject private var controller = PlayerController()
     @State private var isDropTargeted = false
+    @State private var dropTargetSegmentID: UUID?
     @State private var didHandleLaunchArgument = false
 
     var body: some View {
@@ -211,9 +212,9 @@ struct ContentView: View {
     private var timeline: some View {
         VStack(spacing: 6) {
             HStack {
-                Label("元動画の時間軸", systemImage: "film")
+                Label("ソースタイムライン", systemImage: "film")
                     .font(.caption.weight(.semibold))
-                Text("青＝出力する区間　緑／赤＝作成中の開始／終了")
+                Text("青＝シーケンスのクリップ　緑／赤＝IN／OUT")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -265,6 +266,11 @@ struct ContentView: View {
         String(format: "%.3fs", seconds)
     }
 
+    private func clipLabel(_ segment: EditSegment, fallbackIndex: Int) -> String {
+        let number = segment.clipNumber ?? fallbackIndex + 1
+        return "クリップ \(String(format: "%03d", number))"
+    }
+
     private func pointTime(_ seconds: Double?) -> String {
         guard let seconds else { return "未設定" }
         return TimecodeFormatter.string(
@@ -280,10 +286,10 @@ struct ContentView: View {
             HStack(alignment: .top, spacing: 8) {
                 rangeStep(
                     number: 1,
-                    title: "開始点",
+                    title: "IN点",
                     value: controller.trimRange.inPoint,
                     tint: .green,
-                    actionTitle: "現在位置を開始に",
+                    actionTitle: "現在位置をIN点に",
                     action: { controller.setInPoint() },
                     jump: controller.trimRange.inPoint == nil ? nil : { controller.goToInPoint() }
                 )
@@ -293,10 +299,10 @@ struct ContentView: View {
 
                 rangeStep(
                     number: 2,
-                    title: "終了点",
+                    title: "OUT点",
                     value: controller.trimRange.outPoint,
                     tint: .red,
-                    actionTitle: "現在位置を終了に",
+                    actionTitle: "現在位置をOUT点に",
                     action: { controller.setOutPoint() },
                     jump: controller.trimRange.outPoint == nil ? nil : { controller.goToOutPoint() },
                     isActionDisabled: controller.trimRange.inPoint == nil
@@ -315,17 +321,17 @@ struct ContentView: View {
     private var rangeControlHeader: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(controller.selectedSegmentID == nil ? "新しい区間を作る" : "選択した区間を編集")
+                Text(controller.selectedSegmentID == nil ? "サブクリップを作成" : "クリップをトリム")
                     .font(.headline)
                 Text(controller.selectedSegmentID == nil
-                     ? "再生位置を動かし、① → ② → ③の順に操作します"
-                     : "開始／終了を変更し、③変更を保存します")
+                     ? "ソースの範囲を ①IN → ②OUT で指定し、③シーケンスへ追加します"
+                     : "IN／OUTを変更し、③トリムを適用します")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
             if controller.selectedSegmentID != nil {
-                Button("新しい区間に戻る", systemImage: "plus") {
+                Button("新規サブクリップ", systemImage: "plus") {
                     controller.startNewSegment()
                 }
             }
@@ -335,7 +341,7 @@ struct ContentView: View {
     private var rangeCommitStep: some View {
         VStack(alignment: .leading, spacing: 7) {
             Label {
-                Text(controller.selectedSegmentID == nil ? "出力へ追加" : "変更を確定")
+                Text(controller.selectedSegmentID == nil ? "シーケンスへ追加" : "トリムを確定")
                     .font(.caption.weight(.semibold))
             } icon: {
                 Text("3")
@@ -345,12 +351,12 @@ struct ContentView: View {
                     .foregroundStyle(.white)
             }
 
-            Text(controller.trimRange.isValid ? controller.selectedDurationText : "開始と終了を設定")
+            Text(controller.trimRange.isValid ? controller.selectedDurationText : "IN点とOUT点を設定")
                 .font(.system(.caption, design: .monospaced).weight(.semibold))
                 .foregroundStyle(controller.trimRange.isValid ? Color.primary : Color.secondary)
 
             HStack {
-                Button(controller.selectedSegmentID == nil ? "この範囲を残す" : "変更を保存",
+                Button(controller.selectedSegmentID == nil ? "シーケンスへ追加" : "トリムを適用",
                        systemImage: controller.selectedSegmentID == nil ? "plus" : "checkmark") {
                     if controller.selectedSegmentID == nil {
                         controller.addDraftSegment()
@@ -415,15 +421,15 @@ struct ContentView: View {
     private var editListControls: some View {
         VStack(spacing: 8) {
             HStack(spacing: 8) {
-                Label("出力される区間", systemImage: "list.number")
+                Label("編集シーケンス", systemImage: "list.number")
                     .font(.caption.weight(.semibold))
                 Text(controller.editList.isEmpty
                      ? "まだありません"
-                     : "左から順に \(controller.editList.segments.count)区間 · 合計 \(controller.totalDurationText)")
+                     : "左から順に \(controller.editList.segments.count)クリップ · 合計 \(controller.totalDurationText)")
                     .font(.system(.caption, design: .monospaced))
                     .foregroundStyle(.secondary)
                 Spacer()
-                Button("出力順に再生", systemImage: "play.fill") {
+                Button("シーケンスを再生", systemImage: "play.fill") {
                     controller.previewAllSegments()
                 }
                 .disabled(controller.editList.isEmpty)
@@ -446,7 +452,7 @@ struct ContentView: View {
             if controller.editList.isEmpty {
                 HStack(spacing: 8) {
                     Image(systemName: "arrow.up")
-                    Text("上の①開始点 → ②終了点 → ③この範囲を残す、で追加されます")
+                    Text("上で①IN点 → ②OUT点を指定し、③シーケンスへ追加します")
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -460,8 +466,16 @@ struct ContentView: View {
                                 controller.selectSegment(segment.id)
                             } label: {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("区間 \(index + 1)")
-                                        .font(.caption2.weight(.bold))
+                                    HStack(spacing: 6) {
+                                        Text("順番 \(index + 1)")
+                                            .font(.caption2)
+                                            .foregroundStyle(.secondary)
+                                        Text(clipLabel(segment, fallbackIndex: index))
+                                            .font(.caption2.weight(.bold))
+                                        Image(systemName: "line.3.horizontal")
+                                            .font(.caption2)
+                                            .foregroundStyle(.secondary)
+                                    }
                                     Text("\(shortTime(segment.inPoint.seconds))–\(shortTime(segment.outPoint.seconds))")
                                         .font(.system(.caption2, design: .monospaced))
                                     Text(TimecodeFormatter.string(seconds: segment.durationSeconds, framesPerSecond: controller.nominalFrameRate))
@@ -482,23 +496,46 @@ struct ContentView: View {
                                 .padding(.horizontal, 9)
                                 .padding(.vertical, 6)
                                 .background(
-                                    controller.selectedSegmentID == segment.id
-                                        ? Color.accentColor.opacity(0.22)
-                                        : Color.secondary.opacity(0.08),
+                                    dropTargetSegmentID == segment.id
+                                        ? Color.accentColor.opacity(0.38)
+                                        : controller.selectedSegmentID == segment.id
+                                            ? Color.accentColor.opacity(0.22)
+                                            : Color.secondary.opacity(0.08),
                                     in: RoundedRectangle(cornerRadius: 7)
                                 )
                             }
                             .buttonStyle(.plain)
+                            .draggable(segment.id.uuidString) {
+                                Label(clipLabel(segment, fallbackIndex: index), systemImage: "line.3.horizontal")
+                                    .padding(8)
+                                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 7))
+                            }
+                            .dropDestination(for: String.self) { items, _ in
+                                guard let rawID = items.first,
+                                      let sourceID = UUID(uuidString: rawID),
+                                      sourceID != segment.id else {
+                                    return false
+                                }
+                                return controller.moveSegment(sourceID, to: index)
+                            } isTargeted: { isTargeted in
+                                if isTargeted {
+                                    dropTargetSegmentID = segment.id
+                                } else if dropTargetSegmentID == segment.id {
+                                    dropTargetSegmentID = nil
+                                }
+                            }
                         }
                     }
                 }
                 .scrollIndicators(.hidden)
 
                 HStack(spacing: 8) {
-                    Text(controller.selectedSegmentID == nil ? "区間をクリックすると編集できます" : "選択中の区間を操作")
+                    Text(controller.selectedSegmentID == nil
+                         ? "ドラッグで並べ替え · クリックでトリム"
+                         : "ドラッグで並べ替え · 選択中のクリップを操作")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                    Button("この区間を再生", systemImage: "play.rectangle") {
+                    Button("クリップを再生", systemImage: "play.rectangle") {
                         controller.previewSelectedSegment()
                     }
                     Button("前へ移動", systemImage: "arrow.left") {

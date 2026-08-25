@@ -14,7 +14,7 @@
 - Status: Implemented; automated checks pass, human check pending
 - Scope: integer timestamp segments, overlap rejection, selection, update, delete, output-order move, Undo/Redo
 
-### TRIM-011 — 区間リストを連続プレビューする
+### TRIM-011 — 編集シーケンスを連続プレビューする
 
 - Priority: P0
 - Status: Implemented; human timing check pending
@@ -49,7 +49,32 @@
 - Priority: P0
 - Status: Implemented; human check pending
 - Reported: 2026-08-25 human check showed that Add-before-IN/OUT and IN/OUT-before-Add were indistinguishable
-- Scope: empty initial boundaries, numbered Start → End → Keep flow, always-visible output section, separate new/edit modes, post-add reset
+- Scope: empty initial boundaries, numbered IN → OUT → Add to Sequence flow, always-visible editing sequence, separate new-subclip/trim modes, post-add reset
+
+### TRIM-017 — 編集シーケンスを直接並べ替える
+
+- Priority: P0
+- Status: Implemented; human check pending
+- Scope: drag-and-drop clip reordering, visible drop target, earlier/later accessibility alternative, undo/redo compatibility
+
+### TRIM-018 — 時間配置型のプロ向けタイムライン
+
+- Priority: P1
+- Status: Open; separate design milestone
+- Scope: absolute sequence positions, empty gaps, snapping, overlaps or transitions, multiple visual/audio tracks, zoom and pan
+- Boundary: Current drag operation changes the order of contiguous clips only. Do not simulate free placement until project storage, preview, export, and undo all share a sequence-time model.
+
+### TRIM-019 — 並べ替えても変わらないクリップ名
+
+- Priority: P0
+- Status: Implemented; human check pending
+- Scope: creation-order labels `クリップ 001…`, separate sequence-position display, preservation through trim/reorder/undo data snapshots
+
+### TRIM-020 — クリップカードの代表サムネイル
+
+- Priority: P1
+- Status: Open
+- Scope: image near IN point, asynchronous generation, source/timestamp cache key, cancellation, long-media memory limit, placeholder and failure state
 
 ## PoC 0.2
 

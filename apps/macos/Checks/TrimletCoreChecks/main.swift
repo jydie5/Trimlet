@@ -94,11 +94,13 @@ require(MediaTimestamp(seconds: 1.5) == MediaTimestamp(value: 3, timescale: 2), 
 
 let intro = EditSegment(
     inPoint: MediaTimestamp(seconds: 1),
-    outPoint: MediaTimestamp(seconds: 2.5)
+    outPoint: MediaTimestamp(seconds: 2.5),
+    clipNumber: 1
 )
 let ending = EditSegment(
     inPoint: MediaTimestamp(seconds: 6),
-    outPoint: MediaTimestamp(seconds: 8)
+    outPoint: MediaTimestamp(seconds: 8),
+    clipNumber: 2
 )
 var editList = try EditList(segments: [ending, intro])
 require(editList.segments.map(\.id) == [ending.id, intro.id], "edit-list order should remain explicit")
@@ -116,13 +118,25 @@ do {
 
 try editList.move(id: intro.id, by: -1)
 require(editList.segments.map(\.id) == [intro.id, ending.id], "segments should be reorderable")
+let middle = EditSegment(
+    inPoint: MediaTimestamp(seconds: 3),
+    outPoint: MediaTimestamp(seconds: 4)
+)
+var dragReorderList = try EditList(segments: [intro, middle, ending])
+try dragReorderList.move(id: intro.id, to: 2)
+require(dragReorderList.segments.map(\.id) == [middle.id, ending.id, intro.id], "a dragged segment should move to its target position")
+try dragReorderList.move(id: intro.id, to: 0)
+require(dragReorderList.segments.map(\.id) == [intro.id, middle.id, ending.id], "a dragged segment should move back to the first position")
+require(dragReorderList.segments.first?.clipNumber == 1, "a clip's creation number should remain stable when reordered")
 let updatedIntro = EditSegment(
     id: intro.id,
     inPoint: MediaTimestamp(seconds: 0.5),
-    outPoint: MediaTimestamp(seconds: 2)
+    outPoint: MediaTimestamp(seconds: 2),
+    clipNumber: intro.clipNumber
 )
 try editList.update(updatedIntro, sourceDuration: MediaTimestamp(seconds: 10))
 require(editList.segments.first?.inPoint.seconds == 0.5, "a retained segment should be updateable")
+require(editList.segments.first?.clipNumber == 1, "trimming a clip should preserve its creation number")
 
 let operationDirectory = URL(fileURLWithPath: "/tmp/trimlet-operation")
 let incompleteOutput = URL(fileURLWithPath: "/tmp/trimlet-output.partial.mp4")

@@ -21,8 +21,11 @@ Both implementations use these concepts and labels:
 | IN point | IN点 | Inclusive start of the selected range |
 | OUT point | OUT点 | End boundary of the selected range |
 | Selected range | 選択範囲 | Interval from IN to OUT; valid only when OUT is later than IN |
-| Edit segment | 編集区間 | One retained source range with a stable identity |
-| Edit list | 区間リスト | Ordered retained ranges that become the output sequence |
+| Source timeline | ソースタイムライン | Source-time view containing the playhead, IN/OUT, and retained ranges |
+| Subclip | サブクリップ | A non-destructive source range created by setting IN and OUT |
+| Clip | クリップ | A retained subclip with a stable identity in the editing sequence |
+| Clip number | クリップ番号 | A creation-order number that remains attached to the same clip when it moves |
+| Editing sequence | 編集シーケンス | Ordered, contiguous clips that become the output |
 | Fast mode | 高速 | Video stream copy where compatible; cut may follow keyframe constraints and audio may require conversion |
 | Accurate mode | フレーム正確 | Timestamp-prioritized export; re-encode when required |
 | Proxy | プロキシ | Temporary preview media; never the final export source |
@@ -37,9 +40,9 @@ Both platforms must support the same primary flow:
 2. Inspect streams and determine preview compatibility.
 3. Provide direct preview or a proxy path without changing the source.
 4. Play, pause, scrub, jump, and step one displayed frame in either direction.
-5. Set a draft IN point and OUT point and add the range to the edit list.
-6. Display, update, remove, reorder, and preview retained edit segments.
-7. Continuously preview the ordered edit list while skipping source gaps.
+5. Set a draft IN point and OUT point and add the subclip to the editing sequence.
+6. Display, trim, remove, drag-reorder, and preview retained clips.
+7. Continuously preview the editing sequence while skipping unused source ranges.
 8. Choose Fast or Accurate export.
 9. Join the edit list into a new MP4 with progress, cancellation, and a recoverable error state.
 10. Move by one frame, ten frames, or five seconds using equivalent visible controls and platform-appropriate shortcuts.
@@ -73,9 +76,11 @@ Platform hardware encoders may produce different binary output. Behavioral parit
 - The canonical internal unit is the source presentation timestamp, represented without assuming a constant frame duration.
 - Project interchange must not store only a human-readable frame number.
 - A range is valid only when `outTimestamp > inTimestamp`.
-- An edit segment has a stable identifier and exactly one valid source range.
-- An edit list preserves explicit output order. Source ranges in one list must not overlap, even when output order differs from source chronology.
-- Draft IN/OUT values are not exported until added to or used to update the edit list.
+- A clip has a stable identifier and exactly one valid source range.
+- A newly created clip receives a stable, increasing clip number. Sequence position is displayed separately and must not rename a clip after reordering.
+- An editing sequence preserves explicit output order. Source ranges in one sequence must not overlap, even when output order differs from source chronology.
+- Draft IN/OUT values are not exported until added to or used to trim a clip in the editing sequence.
+- The current editing sequence is contiguous: moving a clip changes order but does not create a gap, overlap, or track.
 - The UI may display `HH:MM:SS:FF` for constant-frame-rate sources.
 - For variable-frame-rate sources, frame display is informational; saved edit boundaries remain timestamp-based.
 - Seeking and range validation clamp positions to `[0, sourceDuration]`.

@@ -37,9 +37,9 @@ The MVP does not target multi-track editors, colorists, motion-graphics creators
 3. The video becomes operable as soon as practical.
 4. If direct playback is unsuitable, Trimlet offers or starts proxy generation according to the chosen policy.
 5. The user plays, seeks, scrubs, or steps frame by frame.
-6. The user marks an IN point and an OUT point and adds that range to the edit list.
-7. The user repeats marking as needed, then adjusts, removes, or reorders ranges.
-8. Trimlet shows every retained range, total output duration, and a continuous sequence preview.
+6. The user marks an IN point and an OUT point and adds that subclip to the editing sequence.
+7. The user repeats marking as needed, then trims, removes, or reorders clips.
+8. Trimlet shows every clip, total output duration, and a continuous sequence preview.
 9. The user chooses Fast or Accurate export.
 10. Trimlet joins the ordered retained ranges into one new MP4, showing progress and allowing cancellation.
 11. On success, Trimlet validates and reveals the output in Finder or offers to open it.
@@ -72,17 +72,20 @@ Requirement keywords follow MUST, SHOULD, and MAY.
 
 ### 5.3 Range selection
 
-- FR-020: The app MUST provide one segment editor used to create or update an edit segment. New-segment mode MUST begin with both boundaries unset rather than implying that the entire source is selected.
-- FR-021: New-segment mode MUST present the primary workflow in visible order: `1. set start`, `2. set end`, `3. keep this range`. The user MUST also be able to set start and end with keyboard shortcuts.
-- FR-022: The app MUST maintain an ordered edit list containing zero or more retained source ranges.
-- FR-023: Every retained range MUST be visible on the timeline and in a compact segment list.
+- FR-020: The app MUST provide one trim editor used to create a subclip or trim an existing clip. New-subclip mode MUST begin with both boundaries unset rather than implying that the entire source is selected.
+- FR-021: New-subclip mode MUST present the primary workflow in visible order: `1. IN point`, `2. OUT point`, `3. add to sequence`. The user MUST also be able to set IN and OUT with keyboard shortcuts.
+- FR-022: The app MUST maintain an editing sequence containing zero or more ordered clips.
+- FR-023: Every retained range MUST be visible on the source timeline and as a compact clip card in the editing sequence.
+- FR-023A: Every new clip MUST receive a stable incremental label such as `Clip 001`. The UI MUST display sequence position separately so reordering never makes a clip appear to change identity.
 - FR-024: A segment MUST be rejected when IN is not earlier than OUT, lies outside the source, or overlaps another retained source range.
 - FR-025: The app MUST show draft duration, each segment duration, and total output duration.
 - FR-026: Retained range positions MUST be stored using integer source-media timestamps plus a timescale; floating-point seconds are a playback adapter only.
-- FR-027: The user MUST be able to add, select, update, remove, and reorder retained ranges.
+- FR-027: The user MUST be able to add, select, trim, remove, and reorder clips.
+- FR-027A: The user MUST be able to reorder clips directly by dragging them in the editing sequence. Visible earlier/later controls MUST remain as keyboard and accessibility alternatives.
 - FR-028: Edit-list mutations MUST support undo and redo without changing the source file.
 - FR-029: The user MUST be able to preview one retained range and continuously preview the ordered edit list, skipping gaps between retained ranges.
-- FR-029A: After adding a new segment, the editor MUST return to an empty new-segment state. Selecting a retained segment MUST enter a visibly distinct edit state in which the primary action is Update, never Add.
+- FR-029A: After adding a new subclip, the editor MUST return to an empty new-subclip state. Selecting a clip MUST enter a visibly distinct trim state in which the primary action is Apply Trim, never Add to Sequence.
+- FR-029B: A representative thumbnail near the clip IN point SHOULD be added to each clip card after the asynchronous thumbnail cache and long-media performance policy are defined.
 
 ### 5.4 Proxy handling
 

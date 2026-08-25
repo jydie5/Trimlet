@@ -4,18 +4,21 @@ public struct EditSegment: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     public var inPoint: MediaTimestamp
     public var outPoint: MediaTimestamp
+    public var clipNumber: Int?
 
     public init(
         id: UUID = UUID(),
         inPoint: MediaTimestamp,
-        outPoint: MediaTimestamp
+        outPoint: MediaTimestamp,
+        clipNumber: Int? = nil
     ) {
         self.id = id
         self.inPoint = inPoint
         self.outPoint = outPoint
+        self.clipNumber = clipNumber
     }
 
-    public init(id: UUID = UUID(), range: TrimRange) throws {
+    public init(id: UUID = UUID(), range: TrimRange, clipNumber: Int? = nil) throws {
         guard let start = range.inPoint,
               let end = range.outPoint,
               end > start else {
@@ -24,7 +27,8 @@ public struct EditSegment: Identifiable, Codable, Hashable, Sendable {
         self.init(
             id: id,
             inPoint: MediaTimestamp(seconds: start),
-            outPoint: MediaTimestamp(seconds: end)
+            outPoint: MediaTimestamp(seconds: end),
+            clipNumber: clipNumber
         )
     }
 
@@ -94,6 +98,15 @@ public struct EditList: Codable, Equatable, Sendable {
         segments.insert(segment, at: destination)
     }
 
+    public mutating func move(id: UUID, to destinationIndex: Int) throws {
+        guard let from = segments.firstIndex(where: { $0.id == id }) else {
+            throw EditListError.segmentNotFound
+        }
+        let segment = segments.remove(at: from)
+        let destination = min(max(0, destinationIndex), segments.count)
+        segments.insert(segment, at: destination)
+    }
+
     public func validate(sourceDuration: MediaTimestamp? = nil) throws {
         for segment in segments {
             try validate(segment, replacing: segment.id, sourceDuration: sourceDuration)
@@ -128,11 +141,11 @@ public enum EditListError: LocalizedError, Equatable, Sendable {
         case .invalidRange:
             "IN点をOUT点より前に設定してください。"
         case .outsideSource:
-            "編集区間が元動画の範囲外です。"
+            "クリップが元動画の範囲外です。"
         case .overlap:
-            "編集区間が既存の区間と重なっています。"
+            "サブクリップが既存のクリップと重なっています。"
         case .segmentNotFound:
-            "編集区間が見つかりません。"
+            "クリップが見つかりません。"
         }
     }
 }

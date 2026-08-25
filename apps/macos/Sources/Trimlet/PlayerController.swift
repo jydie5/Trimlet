@@ -45,6 +45,7 @@ final class PlayerController: ObservableObject {
     private var editRedoStack: [EditList] = []
     private var previewRanges: [TrimRange] = []
     private var previewRangeIndex: Int?
+    private var nextClipNumber = 1
 
     var hasMedia: Bool {
         currentURL != nil && durationSeconds > 0
@@ -130,6 +131,7 @@ final class PlayerController: ObservableObject {
         selectedSegmentID = nil
         editUndoStack.removeAll()
         editRedoStack.removeAll()
+        nextClipNumber = 1
         currentSeconds = 0
         durationSeconds = 0
         nominalFrameRate = 30
@@ -365,22 +367,22 @@ final class PlayerController: ObservableObject {
             trimRange.outPoint = nil
         }
         trimRange.clamp(to: durationSeconds)
-        statusMessage = "開始点を \(currentTimecode) に設定しました。次に終了点を決めてください。"
+        statusMessage = "IN点を \(currentTimecode) に設定しました。次にOUT点を決めてください。"
     }
 
     func setOutPoint() {
         guard hasMedia else { return }
         guard let inPoint = trimRange.inPoint else {
-            statusMessage = "先に①開始点を設定してください。"
+            statusMessage = "先に①IN点を設定してください。"
             return
         }
         guard currentSeconds > inPoint else {
-            statusMessage = "終了点は開始点より後ろに設定してください。"
+            statusMessage = "OUT点はIN点より後ろに設定してください。"
             return
         }
         trimRange.outPoint = currentSeconds
         trimRange.clamp(to: durationSeconds)
-        statusMessage = "終了点を \(currentTimecode) に設定しました。③この範囲を残す、で追加できます。"
+        statusMessage = "OUT点を \(currentTimecode) に設定しました。③シーケンスへ追加できます。"
     }
 
     func goToInPoint() {
@@ -395,13 +397,15 @@ final class PlayerController: ObservableObject {
 
     func addDraftSegment() {
         do {
-            let segment = try EditSegment(range: trimRange)
+            let clipNumber = nextClipNumber
+            let segment = try EditSegment(range: trimRange, clipNumber: clipNumber)
             var next = editList
             try next.append(segment, sourceDuration: MediaTimestamp(seconds: durationSeconds))
             commitEditList(next)
+            nextClipNumber += 1
             selectedSegmentID = nil
             trimRange.reset()
-            statusMessage = "区間 \(editList.segments.count) を出力リストへ追加しました。次の区間を作成できます。"
+            statusMessage = "クリップ \(String(format: "%03d", clipNumber)) を編集シーケンスへ追加しました。次のサブクリップを作成できます。"
         } catch {
             statusMessage = error.localizedDescription
         }
@@ -409,15 +413,23 @@ final class PlayerController: ObservableObject {
 
     func updateSelectedSegment() {
         guard let selectedSegmentID else {
-            statusMessage = "更新する編集区間を選択してください。"
+            statusMessage = "トリムするクリップを選択してください。"
+            return
+        }
+        guard let existingSegment = editList.segment(id: selectedSegmentID) else {
+            statusMessage = "トリムするクリップが見つかりません。"
             return
         }
         do {
-            let segment = try EditSegment(id: selectedSegmentID, range: trimRange)
+            let segment = try EditSegment(
+                id: selectedSegmentID,
+                range: trimRange,
+                clipNumber: existingSegment.clipNumber
+            )
             var next = editList
             try next.update(segment, sourceDuration: MediaTimestamp(seconds: durationSeconds))
             commitEditList(next)
-            statusMessage = "選択した編集区間を更新しました。"
+            statusMessage = "選択したクリップのトリムを更新しました。"
         } catch {
             statusMessage = error.localizedDescription
         }
@@ -427,14 +439,14 @@ final class PlayerController: ObservableObject {
         guard let segment = editList.segment(id: id) else { return }
         selectedSegmentID = id
         trimRange = segment.trimRange
-        statusMessage = "区間を編集中です。開始／終了を変更してから「変更を保存」を押してください。"
+        statusMessage = "クリップをトリム中です。IN／OUTを変更してから「トリムを適用」を押してください。"
     }
 
     func startNewSegment() {
         selectedSegmentID = nil
         trimRange.reset()
         cancelPreviewSequence()
-        statusMessage = "新しい区間を作成します。①開始点から設定してください。"
+        statusMessage = "新しいサブクリップを作成します。①IN点から設定してください。"
     }
 
     func removeSelectedSegment() {
@@ -445,7 +457,7 @@ final class PlayerController: ObservableObject {
             commitEditList(next)
             self.selectedSegmentID = nil
             trimRange.reset()
-            statusMessage = "編集区間を削除しました。"
+            statusMessage = "クリップを編集シーケンスから削除しました。"
         } catch {
             statusMessage = error.localizedDescription
         }
@@ -458,9 +470,25 @@ final class PlayerController: ObservableObject {
             try next.move(id: selectedSegmentID, by: offset)
             guard next != editList else { return }
             commitEditList(next)
-            statusMessage = "出力順を変更しました。"
+            statusMessage = "クリップの順序を変更しました。"
         } catch {
             statusMessage = error.localizedDescription
+        }
+    }
+
+    @discardableResult
+    func moveSegment(_ id: UUID, to destinationIndex: Int) -> Bool {
+        do {
+            var next = editList
+            try next.move(id: id, to: destinationIndex)
+            guard next != editList else { return false }
+            commitEditList(next)
+            selectedSegmentID = id
+            statusMessage = "クリップを編集シーケンス内で移動しました。"
+            return true
+        } catch {
+            statusMessage = error.localizedDescription
+            return false
         }
     }
 
@@ -507,20 +535,20 @@ final class PlayerController: ObservableObject {
 
     func previewSelectedSegment() {
         guard let selectedSegment else {
-            statusMessage = "プレビューする編集区間を選択してください。"
+            statusMessage = "プレビューするクリップを選択してください。"
             return
         }
-        startPreview(ranges: [selectedSegment.trimRange], message: "編集区間をプレビューしています。")
+        startPreview(ranges: [selectedSegment.trimRange], message: "クリップをプレビューしています。")
     }
 
     func previewAllSegments() {
         guard !editList.isEmpty else {
-            statusMessage = "プレビューする編集区間がありません。"
+            statusMessage = "プレビューするクリップがありません。"
             return
         }
         startPreview(
             ranges: editList.segments.map(\.trimRange),
-            message: "区間リストを連続プレビューしています。"
+            message: "編集シーケンスを連続プレビューしています。"
         )
     }
 
@@ -550,7 +578,7 @@ final class PlayerController: ObservableObject {
         }
 
         guard !editList.isEmpty else {
-            statusMessage = "書き出す編集区間を追加してください。"
+            statusMessage = "書き出すクリップを編集シーケンスへ追加してください。"
             return
         }
         if sourceHasAudio && selectedAudioStreamIndex == nil {

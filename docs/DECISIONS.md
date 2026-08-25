@@ -146,8 +146,17 @@ This log records decisions that define Trimlet. Change a decision by adding a ne
 - Date: 2026-08-25
 - Status: Accepted after the first Mac 0.3 human check
 - Problem: Showing draft IN/OUT, Add, and Update together did not reveal whether Add came before or after boundary selection. Preselecting the whole source made the ambiguity worse.
-- Decision: New ranges use `1 Start → 2 End → 3 Keep this range`; source open and successful Add leave both boundaries unset. Selecting an output card enters a separate edit state whose commit action is Update.
+- Decision: New ranges use a visible three-stage creation flow; source open and successful Add leave both boundaries unset. Selecting an output card enters a separate edit state. D-018 defines the final user-visible labels as `1 IN → 2 OUT → 3 Add to Sequence` and Apply Trim.
 - AviUtl reference: Preserve the useful relationship between time-axis objects, selection, and visible results, without importing a multi-layer NLE or general object system into Trimlet.
+
+### D-018: Use editing terminology and direct sequence manipulation
+
+- Date: 2026-08-25
+- Status: Accepted after terminology review
+- Decision: User-visible names are `Source Timeline` / `ソースタイムライン`, `Subclip` / `サブクリップ`, `Clip` / `クリップ`, `Editing Sequence` / `編集シーケンス`, and `Trim` / `トリム`. Internal `EditSegment` and `EditList` names remain implementation details.
+- Interaction: Clips can be dragged to change their order in the contiguous editing sequence. Earlier/later buttons remain available for keyboard and accessibility use.
+- Identity: A stable incremental clip number is assigned on creation and displayed separately from current sequence position. Reordering and trimming never rename the clip. Representative thumbnails are a later cached presentation layer, not identity.
+- Boundary: Arbitrary sequence-time placement, gaps, overlaps, and multiple tracks are not represented by the current model. They require a separate sequence-time milestone rather than overloading list order.
 
 ## Proposed decisions awaiting validation
 
