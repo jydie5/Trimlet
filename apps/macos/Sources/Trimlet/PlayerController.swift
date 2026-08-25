@@ -177,7 +177,7 @@ final class PlayerController: ObservableObject {
                 self.currentURL = sourceURL
                 self.durationSeconds = seconds
                 self.nominalFrameRate = frameRate
-                self.trimRange = TrimRange(inPoint: 0, outPoint: seconds)
+                self.trimRange.reset()
                 self.player.replaceCurrentItem(with: AVPlayerItem(asset: asset))
                 if let ffprobeURL = Self.ffprobeURL() {
                     let streams = await MediaProbe.audioStreams(at: sourceURL, ffprobeURL: ffprobeURL)
@@ -361,15 +361,26 @@ final class PlayerController: ObservableObject {
     func setInPoint() {
         guard hasMedia else { return }
         trimRange.inPoint = currentSeconds
+        if let outPoint = trimRange.outPoint, outPoint <= currentSeconds {
+            trimRange.outPoint = nil
+        }
         trimRange.clamp(to: durationSeconds)
-        statusMessage = "IN点を \(currentTimecode) に設定しました。"
+        statusMessage = "開始点を \(currentTimecode) に設定しました。次に終了点を決めてください。"
     }
 
     func setOutPoint() {
         guard hasMedia else { return }
+        guard let inPoint = trimRange.inPoint else {
+            statusMessage = "先に①開始点を設定してください。"
+            return
+        }
+        guard currentSeconds > inPoint else {
+            statusMessage = "終了点は開始点より後ろに設定してください。"
+            return
+        }
         trimRange.outPoint = currentSeconds
         trimRange.clamp(to: durationSeconds)
-        statusMessage = "OUT点を \(currentTimecode) に設定しました。"
+        statusMessage = "終了点を \(currentTimecode) に設定しました。③この範囲を残す、で追加できます。"
     }
 
     func goToInPoint() {
@@ -388,8 +399,9 @@ final class PlayerController: ObservableObject {
             var next = editList
             try next.append(segment, sourceDuration: MediaTimestamp(seconds: durationSeconds))
             commitEditList(next)
-            selectedSegmentID = segment.id
-            statusMessage = "編集区間 \(editList.segments.count) を追加しました。"
+            selectedSegmentID = nil
+            trimRange.reset()
+            statusMessage = "区間 \(editList.segments.count) を出力リストへ追加しました。次の区間を作成できます。"
         } catch {
             statusMessage = error.localizedDescription
         }
@@ -415,7 +427,14 @@ final class PlayerController: ObservableObject {
         guard let segment = editList.segment(id: id) else { return }
         selectedSegmentID = id
         trimRange = segment.trimRange
-        statusMessage = "編集区間を選択しました。"
+        statusMessage = "区間を編集中です。開始／終了を変更してから「変更を保存」を押してください。"
+    }
+
+    func startNewSegment() {
+        selectedSegmentID = nil
+        trimRange.reset()
+        cancelPreviewSequence()
+        statusMessage = "新しい区間を作成します。①開始点から設定してください。"
     }
 
     func removeSelectedSegment() {
@@ -425,6 +444,7 @@ final class PlayerController: ObservableObject {
             try next.remove(id: selectedSegmentID)
             commitEditList(next)
             self.selectedSegmentID = nil
+            trimRange.reset()
             statusMessage = "編集区間を削除しました。"
         } catch {
             statusMessage = error.localizedDescription
@@ -448,7 +468,10 @@ final class PlayerController: ObservableObject {
         guard let previous = editUndoStack.popLast() else { return }
         editRedoStack.append(editList)
         editList = previous
-        if editList.segment(id: selectedSegmentID) == nil { selectedSegmentID = nil }
+        if editList.segment(id: selectedSegmentID) == nil {
+            selectedSegmentID = nil
+            trimRange.reset()
+        }
         cancelPreviewSequence()
         statusMessage = "区間編集を取り消しました。"
     }
@@ -457,7 +480,10 @@ final class PlayerController: ObservableObject {
         guard let next = editRedoStack.popLast() else { return }
         editUndoStack.append(editList)
         editList = next
-        if editList.segment(id: selectedSegmentID) == nil { selectedSegmentID = nil }
+        if editList.segment(id: selectedSegmentID) == nil {
+            selectedSegmentID = nil
+            trimRange.reset()
+        }
         cancelPreviewSequence()
         statusMessage = "区間編集をやり直しました。"
     }

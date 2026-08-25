@@ -1,7 +1,7 @@
 # Multi-range editing design
 
 - Status: Accepted for Mac milestone 0.3
-- Updated: 2026-08-24
+- Updated: 2026-08-25
 
 ## Model boundary
 
@@ -27,6 +27,8 @@ The Mac controller keeps:
 
 Opening a new source resets all of this state. Loading a segment into the draft does not mutate the edit list until Update is chosen.
 
+New-segment mode starts with both draft boundaries unset. Adding a valid segment clears the draft and selection so the next action is unambiguously the start of another segment. Selecting a retained segment changes the editor to edit mode; Add is removed from that state and Update becomes the only commit action.
+
 ## Preview state machine
 
 Single-segment preview seeks to its IN timestamp and stops at its exclusive OUT timestamp.
@@ -43,12 +45,16 @@ Progress is weighted by retained source duration across segment stages. The fina
 
 ## UI composition
 
-The existing media-first layout remains. Below playback controls:
+The media-first layout remains, but the editing hierarchy is explicit:
 
-1. a compact overview timeline renders every retained segment;
-2. draft IN/OUT controls add or update a segment;
-3. a horizontally compact edit-list row exposes selection, duration, reorder, and delete;
-4. preview-all and total-duration controls appear only when at least one retained segment exists;
-5. audio selection appears only when the source has multiple audio streams.
+1. the source timeline renders the playhead, retained segments, start/end markers, keyframes, and Fast candidates in one place;
+2. new-segment mode is a left-to-right `1 Start → 2 End → 3 Keep this range` flow;
+3. start and end are unset on source open, step 2 is unavailable before step 1, and step 3 is unavailable until the range is valid;
+4. the output section is always visible, including an empty state that points back to steps 1–3;
+5. retained cards are arranged in output order and selecting one visibly changes the range editor into Update mode;
+6. Add and Update are never presented as simultaneous primary actions;
+7. audio selection appears only when the source has multiple audio streams.
+
+This borrows AviUtl/ExEdit2's useful principle that the time-axis object and the operation result remain visually connected. It does not copy the multi-layer NLE surface, because Trimlet still has one source and one retained-output sequence.
 
 No permanent tutorial paragraph is added to the work surface.

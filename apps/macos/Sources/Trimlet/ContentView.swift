@@ -210,6 +210,15 @@ struct ContentView: View {
 
     private var timeline: some View {
         VStack(spacing: 6) {
+            HStack {
+                Label("元動画の時間軸", systemImage: "film")
+                    .font(.caption.weight(.semibold))
+                Text("青＝出力する区間　緑／赤＝作成中の開始／終了")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                Spacer()
+            }
+
             RangeBar(
                 duration: controller.durationSeconds,
                 current: controller.currentSeconds,
@@ -235,7 +244,7 @@ struct ContentView: View {
                 if let index = controller.keyframeIndex {
                     Label("キーフレーム \(index.keyframes.count)個", systemImage: "line.3.horizontal.decrease")
                     if controller.exportMode == .fast, let candidate = controller.fastCandidate {
-                        Text("下書き高速候補 \(shortTime(candidate.start))–\(shortTime(candidate.end))")
+                        Text("作成中の高速候補 \(shortTime(candidate.start))–\(shortTime(candidate.end))")
                             .foregroundStyle(.orange)
                     } else if controller.exportMode == .fast {
                         Text("この範囲は正確モードを推奨")
@@ -256,97 +265,194 @@ struct ContentView: View {
         String(format: "%.3fs", seconds)
     }
 
+    private func pointTime(_ seconds: Double?) -> String {
+        guard let seconds else { return "未設定" }
+        return TimecodeFormatter.string(
+            seconds: seconds,
+            framesPerSecond: controller.nominalFrameRate
+        )
+    }
+
     private var rangeControls: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 10) {
-                Button("INを設定", systemImage: "inset.filled.leadinghalf.rectangle") {
-                    controller.setInPoint()
+        VStack(alignment: .leading, spacing: 8) {
+            rangeControlHeader
+
+            HStack(alignment: .top, spacing: 8) {
+                rangeStep(
+                    number: 1,
+                    title: "開始点",
+                    value: controller.trimRange.inPoint,
+                    tint: .green,
+                    actionTitle: "現在位置を開始に",
+                    action: { controller.setInPoint() },
+                    jump: controller.trimRange.inPoint == nil ? nil : { controller.goToInPoint() }
+                )
+
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(.tertiary)
+
+                rangeStep(
+                    number: 2,
+                    title: "終了点",
+                    value: controller.trimRange.outPoint,
+                    tint: .red,
+                    actionTitle: "現在位置を終了に",
+                    action: { controller.setOutPoint() },
+                    jump: controller.trimRange.outPoint == nil ? nil : { controller.goToOutPoint() },
+                    isActionDisabled: controller.trimRange.inPoint == nil
+                )
+
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(.tertiary)
+
+                rangeCommitStep
+            }
+        }
+        .padding(10)
+        .disabled(!controller.hasMedia || controller.isExporting)
+    }
+
+    private var rangeControlHeader: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(controller.selectedSegmentID == nil ? "新しい区間を作る" : "選択した区間を編集")
+                    .font(.headline)
+                Text(controller.selectedSegmentID == nil
+                     ? "再生位置を動かし、① → ② → ③の順に操作します"
+                     : "開始／終了を変更し、③変更を保存します")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            if controller.selectedSegmentID != nil {
+                Button("新しい区間に戻る", systemImage: "plus") {
+                    controller.startNewSegment()
                 }
-                .help("現在位置をIN点に設定（I）")
+            }
+        }
+    }
 
-                Button("INへ") {
-                    controller.goToInPoint()
-                }
-
-                Spacer()
-
-                VStack(spacing: 2) {
-                    Text("下書き範囲")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(controller.selectedDurationText)
-                        .font(.system(.body, design: .monospaced).weight(.semibold))
-                        .foregroundStyle(controller.trimRange.isValid ? Color.primary : Color.red)
-                }
-
-                Button("下書きを再生", systemImage: "play.rectangle") {
-                    controller.previewSelection()
-                }
-                .disabled(!controller.trimRange.isValid)
-
-                Spacer()
-
-                Button("OUTへ") {
-                    controller.goToOutPoint()
-                }
-
-                Button("OUTを設定", systemImage: "inset.filled.trailinghalf.rectangle") {
-                    controller.setOutPoint()
-                }
-                .help("現在位置をOUT点に設定（O）")
+    private var rangeCommitStep: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Label {
+                Text(controller.selectedSegmentID == nil ? "出力へ追加" : "変更を確定")
+                    .font(.caption.weight(.semibold))
+            } icon: {
+                Text("3")
+                    .font(.caption2.bold())
+                    .frame(width: 20, height: 20)
+                    .background(Color.accentColor, in: Circle())
+                    .foregroundStyle(.white)
             }
 
-            HStack(spacing: 8) {
-                Button("区間に追加", systemImage: "plus") {
-                    controller.addDraftSegment()
+            Text(controller.trimRange.isValid ? controller.selectedDurationText : "開始と終了を設定")
+                .font(.system(.caption, design: .monospaced).weight(.semibold))
+                .foregroundStyle(controller.trimRange.isValid ? Color.primary : Color.secondary)
+
+            HStack {
+                Button(controller.selectedSegmentID == nil ? "この範囲を残す" : "変更を保存",
+                       systemImage: controller.selectedSegmentID == nil ? "plus" : "checkmark") {
+                    if controller.selectedSegmentID == nil {
+                        controller.addDraftSegment()
+                    } else {
+                        controller.updateSelectedSegment()
+                    }
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(!controller.trimRange.isValid)
 
-                Button("選択区間を更新", systemImage: "arrow.triangle.2.circlepath") {
-                    controller.updateSelectedSegment()
+                Button("確認", systemImage: "play.fill") {
+                    controller.previewSelection()
                 }
-                .disabled(controller.selectedSegmentID == nil || !controller.trimRange.isValid)
-
-                Text("IN/OUTは区間へ追加するまで下書きです")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                Spacer()
+                .labelStyle(.iconOnly)
+                .disabled(!controller.trimRange.isValid)
+                .help("この範囲だけ再生")
             }
         }
-        .disabled(!controller.hasMedia || controller.isExporting)
+        .padding(9)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 9))
     }
 
-    @ViewBuilder
-    private var editListControls: some View {
-        if !controller.editList.isEmpty {
-            VStack(spacing: 8) {
-                HStack(spacing: 8) {
-                    Label("区間リスト", systemImage: "list.number")
-                        .font(.caption.weight(.semibold))
-                    Text("\(controller.editList.segments.count)区間 · 合計 \(controller.totalDurationText)")
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Button("すべて再生", systemImage: "play.fill") {
-                        controller.previewAllSegments()
-                    }
-                    Button("取り消す", systemImage: "arrow.uturn.backward") {
-                        controller.undoEdit()
-                    }
-                    .labelStyle(.iconOnly)
-                    .keyboardShortcut("z", modifiers: .command)
-                    .disabled(!controller.canUndoEdit)
-                    .help("区間編集を取り消す（⌘Z）")
-                    Button("やり直す", systemImage: "arrow.uturn.forward") {
-                        controller.redoEdit()
-                    }
-                    .labelStyle(.iconOnly)
-                    .keyboardShortcut("z", modifiers: [.command, .shift])
-                    .disabled(!controller.canRedoEdit)
-                    .help("区間編集をやり直す（⇧⌘Z）")
-                }
+    private func rangeStep(
+        number: Int,
+        title: String,
+        value: Double?,
+        tint: Color,
+        actionTitle: String,
+        action: @escaping () -> Void,
+        jump: (() -> Void)?,
+        isActionDisabled: Bool = false
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack {
+                Text("\(number)")
+                    .font(.caption2.bold())
+                    .frame(width: 20, height: 20)
+                    .background(tint, in: Circle())
+                    .foregroundStyle(.white)
+                Text(title)
+                    .font(.caption.weight(.semibold))
+                Spacer()
+                Text(pointTime(value))
+                    .font(.system(.caption, design: .monospaced).weight(.medium))
+                    .foregroundStyle(value == nil ? Color.secondary : Color.primary)
+            }
 
+            HStack {
+                Button(actionTitle, action: action)
+                    .disabled(isActionDisabled)
+                if let jump {
+                    Button("移動", action: jump)
+                }
+            }
+        }
+        .padding(9)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(tint.opacity(0.08), in: RoundedRectangle(cornerRadius: 9))
+    }
+
+    private var editListControls: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 8) {
+                Label("出力される区間", systemImage: "list.number")
+                    .font(.caption.weight(.semibold))
+                Text(controller.editList.isEmpty
+                     ? "まだありません"
+                     : "左から順に \(controller.editList.segments.count)区間 · 合計 \(controller.totalDurationText)")
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button("出力順に再生", systemImage: "play.fill") {
+                    controller.previewAllSegments()
+                }
+                .disabled(controller.editList.isEmpty)
+                Button("取り消す", systemImage: "arrow.uturn.backward") {
+                    controller.undoEdit()
+                }
+                .labelStyle(.iconOnly)
+                .keyboardShortcut("z", modifiers: .command)
+                .disabled(!controller.canUndoEdit)
+                .help("区間編集を取り消す（⌘Z）")
+                Button("やり直す", systemImage: "arrow.uturn.forward") {
+                    controller.redoEdit()
+                }
+                .labelStyle(.iconOnly)
+                .keyboardShortcut("z", modifiers: [.command, .shift])
+                .disabled(!controller.canRedoEdit)
+                .help("区間編集をやり直す（⇧⌘Z）")
+            }
+
+            if controller.editList.isEmpty {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.up")
+                    Text("上の①開始点 → ②終了点 → ③この範囲を残す、で追加されます")
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 4)
+            } else {
                 ScrollView(.horizontal) {
                     HStack(spacing: 6) {
                         ForEach(Array(controller.editList.segments.enumerated()), id: \.element.id) { index, segment in
@@ -354,7 +460,7 @@ struct ContentView: View {
                                 controller.selectSegment(segment.id)
                             } label: {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("\(index + 1)")
+                                    Text("区間 \(index + 1)")
                                         .font(.caption2.weight(.bold))
                                     Text("\(shortTime(segment.inPoint.seconds))–\(shortTime(segment.outPoint.seconds))")
                                         .font(.system(.caption2, design: .monospaced))
@@ -389,7 +495,10 @@ struct ContentView: View {
                 .scrollIndicators(.hidden)
 
                 HStack(spacing: 8) {
-                    Button("選択区間を再生", systemImage: "play.rectangle") {
+                    Text(controller.selectedSegmentID == nil ? "区間をクリックすると編集できます" : "選択中の区間を操作")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Button("この区間を再生", systemImage: "play.rectangle") {
                         controller.previewSelectedSegment()
                     }
                     Button("前へ移動", systemImage: "arrow.left") {
@@ -405,10 +514,10 @@ struct ContentView: View {
                 }
                 .disabled(controller.selectedSegmentID == nil)
             }
-            .padding(10)
-            .background(.quaternary.opacity(0.45), in: RoundedRectangle(cornerRadius: 10))
-            .disabled(controller.isExporting)
         }
+        .padding(10)
+        .background(.quaternary.opacity(0.45), in: RoundedRectangle(cornerRadius: 10))
+        .disabled(controller.isExporting)
     }
 
     private var exportControls: some View {
@@ -539,8 +648,6 @@ private struct RangeBar: View {
         GeometryReader { geometry in
             let width = geometry.size.width
             let safeDuration = max(duration, 0.01)
-            let draftStart = min(max((draftInPoint ?? 0) / safeDuration, 0), 1)
-            let draftEnd = min(max((draftOutPoint ?? duration) / safeDuration, 0), 1)
             let playhead = min(max(current / safeDuration, 0), 1)
             let markStride = max(1, keyframes.count / max(1, Int(width / 5)))
             let visibleKeyframes = Array(keyframes.enumerated()).filter { $0.offset % markStride == 0 }
@@ -572,11 +679,27 @@ private struct RangeBar: View {
                     }
                 }
 
-                if draftEnd > draftStart {
+                if let draftInPoint, let draftOutPoint, draftOutPoint > draftInPoint {
+                    let draftStart = min(max(draftInPoint / safeDuration, 0), 1)
+                    let draftEnd = min(max(draftOutPoint / safeDuration, 0), 1)
                     RoundedRectangle(cornerRadius: 5)
                         .stroke(Color.white.opacity(0.9), style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
                         .frame(width: width * (draftEnd - draftStart), height: 26)
                         .offset(x: width * draftStart)
+                }
+
+                if let draftInPoint {
+                    Rectangle()
+                        .fill(Color.green)
+                        .frame(width: 2, height: 26)
+                        .offset(x: width * min(max(draftInPoint / safeDuration, 0), 1))
+                }
+
+                if let draftOutPoint {
+                    Rectangle()
+                        .fill(Color.red)
+                        .frame(width: 2, height: 26)
+                        .offset(x: width * min(max(draftOutPoint / safeDuration, 0), 1))
                 }
 
                 Rectangle()

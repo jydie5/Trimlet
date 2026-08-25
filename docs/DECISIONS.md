@@ -141,6 +141,14 @@ This log records decisions that define Trimlet. Change a decision by adding a ne
 - Shared contract: Store retained boundaries as integer timestamp values plus timescales and expose the edit-list contract to both native implementations.
 - Detail: See `docs/milestones/MAC_MULTI_RANGE_0.3.md` and `docs/architecture/MULTI_RANGE_EDITING.md`.
 
+### D-017: Make range creation a visible three-step state machine
+
+- Date: 2026-08-25
+- Status: Accepted after the first Mac 0.3 human check
+- Problem: Showing draft IN/OUT, Add, and Update together did not reveal whether Add came before or after boundary selection. Preselecting the whole source made the ambiguity worse.
+- Decision: New ranges use `1 Start → 2 End → 3 Keep this range`; source open and successful Add leave both boundaries unset. Selecting an output card enters a separate edit state whose commit action is Update.
+- AviUtl reference: Preserve the useful relationship between time-axis objects, selection, and visible results, without importing a multi-layer NLE or general object system into Trimlet.
+
 ## Proposed decisions awaiting validation
 
 ### P-001: Project structure

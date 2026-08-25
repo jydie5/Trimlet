@@ -2,7 +2,7 @@
 
 ## Mac multi-range 0.3 developer verification
 
-- Verified: 2026-08-24
+- Verified: 2026-08-25
 - Host: Apple silicon (`arm64`), macOS 26.5.2
 - Toolchain: Apple Swift 6.3
 - Local FFmpeg: 7.1.1 with VideoToolbox enabled
@@ -18,6 +18,7 @@
 - Release-readiness, shell syntax, and whitespace checks passed.
 - Release application bundle build, ad-hoc signing, launch, and initial multi-range UI rendering passed.
 - GitHub Draft PR #4 passed both macOS build/integration jobs, both Windows validation jobs, shared contract validation, and repository security checks.
+- The 2026-08-25 range-flow redesign opened with both boundaries unset and steps 2/3 unavailable. An accessibility-driven UI check set Start at 0 s, moved to 5 s, set End, committed the range, observed the output card, and confirmed that the editor reset to empty new-segment mode. Selecting the card visibly entered Update mode.
 
 Run the principal checks with:
 

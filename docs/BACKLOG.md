@@ -1,7 +1,7 @@
 # Trimlet development backlog
 
 - Current milestone: Mac multi-range 0.3
-- Updated: 2026-08-24
+- Updated: 2026-08-25
 - Source: `HUMAN_CHECK.md`
 
 優先度はP0（次回確認を妨げる）、P1（次回確認に必要）、P2（その後の改善）の順。
@@ -43,6 +43,13 @@
 - Priority: P1
 - Status: Open
 - Scope: encoder usability probe, quality policy, VFR PTS, interlace, HDR/color/rotation metadata, diagnostics
+
+### TRIM-016 — 区間作成の順序をUIだけで理解できるようにする
+
+- Priority: P0
+- Status: Implemented; human check pending
+- Reported: 2026-08-25 human check showed that Add-before-IN/OUT and IN/OUT-before-Add were indistinguishable
+- Scope: empty initial boundaries, numbered Start → End → Keep flow, always-visible output section, separate new/edit modes, post-add reset
 
 ## PoC 0.2
 

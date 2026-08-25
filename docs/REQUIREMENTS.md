@@ -1,7 +1,7 @@
 # Trimlet product requirements
 
 - Status: Draft 0.2
-- Updated: 2026-08-24
+- Updated: 2026-08-25
 - Target: Shared product behavior and the native Mac multi-range milestone
 
 ## 1. Product definition
@@ -72,8 +72,8 @@ Requirement keywords follow MUST, SHOULD, and MAY.
 
 ### 5.3 Range selection
 
-- FR-020: The app MUST provide one draft IN/OUT selection used to create or update an edit segment.
-- FR-021: The user MUST be able to set draft IN and OUT with both buttons and keyboard shortcuts.
+- FR-020: The app MUST provide one segment editor used to create or update an edit segment. New-segment mode MUST begin with both boundaries unset rather than implying that the entire source is selected.
+- FR-021: New-segment mode MUST present the primary workflow in visible order: `1. set start`, `2. set end`, `3. keep this range`. The user MUST also be able to set start and end with keyboard shortcuts.
 - FR-022: The app MUST maintain an ordered edit list containing zero or more retained source ranges.
 - FR-023: Every retained range MUST be visible on the timeline and in a compact segment list.
 - FR-024: A segment MUST be rejected when IN is not earlier than OUT, lies outside the source, or overlaps another retained source range.
@@ -82,6 +82,7 @@ Requirement keywords follow MUST, SHOULD, and MAY.
 - FR-027: The user MUST be able to add, select, update, remove, and reorder retained ranges.
 - FR-028: Edit-list mutations MUST support undo and redo without changing the source file.
 - FR-029: The user MUST be able to preview one retained range and continuously preview the ordered edit list, skipping gaps between retained ranges.
+- FR-029A: After adding a new segment, the editor MUST return to an empty new-segment state. Selecting a retained segment MUST enter a visibly distinct edit state in which the primary action is Update, never Add.
 
 ### 5.4 Proxy handling
 
