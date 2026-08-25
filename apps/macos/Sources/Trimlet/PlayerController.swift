@@ -21,6 +21,7 @@ final class PlayerController: ObservableObject {
     @Published private(set) var activeOperation: OperationStatus?
     @Published private(set) var editList = EditList()
     @Published private(set) var selectedSegmentID: UUID?
+    @Published private(set) var trimmingSegmentID: UUID?
     @Published private(set) var clipThumbnails: [UUID: NSImage] = [:]
     @Published private(set) var audioStreams: [MediaProbe.AudioStreamInfo] = []
     @Published var trimRange = TrimRange()
@@ -131,6 +132,7 @@ final class PlayerController: ObservableObject {
         trimRange.reset()
         editList = EditList()
         selectedSegmentID = nil
+        trimmingSegmentID = nil
         editUndoStack.removeAll()
         editRedoStack.removeAll()
         clipNameDraft = ""
@@ -411,6 +413,7 @@ final class PlayerController: ObservableObject {
             commitEditList(next)
             generateThumbnail(for: segment)
             selectedSegmentID = nil
+            trimmingSegmentID = nil
             clipNameDraft = ""
             trimRange.reset()
             statusMessage = "「\(segment.name ?? "クリップ")」を編集シーケンスへ追加しました。次のサブクリップを作成できます。"
@@ -420,17 +423,17 @@ final class PlayerController: ObservableObject {
     }
 
     func updateSelectedSegment() {
-        guard let selectedSegmentID else {
-            statusMessage = "トリムするクリップを選択してください。"
+        guard let trimmingSegmentID else {
+            statusMessage = "先に選択したクリップの「トリム編集」を押してください。"
             return
         }
-        guard let existingSegment = editList.segment(id: selectedSegmentID) else {
+        guard let existingSegment = editList.segment(id: trimmingSegmentID) else {
             statusMessage = "トリムするクリップが見つかりません。"
             return
         }
         do {
             let segment = try EditSegment(
-                id: selectedSegmentID,
+                id: trimmingSegmentID,
                 range: trimRange,
                 name: existingSegment.name
             )
@@ -446,14 +449,28 @@ final class PlayerController: ObservableObject {
 
     func selectSegment(_ id: UUID) {
         guard let segment = editList.segment(id: id) else { return }
+        if let trimmingSegmentID, trimmingSegmentID != id {
+            self.trimmingSegmentID = nil
+            trimRange.reset()
+        }
         selectedSegmentID = id
-        trimRange = segment.trimRange
         clipNameDraft = segment.name ?? ""
+        statusMessage = "「\(segment.name ?? "クリップ")」を選択しました。既存範囲を変更するときは「トリム編集」を押します。"
+    }
+
+    func beginTrimmingSelectedSegment() {
+        guard let selectedSegment else {
+            statusMessage = "トリムするクリップを選択してください。"
+            return
+        }
+        trimmingSegmentID = selectedSegment.id
+        trimRange = selectedSegment.trimRange
         statusMessage = "クリップをトリム中です。IN／OUTを変更してから「トリムを適用」を押してください。"
     }
 
     func startNewSegment() {
         selectedSegmentID = nil
+        trimmingSegmentID = nil
         clipNameDraft = ""
         trimRange.reset()
         cancelPreviewSequence()
@@ -467,6 +484,9 @@ final class PlayerController: ObservableObject {
             try next.remove(id: selectedSegmentID)
             commitEditList(next)
             self.selectedSegmentID = nil
+            if trimmingSegmentID == selectedSegmentID {
+                self.trimmingSegmentID = nil
+            }
             clipNameDraft = ""
             trimRange.reset()
             statusMessage = "クリップを編集シーケンスから削除しました。"
@@ -518,6 +538,10 @@ final class PlayerController: ObservableObject {
             try next.move(id: id, to: destinationIndex)
             guard next != editList else { return false }
             commitEditList(next)
+            if let trimmingSegmentID, trimmingSegmentID != id {
+                self.trimmingSegmentID = nil
+                trimRange.reset()
+            }
             selectedSegmentID = id
             clipNameDraft = editList.segment(id: id)?.name ?? ""
             statusMessage = "クリップを編集シーケンス内で移動しました。"
@@ -532,13 +556,7 @@ final class PlayerController: ObservableObject {
         guard let previous = editUndoStack.popLast() else { return }
         editRedoStack.append(editList)
         editList = previous
-        if editList.segment(id: selectedSegmentID) == nil {
-            selectedSegmentID = nil
-            trimRange.reset()
-            clipNameDraft = ""
-        } else if let segment = editList.segment(id: selectedSegmentID) {
-            clipNameDraft = segment.name ?? ""
-        }
+        reconcileSegmentEditingStateAfterHistoryChange()
         cancelPreviewSequence()
         statusMessage = "区間編集を取り消しました。"
     }
@@ -547,15 +565,29 @@ final class PlayerController: ObservableObject {
         guard let next = editRedoStack.popLast() else { return }
         editUndoStack.append(editList)
         editList = next
-        if editList.segment(id: selectedSegmentID) == nil {
-            selectedSegmentID = nil
-            trimRange.reset()
-            clipNameDraft = ""
-        } else if let segment = editList.segment(id: selectedSegmentID) {
-            clipNameDraft = segment.name ?? ""
-        }
+        reconcileSegmentEditingStateAfterHistoryChange()
         cancelPreviewSequence()
         statusMessage = "区間編集をやり直しました。"
+    }
+
+    private func reconcileSegmentEditingStateAfterHistoryChange() {
+        if let selectedSegmentID {
+            if let segment = editList.segment(id: selectedSegmentID) {
+                clipNameDraft = segment.name ?? ""
+            } else {
+                self.selectedSegmentID = nil
+                clipNameDraft = ""
+            }
+        }
+
+        if let trimmingSegmentID {
+            if let segment = editList.segment(id: trimmingSegmentID) {
+                trimRange = segment.trimRange
+            } else {
+                self.trimmingSegmentID = nil
+                trimRange.reset()
+            }
+        }
     }
 
     private func defaultClipName(for range: TrimRange) -> String {

@@ -326,16 +326,16 @@ struct ContentView: View {
     private var rangeControlHeader: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(controller.selectedSegmentID == nil ? "サブクリップを作成" : "クリップをトリム")
+                Text(controller.trimmingSegmentID == nil ? "サブクリップを作成" : "クリップをトリム")
                     .font(.headline)
-                Text(controller.selectedSegmentID == nil
+                Text(controller.trimmingSegmentID == nil
                      ? "ソースの範囲を ①IN → ②OUT で指定し、③シーケンスへ追加します"
                      : "IN／OUTを変更し、③トリムを適用します")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            if controller.selectedSegmentID != nil {
+            if controller.trimmingSegmentID != nil {
                 Button("新規サブクリップ", systemImage: "plus") {
                     controller.startNewSegment()
                 }
@@ -346,7 +346,7 @@ struct ContentView: View {
     private var rangeCommitStep: some View {
         VStack(alignment: .leading, spacing: 7) {
             Label {
-                Text(controller.selectedSegmentID == nil ? "シーケンスへ追加" : "トリムを確定")
+                Text(controller.trimmingSegmentID == nil ? "シーケンスへ追加" : "トリムを確定")
                     .font(.caption.weight(.semibold))
             } icon: {
                 Text("3")
@@ -361,9 +361,9 @@ struct ContentView: View {
                 .foregroundStyle(controller.trimRange.isValid ? Color.primary : Color.secondary)
 
             HStack {
-                Button(controller.selectedSegmentID == nil ? "シーケンスへ追加" : "トリムを適用",
-                       systemImage: controller.selectedSegmentID == nil ? "plus" : "checkmark") {
-                    if controller.selectedSegmentID == nil {
+                Button(controller.trimmingSegmentID == nil ? "シーケンスへ追加" : "トリムを適用",
+                       systemImage: controller.trimmingSegmentID == nil ? "plus" : "checkmark") {
+                    if controller.trimmingSegmentID == nil {
                         controller.addDraftSegment()
                     } else {
                         controller.updateSelectedSegment()
@@ -568,13 +568,19 @@ struct ContentView: View {
 
                 HStack(spacing: 8) {
                     Text(controller.selectedSegmentID == nil
-                         ? "ドラッグで並べ替え · クリックでトリム"
-                         : "ドラッグで並べ替え · 選択中のクリップを操作")
+                         ? "クリックで選択 · ドラッグで並べ替え"
+                         : controller.trimmingSegmentID == nil
+                            ? "選択中 · 既存範囲の変更は「トリム編集」"
+                            : "トリム編集中")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                     Button("クリップを再生", systemImage: "play.rectangle") {
                         controller.previewSelectedSegment()
                     }
+                    Button("トリム編集", systemImage: "slider.horizontal.2.square") {
+                        controller.beginTrimmingSelectedSegment()
+                    }
+                    .disabled(controller.trimmingSegmentID != nil)
                     Button("前へ移動", systemImage: "arrow.left") {
                         controller.moveSelectedSegment(by: -1)
                     }

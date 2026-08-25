@@ -21,13 +21,14 @@ The Mac controller keeps:
 - one mutable draft `TrimRange` for the current IN/OUT controls;
 - one canonical `EditList` backing the user-visible editing sequence;
 - an optional selected clip identifier;
+- a separate optional trimming clip identifier;
 - undo and redo stacks containing prior edit-list snapshots;
 - an optional preview sequence cursor;
 - inspected audio streams and the selected absolute FFmpeg stream index.
 
 Opening a new source resets all of this state. Loading a segment into the draft does not mutate the edit list until Update is chosen.
 
-New-subclip mode starts with both draft boundaries unset. Adding a valid subclip clears the draft and selection so the next action is unambiguously the start of another subclip. Selecting a retained clip changes the editor to trim mode; Add to Sequence is removed from that state and Apply Trim becomes the only commit action.
+New-subclip mode starts with both draft boundaries unset. Adding a valid subclip clears the draft and selection so the next action is unambiguously the start of another subclip. Clicking a retained clip only selects it for preview, naming, movement, or deletion and does not alter the draft. `Trim Edit` is the explicit transition that loads that clip's IN/OUT and changes the commit action from Add to Sequence to Apply Trim.
 
 Each newly created segment receives a default name derived from the source filename and its initial IN timecode. The user can rename it. Reordering and trimming preserve the name, while a UUID remains the machine identity. Sequence position is not rendered as a number because horizontal placement already communicates it.
 
@@ -53,11 +54,12 @@ The media-first layout remains, but the editing hierarchy is explicit:
 2. new-subclip mode is a left-to-right `1 IN → 2 OUT → 3 Add to Sequence` flow;
 3. start and end are unset on source open, step 2 is unavailable before step 1, and step 3 is unavailable until the range is valid;
 4. the output section is always visible, including an empty state that points back to steps 1–3;
-5. clip cards are arranged in sequence order; selecting one visibly changes the editor into Trim mode;
-6. a clip can be dragged directly to another position, while earlier/later buttons provide the same order change without dragging;
-7. clip cards show one representative frame, a stable editable clip name, and the source IN–OUT range, without a position number;
-8. Add to Sequence and Apply Trim are never presented as simultaneous primary actions;
-9. audio selection appears only when the source has multiple audio streams.
+5. clip cards are arranged in sequence order; clicking one selects it without changing the new-subclip editor;
+6. the explicit `Trim Edit` action changes the editor into Trim mode and is the only path that can update an existing clip's boundaries;
+7. a clip can be dragged directly to another position, while earlier/later buttons provide the same order change without dragging;
+8. clip cards show one representative frame, a stable editable clip name, and the source IN–OUT range, without a position number;
+9. Add to Sequence and Apply Trim are never presented as simultaneous primary actions;
+10. audio selection appears only when the source has multiple audio streams.
 
 This borrows AviUtl/ExEdit2's useful principle that the time-axis object and the operation result remain visually connected. It does not copy the multi-layer NLE surface, because Trimlet still has one source and one retained-output sequence.
 

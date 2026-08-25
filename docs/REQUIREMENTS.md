@@ -85,7 +85,8 @@ Requirement keywords follow MUST, SHOULD, and MAY.
 - FR-027A: The user MUST be able to reorder clips directly by dragging them in the editing sequence. Visible earlier/later controls MUST remain as keyboard and accessibility alternatives.
 - FR-028: Edit-list mutations MUST support undo and redo without changing the source file.
 - FR-029: The user MUST be able to preview one retained range and continuously preview the ordered edit list, skipping gaps between retained ranges.
-- FR-029A: After adding a new subclip, the editor MUST return to an empty new-subclip state. Selecting a clip MUST enter a visibly distinct trim state in which the primary action is Apply Trim, never Add to Sequence.
+- FR-029A: After adding a new subclip, the editor MUST return to an empty new-subclip state. Explicitly choosing Trim Edit for a selected clip MUST enter a visibly distinct trim state in which the primary action is Apply Trim, never Add to Sequence.
+- FR-029A1: Selecting a clip card MUST NOT enter trim mode or load its IN/OUT into the new-subclip draft. Existing boundaries may change only after the user explicitly chooses `Trim Edit` / `トリム編集`.
 - FR-029B: Every clip card MUST show a representative thumbnail generated near its IN point without blocking playback or editing. Failure MUST leave a clear placeholder rather than removing the card.
 
 ### 5.4 Proxy handling

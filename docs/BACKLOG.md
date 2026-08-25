@@ -77,6 +77,13 @@
 - Scope: image near IN point, asynchronous AVFoundation generation from the playable asset/proxy, per-segment cancellation, placeholder and failure state
 - Follow-up: persistent source/timestamp cache and bounded eviction when project save or very large clip counts are introduced
 
+### TRIM-021 — カード選択とトリム編集を分離する
+
+- Priority: P0
+- Status: Implemented after user reproduction; human check pending
+- Reported: Creating a third clip after selecting the first card appeared to delete the first clip because the UI silently remained in trim mode and updated it.
+- Scope: card click is selection only, explicit `トリム編集` transition, separate selected/trimming identifiers, new IN/OUT remains an Add operation unless trim edit was explicitly chosen
+
 ## PoC 0.2
 
 ### TRIM-001 — 再生・停止状態を安定させる

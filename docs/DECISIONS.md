@@ -159,6 +159,14 @@ This log records decisions that define Trimlet. Change a decision by adding a ne
 - Card content: Show a representative frame near IN, clip name, and IN–OUT time. Thumbnail generation is an asynchronous presentation layer and never affects export.
 - Reference: Final Cut Pro exposes filmstrips and clip-name display independently and supports renaming clips in its timeline index; Premiere exposes clip name and IN/OUT timecode as distinct display data. Trimlet adopts that information hierarchy without copying either application's full timeline surface.
 - Sources: https://support.apple.com/guide/final-cut-pro/verb8e5d346/mac, https://support.apple.com/guide/final-cut-pro/view-your-project-in-the-timeline-index-ver4e30596/12.3/mac/15.6, https://helpx.adobe.com/premiere/desktop/organize-media/apply-labeling/timecode-display-options.html
+
+### D-019: Separate clip selection from destructive trim editing
+
+- Date: 2026-08-25
+- Status: Accepted after a reproduced human-check failure
+- Problem: Clicking a card previously loaded its boundaries into the shared editor. A later IN/OUT operation could therefore update that clip when the user believed they were adding another one, making the original appear deleted.
+- Decision: Card click performs selection only. Preview, rename, reorder, and delete operate on selection. Existing IN/OUT values are loaded only after the explicit `Trim Edit` action, tracked by a separate trimming identifier.
+- Safety invariant: Unless Trim Edit was explicitly chosen, the three-stage IN → OUT → Add flow creates a new clip and never changes an existing clip.
 - Boundary: Arbitrary sequence-time placement, gaps, overlaps, and multiple tracks are not represented by the current model. They require a separate sequence-time milestone rather than overloading list order.
 
 ## Proposed decisions awaiting validation

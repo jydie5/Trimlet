@@ -22,6 +22,7 @@
 - The professional terminology pass rendered Source Timeline, Subclip, Clip, Editing Sequence, and Trim consistently. A three-clip UI exercise dragged a clip to a new position; the cards reordered immediately, the moved clip remained selected, and the trim controls stayed usable.
 - The earlier position-number card experiment was removed after review. The accepted card hierarchy is representative thumbnail, editable stable clip name, and IN–OUT range; sequence order is communicated by horizontal placement.
 - A generated H.264 sample produced a visible IN-adjacent thumbnail on its clip card. The default `trimlet-sample · 00:00:00:00` name was changed to `Opening IO`; the card updated without changing its thumbnail, IN–OUT range, or segment identity. Typing I/O while the name field was focused did not trigger IN/OUT shortcuts.
+- The reported “first clip disappeared after making three” case was reproduced as an accidental update: the UI had two cards, remained in Trim mode, and the first card's original-name timecode no longer matched its changed range. After separating selection from Trim Edit, a test selected the first card before each new IN/OUT operation and still produced three distinct cards; the editor stayed in Add mode until the explicit Trim Edit button was used.
 
 Run the principal checks with:
 

@@ -14,7 +14,7 @@ This milestone does not attempt to become a general non-linear editor. It adds n
 
 1. Follow the visible `1 IN → 2 OUT → 3 Add to Sequence` flow to create a subclip.
 2. See the editor clear after the clip appears in the always-visible editing sequence.
-3. Select a clip to enter a distinct trim state, then apply the trim, remove it, or move it earlier/later in sequence order.
+3. Select a clip without changing the active IN/OUT draft. Enter the distinct trim state only through its explicit `Trim Edit` action, then apply the trim; removal and reordering operate directly on selection.
 4. Drag clips directly to rearrange the editing sequence; use earlier/later buttons as an equivalent alternative.
 5. Identify each clip by its representative thumbnail, editable name, and IN–OUT range rather than a position number.
 6. Undo and redo sequence changes.
