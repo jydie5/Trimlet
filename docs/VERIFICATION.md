@@ -20,7 +20,8 @@
 - GitHub Draft PR #4 passed both macOS build/integration jobs, both Windows validation jobs, shared contract validation, and repository security checks.
 - The 2026-08-25 range-flow redesign opened with both boundaries unset and steps 2/3 unavailable. An accessibility-driven UI check set IN at 0 s, moved to 5 s, set OUT, added the subclip to the editing sequence, and confirmed that the editor reset to empty new-subclip mode. Selecting the clip visibly entered Trim mode.
 - The professional terminology pass rendered Source Timeline, Subclip, Clip, Editing Sequence, and Trim consistently. A three-clip UI exercise dragged a clip to a new position; the cards reordered immediately, the moved clip remained selected, and the trim controls stayed usable.
-- Stable clip labels were verified with two created clips: after dragging the second clip before the first, the cards displayed `順番 1・クリップ 002` followed by `順番 2・クリップ 001`. Core checks also preserve the creation number through reorder and trim mutations.
+- The earlier position-number card experiment was removed after review. The accepted card hierarchy is representative thumbnail, editable stable clip name, and IN–OUT range; sequence order is communicated by horizontal placement.
+- A generated H.264 sample produced a visible IN-adjacent thumbnail on its clip card. The default `trimlet-sample · 00:00:00:00` name was changed to `Opening IO`; the card updated without changing its thumbnail, IN–OUT range, or segment identity. Typing I/O while the name field was focused did not trigger IN/OUT shortcuts.
 
 Run the principal checks with:
 

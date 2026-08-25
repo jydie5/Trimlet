@@ -29,7 +29,7 @@ Opening a new source resets all of this state. Loading a segment into the draft 
 
 New-subclip mode starts with both draft boundaries unset. Adding a valid subclip clears the draft and selection so the next action is unambiguously the start of another subclip. Selecting a retained clip changes the editor to trim mode; Add to Sequence is removed from that state and Apply Trim becomes the only commit action.
 
-Each newly created segment also receives a monotonically increasing `clipNumber`. This is creation identity for display, not sequence position: moving `クリップ 003` to the first slot displays `順番 1・クリップ 003`. Trimming and reordering preserve that number. A UUID remains the machine identity.
+Each newly created segment receives a default name derived from the source filename and its initial IN timecode. The user can rename it. Reordering and trimming preserve the name, while a UUID remains the machine identity. Sequence position is not rendered as a number because horizontal placement already communicates it.
 
 ## Preview state machine
 
@@ -55,7 +55,7 @@ The media-first layout remains, but the editing hierarchy is explicit:
 4. the output section is always visible, including an empty state that points back to steps 1–3;
 5. clip cards are arranged in sequence order; selecting one visibly changes the editor into Trim mode;
 6. a clip can be dragged directly to another position, while earlier/later buttons provide the same order change without dragging;
-7. clip cards show stable incremental clip names separately from their current sequence position;
+7. clip cards show one representative frame, a stable editable clip name, and the source IN–OUT range, without a position number;
 8. Add to Sequence and Apply Trim are never presented as simultaneous primary actions;
 9. audio selection appears only when the source has multiple audio streams.
 
@@ -63,6 +63,6 @@ This borrows AviUtl/ExEdit2's useful principle that the time-axis object and the
 
 The current editing sequence is order-based and contiguous. Dragging changes clip order; it does not store an absolute sequence start time, create empty space, overlap clips, or move a clip between tracks. Those interactions require a sequence-time model and are a separate professional-timeline milestone.
 
-Representative thumbnails are intentionally separate from identity. They should be generated near each IN point asynchronously, cached by source identity and timestamp, and never block opening, scrubbing, or reordering long media.
+Representative thumbnails are separate from identity. The Mac adapter uses the active playback asset (the preview proxy when one exists) and asks `AVAssetImageGenerator` for a frame just after each IN point. Results remain in a session-memory map keyed by segment UUID, are regenerated after trimming, and never affect final export. Failure leaves a placeholder. Persistent source/timestamp caching can be added with project save support.
 
 No permanent tutorial paragraph is added to the work surface.

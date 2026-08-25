@@ -76,7 +76,8 @@ Requirement keywords follow MUST, SHOULD, and MAY.
 - FR-021: New-subclip mode MUST present the primary workflow in visible order: `1. IN point`, `2. OUT point`, `3. add to sequence`. The user MUST also be able to set IN and OUT with keyboard shortcuts.
 - FR-022: The app MUST maintain an editing sequence containing zero or more ordered clips.
 - FR-023: Every retained range MUST be visible on the source timeline and as a compact clip card in the editing sequence.
-- FR-023A: Every new clip MUST receive a stable incremental label such as `Clip 001`. The UI MUST display sequence position separately so reordering never makes a clip appear to change identity.
+- FR-023A: Every new clip MUST receive a stable default name derived from source identity and its initial IN point. The user MUST be able to rename it. Reordering and trimming MUST preserve that name.
+- FR-023B: A clip card MUST NOT display a redundant sequence-position number; its horizontal placement already communicates sequence order.
 - FR-024: A segment MUST be rejected when IN is not earlier than OUT, lies outside the source, or overlaps another retained source range.
 - FR-025: The app MUST show draft duration, each segment duration, and total output duration.
 - FR-026: Retained range positions MUST be stored using integer source-media timestamps plus a timescale; floating-point seconds are a playback adapter only.
@@ -85,7 +86,7 @@ Requirement keywords follow MUST, SHOULD, and MAY.
 - FR-028: Edit-list mutations MUST support undo and redo without changing the source file.
 - FR-029: The user MUST be able to preview one retained range and continuously preview the ordered edit list, skipping gaps between retained ranges.
 - FR-029A: After adding a new subclip, the editor MUST return to an empty new-subclip state. Selecting a clip MUST enter a visibly distinct trim state in which the primary action is Apply Trim, never Add to Sequence.
-- FR-029B: A representative thumbnail near the clip IN point SHOULD be added to each clip card after the asynchronous thumbnail cache and long-media performance policy are defined.
+- FR-029B: Every clip card MUST show a representative thumbnail generated near its IN point without blocking playback or editing. Failure MUST leave a clear placeholder rather than removing the card.
 
 ### 5.4 Proxy handling
 

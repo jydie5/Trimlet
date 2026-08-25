@@ -16,11 +16,12 @@ This milestone does not attempt to become a general non-linear editor. It adds n
 2. See the editor clear after the clip appears in the always-visible editing sequence.
 3. Select a clip to enter a distinct trim state, then apply the trim, remove it, or move it earlier/later in sequence order.
 4. Drag clips directly to rearrange the editing sequence; use earlier/later buttons as an equivalent alternative.
-5. Undo and redo sequence changes.
-6. See retained clips, the active draft, playhead, keyframes, and Fast candidates on the source timeline.
-7. Preview the draft, one selected clip, or the complete sequence continuously.
-8. Select the source audio stream when more than one exists.
-9. Export all retained clips to one destination.
+5. Identify each clip by its representative thumbnail, editable name, and IN–OUT range rather than a position number.
+6. Undo and redo sequence changes.
+7. See retained clips, the active draft, playhead, keyframes, and Fast candidates on the source timeline.
+8. Preview the draft, one selected clip, or the complete sequence continuously.
+9. Select the source audio stream when more than one exists.
+10. Export all retained clips to one destination.
 
 ## Export policy
 

@@ -4,21 +4,21 @@ public struct EditSegment: Identifiable, Codable, Hashable, Sendable {
     public let id: UUID
     public var inPoint: MediaTimestamp
     public var outPoint: MediaTimestamp
-    public var clipNumber: Int?
+    public var name: String?
 
     public init(
         id: UUID = UUID(),
         inPoint: MediaTimestamp,
         outPoint: MediaTimestamp,
-        clipNumber: Int? = nil
+        name: String? = nil
     ) {
         self.id = id
         self.inPoint = inPoint
         self.outPoint = outPoint
-        self.clipNumber = clipNumber
+        self.name = name
     }
 
-    public init(id: UUID = UUID(), range: TrimRange, clipNumber: Int? = nil) throws {
+    public init(id: UUID = UUID(), range: TrimRange, name: String? = nil) throws {
         guard let start = range.inPoint,
               let end = range.outPoint,
               end > start else {
@@ -28,7 +28,7 @@ public struct EditSegment: Identifiable, Codable, Hashable, Sendable {
             id: id,
             inPoint: MediaTimestamp(seconds: start),
             outPoint: MediaTimestamp(seconds: end),
-            clipNumber: clipNumber
+            name: name
         )
     }
 

@@ -24,7 +24,8 @@ Both implementations use these concepts and labels:
 | Source timeline | ソースタイムライン | Source-time view containing the playhead, IN/OUT, and retained ranges |
 | Subclip | サブクリップ | A non-destructive source range created by setting IN and OUT |
 | Clip | クリップ | A retained subclip with a stable identity in the editing sequence |
-| Clip number | クリップ番号 | A creation-order number that remains attached to the same clip when it moves |
+| Clip name | クリップ名 | A user-editable label attached to clip identity, independent of sequence position |
+| Clip thumbnail | クリップサムネイル | A representative frame near the clip IN point |
 | Editing sequence | 編集シーケンス | Ordered, contiguous clips that become the output |
 | Fast mode | 高速 | Video stream copy where compatible; cut may follow keyframe constraints and audio may require conversion |
 | Accurate mode | フレーム正確 | Timestamp-prioritized export; re-encode when required |
@@ -77,7 +78,7 @@ Platform hardware encoders may produce different binary output. Behavioral parit
 - Project interchange must not store only a human-readable frame number.
 - A range is valid only when `outTimestamp > inTimestamp`.
 - A clip has a stable identifier and exactly one valid source range.
-- A newly created clip receives a stable, increasing clip number. Sequence position is displayed separately and must not rename a clip after reordering.
+- A clip name remains attached to the same clip after trimming or reordering. Sequence position is communicated by placement, not a redundant position number on the card.
 - An editing sequence preserves explicit output order. Source ranges in one sequence must not overlap, even when output order differs from source chronology.
 - Draft IN/OUT values are not exported until added to or used to trim a clip in the editing sequence.
 - The current editing sequence is contiguous: moving a clip changes order but does not create a gap, overlap, or track.

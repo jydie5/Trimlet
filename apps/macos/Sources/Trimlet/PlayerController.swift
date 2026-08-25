@@ -21,8 +21,10 @@ final class PlayerController: ObservableObject {
     @Published private(set) var activeOperation: OperationStatus?
     @Published private(set) var editList = EditList()
     @Published private(set) var selectedSegmentID: UUID?
+    @Published private(set) var clipThumbnails: [UUID: NSImage] = [:]
     @Published private(set) var audioStreams: [MediaProbe.AudioStreamInfo] = []
     @Published var trimRange = TrimRange()
+    @Published var clipNameDraft = ""
     @Published var exportMode: ExportMode = .fast
     @Published var selectedAudioStreamIndex: Int?
 
@@ -45,7 +47,7 @@ final class PlayerController: ObservableObject {
     private var editRedoStack: [EditList] = []
     private var previewRanges: [TrimRange] = []
     private var previewRangeIndex: Int?
-    private var nextClipNumber = 1
+    private var thumbnailGenerators: [UUID: AVAssetImageGenerator] = [:]
 
     var hasMedia: Bool {
         currentURL != nil && durationSeconds > 0
@@ -131,7 +133,10 @@ final class PlayerController: ObservableObject {
         selectedSegmentID = nil
         editUndoStack.removeAll()
         editRedoStack.removeAll()
-        nextClipNumber = 1
+        clipNameDraft = ""
+        thumbnailGenerators.values.forEach { $0.cancelAllCGImageGeneration() }
+        thumbnailGenerators.removeAll()
+        clipThumbnails.removeAll()
         currentSeconds = 0
         durationSeconds = 0
         nominalFrameRate = 30
@@ -397,15 +402,18 @@ final class PlayerController: ObservableObject {
 
     func addDraftSegment() {
         do {
-            let clipNumber = nextClipNumber
-            let segment = try EditSegment(range: trimRange, clipNumber: clipNumber)
+            let segment = try EditSegment(
+                range: trimRange,
+                name: defaultClipName(for: trimRange)
+            )
             var next = editList
             try next.append(segment, sourceDuration: MediaTimestamp(seconds: durationSeconds))
             commitEditList(next)
-            nextClipNumber += 1
+            generateThumbnail(for: segment)
             selectedSegmentID = nil
+            clipNameDraft = ""
             trimRange.reset()
-            statusMessage = "クリップ \(String(format: "%03d", clipNumber)) を編集シーケンスへ追加しました。次のサブクリップを作成できます。"
+            statusMessage = "「\(segment.name ?? "クリップ")」を編集シーケンスへ追加しました。次のサブクリップを作成できます。"
         } catch {
             statusMessage = error.localizedDescription
         }
@@ -424,11 +432,12 @@ final class PlayerController: ObservableObject {
             let segment = try EditSegment(
                 id: selectedSegmentID,
                 range: trimRange,
-                clipNumber: existingSegment.clipNumber
+                name: existingSegment.name
             )
             var next = editList
             try next.update(segment, sourceDuration: MediaTimestamp(seconds: durationSeconds))
             commitEditList(next)
+            generateThumbnail(for: segment)
             statusMessage = "選択したクリップのトリムを更新しました。"
         } catch {
             statusMessage = error.localizedDescription
@@ -439,11 +448,13 @@ final class PlayerController: ObservableObject {
         guard let segment = editList.segment(id: id) else { return }
         selectedSegmentID = id
         trimRange = segment.trimRange
+        clipNameDraft = segment.name ?? ""
         statusMessage = "クリップをトリム中です。IN／OUTを変更してから「トリムを適用」を押してください。"
     }
 
     func startNewSegment() {
         selectedSegmentID = nil
+        clipNameDraft = ""
         trimRange.reset()
         cancelPreviewSequence()
         statusMessage = "新しいサブクリップを作成します。①IN点から設定してください。"
@@ -456,6 +467,7 @@ final class PlayerController: ObservableObject {
             try next.remove(id: selectedSegmentID)
             commitEditList(next)
             self.selectedSegmentID = nil
+            clipNameDraft = ""
             trimRange.reset()
             statusMessage = "クリップを編集シーケンスから削除しました。"
         } catch {
@@ -476,6 +488,29 @@ final class PlayerController: ObservableObject {
         }
     }
 
+    func applySelectedClipName() {
+        guard let selectedSegmentID,
+              var segment = editList.segment(id: selectedSegmentID) else {
+            statusMessage = "名前を変更するクリップを選択してください。"
+            return
+        }
+        let name = clipNameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else {
+            statusMessage = "クリップ名を入力してください。"
+            return
+        }
+        guard segment.name != name else { return }
+        do {
+            segment.name = name
+            var next = editList
+            try next.update(segment, sourceDuration: MediaTimestamp(seconds: durationSeconds))
+            commitEditList(next)
+            statusMessage = "クリップ名を「\(name)」へ変更しました。"
+        } catch {
+            statusMessage = error.localizedDescription
+        }
+    }
+
     @discardableResult
     func moveSegment(_ id: UUID, to destinationIndex: Int) -> Bool {
         do {
@@ -484,6 +519,7 @@ final class PlayerController: ObservableObject {
             guard next != editList else { return false }
             commitEditList(next)
             selectedSegmentID = id
+            clipNameDraft = editList.segment(id: id)?.name ?? ""
             statusMessage = "クリップを編集シーケンス内で移動しました。"
             return true
         } catch {
@@ -499,6 +535,9 @@ final class PlayerController: ObservableObject {
         if editList.segment(id: selectedSegmentID) == nil {
             selectedSegmentID = nil
             trimRange.reset()
+            clipNameDraft = ""
+        } else if let segment = editList.segment(id: selectedSegmentID) {
+            clipNameDraft = segment.name ?? ""
         }
         cancelPreviewSequence()
         statusMessage = "区間編集を取り消しました。"
@@ -511,9 +550,56 @@ final class PlayerController: ObservableObject {
         if editList.segment(id: selectedSegmentID) == nil {
             selectedSegmentID = nil
             trimRange.reset()
+            clipNameDraft = ""
+        } else if let segment = editList.segment(id: selectedSegmentID) {
+            clipNameDraft = segment.name ?? ""
         }
         cancelPreviewSequence()
         statusMessage = "区間編集をやり直しました。"
+    }
+
+    private func defaultClipName(for range: TrimRange) -> String {
+        let sourceName = currentURL?.deletingPathExtension().lastPathComponent ?? "クリップ"
+        let inPoint = range.inPoint ?? 0
+        let timecode = TimecodeFormatter.string(
+            seconds: inPoint,
+            framesPerSecond: nominalFrameRate
+        )
+        return "\(sourceName) · \(timecode)"
+    }
+
+    private func generateThumbnail(for segment: EditSegment) {
+        guard let asset = player.currentItem?.asset else { return }
+
+        thumbnailGenerators[segment.id]?.cancelAllCGImageGeneration()
+        clipThumbnails[segment.id] = nil
+
+        let generator = AVAssetImageGenerator(asset: asset)
+        generator.appliesPreferredTrackTransform = true
+        generator.maximumSize = CGSize(width: 320, height: 180)
+        thumbnailGenerators[segment.id] = generator
+
+        let offset = min(0.1, segment.durationSeconds / 2)
+        let requestedTime = CMTime(
+            seconds: segment.inPoint.seconds + offset,
+            preferredTimescale: 60_000
+        )
+
+        Task { @MainActor [weak self, generator] in
+            guard let self else { return }
+            defer {
+                if self.thumbnailGenerators[segment.id] === generator {
+                    self.thumbnailGenerators[segment.id] = nil
+                }
+            }
+            do {
+                let result = try await generator.image(at: requestedTime)
+                guard self.thumbnailGenerators[segment.id] === generator else { return }
+                self.clipThumbnails[segment.id] = NSImage(cgImage: result.image, size: .zero)
+            } catch {
+                // A placeholder remains visible when a frame cannot be generated.
+            }
+        }
     }
 
     private func commitEditList(_ next: EditList) {

@@ -155,7 +155,10 @@ This log records decisions that define Trimlet. Change a decision by adding a ne
 - Status: Accepted after terminology review
 - Decision: User-visible names are `Source Timeline` / `ソースタイムライン`, `Subclip` / `サブクリップ`, `Clip` / `クリップ`, `Editing Sequence` / `編集シーケンス`, and `Trim` / `トリム`. Internal `EditSegment` and `EditList` names remain implementation details.
 - Interaction: Clips can be dragged to change their order in the contiguous editing sequence. Earlier/later buttons remain available for keyboard and accessibility use.
-- Identity: A stable incremental clip number is assigned on creation and displayed separately from current sequence position. Reordering and trimming never rename the clip. Representative thumbnails are a later cached presentation layer, not identity.
+- Identity: A stable editable clip name is attached to the segment UUID. The default combines the source name and initial IN timecode. Reordering and trimming never rename the clip, and cards show no redundant position number.
+- Card content: Show a representative frame near IN, clip name, and IN–OUT time. Thumbnail generation is an asynchronous presentation layer and never affects export.
+- Reference: Final Cut Pro exposes filmstrips and clip-name display independently and supports renaming clips in its timeline index; Premiere exposes clip name and IN/OUT timecode as distinct display data. Trimlet adopts that information hierarchy without copying either application's full timeline surface.
+- Sources: https://support.apple.com/guide/final-cut-pro/verb8e5d346/mac, https://support.apple.com/guide/final-cut-pro/view-your-project-in-the-timeline-index-ver4e30596/12.3/mac/15.6, https://helpx.adobe.com/premiere/desktop/organize-media/apply-labeling/timecode-display-options.html
 - Boundary: Arbitrary sequence-time placement, gaps, overlaps, and multiple tracks are not represented by the current model. They require a separate sequence-time milestone rather than overloading list order.
 
 ## Proposed decisions awaiting validation

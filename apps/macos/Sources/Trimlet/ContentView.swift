@@ -8,6 +8,7 @@ struct ContentView: View {
     @State private var isDropTargeted = false
     @State private var dropTargetSegmentID: UUID?
     @State private var didHandleLaunchArgument = false
+    @FocusState private var isClipNameFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -33,6 +34,7 @@ struct ContentView: View {
         }
         .focusable()
         .onKeyPress(phases: .down) { press in
+            guard !isClipNameFocused else { return .ignored }
             guard press.key == .leftArrow || press.key == .rightArrow else { return .ignored }
             let direction = press.key == .leftArrow ? -1 : 1
             if press.modifiers.contains(.option) {
@@ -45,14 +47,17 @@ struct ContentView: View {
             return .handled
         }
         .onKeyPress(.space) {
+            guard !isClipNameFocused else { return .ignored }
             controller.togglePlayback()
             return .handled
         }
         .onKeyPress("i") {
+            guard !isClipNameFocused else { return .ignored }
             controller.setInPoint()
             return .handled
         }
         .onKeyPress("o") {
+            guard !isClipNameFocused else { return .ignored }
             controller.setOutPoint()
             return .handled
         }
@@ -266,9 +271,9 @@ struct ContentView: View {
         String(format: "%.3fs", seconds)
     }
 
-    private func clipLabel(_ segment: EditSegment, fallbackIndex: Int) -> String {
-        let number = segment.clipNumber ?? fallbackIndex + 1
-        return "クリップ \(String(format: "%03d", number))"
+    private func clipLabel(_ segment: EditSegment) -> String {
+        let name = segment.name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return name.isEmpty ? "名称未設定" : name
     }
 
     private func pointTime(_ seconds: Double?) -> String {
@@ -465,36 +470,50 @@ struct ContentView: View {
                             Button {
                                 controller.selectSegment(segment.id)
                             } label: {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    HStack(spacing: 6) {
-                                        Text("順番 \(index + 1)")
-                                            .font(.caption2)
-                                            .foregroundStyle(.secondary)
-                                        Text(clipLabel(segment, fallbackIndex: index))
-                                            .font(.caption2.weight(.bold))
+                                VStack(alignment: .leading, spacing: 4) {
+                                    ZStack(alignment: .topTrailing) {
+                                        if let thumbnail = controller.clipThumbnails[segment.id] {
+                                            Image(nsImage: thumbnail)
+                                                .resizable()
+                                                .scaledToFill()
+                                        } else {
+                                            Rectangle()
+                                                .fill(Color.black.opacity(0.72))
+                                                .overlay {
+                                                    Image(systemName: "photo")
+                                                        .foregroundStyle(.secondary)
+                                                }
+                                        }
                                         Image(systemName: "line.3.horizontal")
-                                            .font(.caption2)
-                                            .foregroundStyle(.secondary)
+                                            .font(.caption2.weight(.semibold))
+                                            .padding(5)
+                                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 5))
+                                            .padding(4)
                                     }
+                                    .frame(width: 156, height: 82)
+                                    .clipped()
+
+                                    Text(clipLabel(segment))
+                                        .font(.caption.weight(.semibold))
+                                        .lineLimit(1)
+                                        .truncationMode(.middle)
                                     Text("\(shortTime(segment.inPoint.seconds))–\(shortTime(segment.outPoint.seconds))")
                                         .font(.system(.caption2, design: .monospaced))
-                                    Text(TimecodeFormatter.string(seconds: segment.durationSeconds, framesPerSecond: controller.nominalFrameRate))
-                                        .font(.system(.caption2, design: .monospaced))
-                                        .foregroundStyle(.secondary)
                                     if controller.exportMode == .fast {
-                                        if let candidate = controller.fastCandidates[segment.id] ?? nil {
-                                            Text("高速 \(shortTime(candidate.start))–\(shortTime(candidate.end))")
-                                                .font(.system(.caption2, design: .monospaced))
-                                                .foregroundStyle(.orange)
-                                        } else {
-                                            Text("高速不可")
-                                                .font(.caption2.weight(.semibold))
-                                                .foregroundStyle(.orange)
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "bolt.fill")
+                                                .font(.caption2)
+                                            if let candidate = controller.fastCandidates[segment.id] ?? nil {
+                                                Text("\(shortTime(candidate.start))–\(shortTime(candidate.end))")
+                                            } else {
+                                                Text("高速不可")
+                                            }
                                         }
+                                        .font(.system(.caption2, design: .monospaced))
+                                        .foregroundStyle(.orange)
                                     }
                                 }
-                                .padding(.horizontal, 9)
-                                .padding(.vertical, 6)
+                                .padding(6)
                                 .background(
                                     dropTargetSegmentID == segment.id
                                         ? Color.accentColor.opacity(0.38)
@@ -506,7 +525,7 @@ struct ContentView: View {
                             }
                             .buttonStyle(.plain)
                             .draggable(segment.id.uuidString) {
-                                Label(clipLabel(segment, fallbackIndex: index), systemImage: "line.3.horizontal")
+                                Label(clipLabel(segment), systemImage: "line.3.horizontal")
                                     .padding(8)
                                     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 7))
                             }
@@ -528,6 +547,24 @@ struct ContentView: View {
                     }
                 }
                 .scrollIndicators(.hidden)
+
+                if controller.selectedSegmentID != nil {
+                    HStack(spacing: 8) {
+                        TextField("クリップ名", text: $controller.clipNameDraft)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(maxWidth: 320)
+                            .focused($isClipNameFocused)
+                            .onSubmit {
+                                controller.applySelectedClipName()
+                                isClipNameFocused = false
+                            }
+                        Button("名前を保存", systemImage: "checkmark") {
+                            controller.applySelectedClipName()
+                            isClipNameFocused = false
+                        }
+                        Spacer()
+                    }
+                }
 
                 HStack(spacing: 8) {
                     Text(controller.selectedSegmentID == nil

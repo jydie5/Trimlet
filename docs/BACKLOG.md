@@ -68,13 +68,14 @@
 
 - Priority: P0
 - Status: Implemented; human check pending
-- Scope: creation-order labels `クリップ 001…`, separate sequence-position display, preservation through trim/reorder/undo data snapshots
+- Scope: source name plus initial IN timecode as the default, user rename, no position number, preservation through trim/reorder/undo data snapshots
 
 ### TRIM-020 — クリップカードの代表サムネイル
 
 - Priority: P1
-- Status: Open
-- Scope: image near IN point, asynchronous generation, source/timestamp cache key, cancellation, long-media memory limit, placeholder and failure state
+- Status: Implemented for Mac session memory; human check pending
+- Scope: image near IN point, asynchronous AVFoundation generation from the playable asset/proxy, per-segment cancellation, placeholder and failure state
+- Follow-up: persistent source/timestamp cache and bounded eviction when project save or very large clip counts are introduced
 
 ## PoC 0.2
 
