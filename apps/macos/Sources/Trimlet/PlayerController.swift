@@ -18,10 +18,13 @@ final class PlayerController: ObservableObject {
     @Published private(set) var isDropTargeted = false
     @Published private(set) var statusMessage = "動画をドロップするか、「動画を開く」を選んでください。"
     @Published private(set) var keyframeIndex: KeyframeIndex?
+    @Published private(set) var keyframeAnalysisState: KeyframeAnalysisState = .idle
     @Published private(set) var activeOperation: OperationStatus?
     @Published private(set) var editList = EditList()
     @Published private(set) var selectedSegmentID: UUID?
     @Published private(set) var trimmingSegmentID: UUID?
+    @Published private(set) var shuttleLevel = 0
+    @Published private(set) var isScrubbing = false
     @Published private(set) var clipThumbnails: [UUID: NSImage] = [:]
     @Published private(set) var audioStreams: [MediaProbe.AudioStreamInfo] = []
     @Published var trimRange = TrimRange()
@@ -49,6 +52,13 @@ final class PlayerController: ObservableObject {
     private var previewRanges: [TrimRange] = []
     private var previewRangeIndex: Int?
     private var thumbnailGenerators: [UUID: AVAssetImageGenerator] = [:]
+    private var seekBasedShuttleTask: Task<Void, Never>?
+    private var seekBasedShuttlePosition: Double?
+    private var scrubSeekTask: Task<Void, Never>?
+    private var pendingScrubSeconds: Double?
+    private var lastScrubSeekUptime = 0.0
+
+    private static let shuttleRates: [Float] = [1, 2, 4, 8]
 
     var hasMedia: Bool {
         currentURL != nil && durationSeconds > 0
@@ -62,6 +72,12 @@ final class PlayerController: ObservableObject {
     }
 
     var isPlaybackActive: Bool { playbackIntent }
+
+    var shuttleDescription: String? {
+        guard shuttleLevel != 0 else { return nil }
+        let direction = shuttleLevel < 0 ? "逆" : "順"
+        return "\(direction) \(Int(shuttleRate(for: shuttleLevel)))x"
+    }
 
     var fastCandidate: FastCutCandidate? {
         keyframeIndex?.fastCandidate(for: trimRange)
@@ -123,6 +139,8 @@ final class PlayerController: ObservableObject {
         }
 
         player.pause()
+        resetShuttleState()
+        cancelScrubbingState()
         playbackIntent = false
         playbackState = .paused
         cancelPreviewSequence()
@@ -146,6 +164,7 @@ final class PlayerController: ObservableObject {
         audioStreams = []
         selectedAudioStreamIndex = nil
         keyframeIndex = nil
+        keyframeAnalysisState = .idle
 
         let extensionName = url.pathExtension.lowercased()
         if extensionName == "m2ts" || extensionName == "mts" {
@@ -290,6 +309,7 @@ final class PlayerController: ObservableObject {
                     self.proxyWasCancelled = false
                 } else if completedProcess.terminationStatus == 0 {
                     self.finishOperation(.completed, detail: "プロキシを作成しました。")
+                    self.activeOperation = nil
                     self.statusMessage = "プロキシを読み込んでいます…"
                     self.loadPlayableAsset(
                         at: proxyURL,
@@ -328,9 +348,11 @@ final class PlayerController: ObservableObject {
 
         if playbackIntent {
             player.pause()
+            resetShuttleState()
             playbackIntent = false
             playbackState = .paused
         } else {
+            resetShuttleState()
             if currentSeconds >= durationSeconds - 0.01 {
                 seekWithoutCancellingPreview(to: 0)
             }
@@ -343,6 +365,8 @@ final class PlayerController: ObservableObject {
     func step(by count: Int) {
         guard hasMedia, let item = player.currentItem else { return }
         cancelPreviewSequence()
+        resetShuttleState()
+        cancelScrubbingState()
         player.pause()
         playbackIntent = false
         playbackState = .paused
@@ -352,7 +376,74 @@ final class PlayerController: ObservableObject {
 
     func seek(to seconds: Double) {
         cancelPreviewSequence()
+        resetShuttleState()
+        cancelScrubbingState()
+        player.pause()
+        playbackIntent = false
+        playbackState = .paused
         seekWithoutCancellingPreview(to: seconds)
+    }
+
+    func adjustShuttle(by delta: Int) {
+        guard hasMedia, delta == -1 || delta == 1 else { return }
+        cancelPreviewSequence()
+        cancelScrubbingState()
+
+        let currentLevel = shuttleLevel == 0 && playbackIntent ? 1 : shuttleLevel
+        let nextLevel = min(Self.shuttleRates.count, max(-Self.shuttleRates.count, currentLevel + delta))
+        applyShuttleLevel(nextLevel)
+    }
+
+    func stopShuttle() {
+        guard hasMedia else { return }
+        player.pause()
+        resetShuttleState()
+        playbackIntent = false
+        playbackState = .paused
+        statusMessage = "シャトルを停止しました。"
+    }
+
+    func beginScrubbing() {
+        guard hasMedia else { return }
+        cancelPreviewSequence()
+        player.pause()
+        resetShuttleState()
+        playbackIntent = false
+        playbackState = .paused
+        isScrubbing = true
+        pendingScrubSeconds = currentSeconds
+        lastScrubSeekUptime = 0
+    }
+
+    func updateScrubbingPosition(to seconds: Double) {
+        guard hasMedia else { return }
+        if !isScrubbing {
+            beginScrubbing()
+        }
+
+        let clamped = min(max(0, seconds), durationSeconds)
+        currentSeconds = clamped
+        pendingScrubSeconds = clamped
+
+        let now = ProcessInfo.processInfo.systemUptime
+        let minimumInterval = 1.0 / 30.0
+        if now - lastScrubSeekUptime >= minimumInterval {
+            performPendingScrubSeek()
+        } else if scrubSeekTask == nil {
+            scrubSeekTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .milliseconds(34))
+                guard !Task.isCancelled, let self, self.isScrubbing else { return }
+                self.scrubSeekTask = nil
+                self.performPendingScrubSeek()
+            }
+        }
+    }
+
+    func endScrubbing() {
+        guard isScrubbing else { return }
+        let finalSeconds = pendingScrubSeconds ?? currentSeconds
+        cancelScrubbingState()
+        seekWithoutCancellingPreview(to: finalSeconds)
     }
 
     private func seekWithoutCancellingPreview(to seconds: Double) {
@@ -361,6 +452,111 @@ final class PlayerController: ObservableObject {
         let time = CMTime(seconds: clamped, preferredTimescale: 60_000)
         player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
         currentSeconds = clamped
+    }
+
+    private func performPendingScrubSeek() {
+        guard let seconds = pendingScrubSeconds else { return }
+        pendingScrubSeconds = nil
+        lastScrubSeekUptime = ProcessInfo.processInfo.systemUptime
+        let clamped = min(max(0, seconds), durationSeconds)
+        let time = CMTime(seconds: clamped, preferredTimescale: 60_000)
+        let tolerance = CMTime(seconds: max(0.04, 1 / nominalFrameRate), preferredTimescale: 60_000)
+        player.seek(to: time, toleranceBefore: tolerance, toleranceAfter: tolerance)
+        currentSeconds = clamped
+    }
+
+    private func cancelScrubbingState() {
+        scrubSeekTask?.cancel()
+        scrubSeekTask = nil
+        pendingScrubSeconds = nil
+        isScrubbing = false
+    }
+
+    private func shuttleRate(for level: Int) -> Float {
+        let index = min(max(abs(level), 1), Self.shuttleRates.count) - 1
+        return Self.shuttleRates[index]
+    }
+
+    private func applyShuttleLevel(_ level: Int) {
+        seekBasedShuttleTask?.cancel()
+        seekBasedShuttleTask = nil
+        seekBasedShuttlePosition = nil
+        player.pause()
+        shuttleLevel = level
+
+        guard level != 0, let item = player.currentItem else {
+            playbackIntent = false
+            playbackState = .paused
+            statusMessage = "シャトルを停止しました。"
+            return
+        }
+
+        let rate = shuttleRate(for: level)
+        let epsilon = max(0.01, 1 / nominalFrameRate)
+        if level < 0, currentSeconds <= epsilon {
+            shuttleLevel = 0
+            playbackIntent = false
+            playbackState = .paused
+            statusMessage = "動画の先頭です。"
+            return
+        }
+        if level > 0, currentSeconds >= durationSeconds - epsilon {
+            shuttleLevel = 0
+            playbackIntent = false
+            playbackState = .paused
+            statusMessage = "動画の終端です。"
+            return
+        }
+
+        playbackIntent = true
+        playbackState = .waiting
+        statusMessage = "シャトル：\(level < 0 ? "逆方向" : "順方向") \(Int(rate))x"
+
+        let canUseNativeRate = level > 0
+            ? (rate == 1 || item.canPlayFastForward)
+            : (rate == 1 ? item.canPlayReverse : item.canPlayFastReverse)
+
+        if canUseNativeRate {
+            player.playImmediately(atRate: level < 0 ? -rate : rate)
+        } else {
+            startSeekBasedShuttle(rate: Double(level < 0 ? -rate : rate))
+        }
+    }
+
+    private func startSeekBasedShuttle(rate: Double) {
+        player.pause()
+        playbackState = .playing
+        seekBasedShuttlePosition = currentSeconds
+        seekBasedShuttleTask = Task { @MainActor [weak self] in
+            let interval = 1.0 / 30.0
+            while !Task.isCancelled {
+                guard let self, self.shuttleLevel != 0 else { return }
+                let position = min(
+                    max(0, (self.seekBasedShuttlePosition ?? self.currentSeconds) + rate * interval),
+                    self.durationSeconds
+                )
+                self.seekBasedShuttlePosition = position
+                let time = CMTime(seconds: position, preferredTimescale: 60_000)
+                let tolerance = CMTime(seconds: max(0.04, 1 / self.nominalFrameRate), preferredTimescale: 60_000)
+                _ = await self.player.seek(to: time, toleranceBefore: tolerance, toleranceAfter: tolerance)
+                guard !Task.isCancelled, self.shuttleLevel != 0 else { return }
+                self.currentSeconds = position
+
+                if position <= 0 || position >= self.durationSeconds {
+                    self.stopShuttle()
+                    self.statusMessage = position <= 0 ? "動画の先頭です。" : "動画の終端です。"
+                    return
+                }
+                try? await Task.sleep(for: .milliseconds(33))
+            }
+        }
+    }
+
+    private func resetShuttleState() {
+        seekBasedShuttleTask?.cancel()
+        seekBasedShuttleTask = nil
+        seekBasedShuttlePosition = nil
+        shuttleLevel = 0
     }
 
     func jump(by seconds: Double) {
@@ -673,6 +869,8 @@ final class PlayerController: ObservableObject {
     private func startPreview(ranges: [TrimRange], message: String) {
         guard let first = ranges.first, let inPoint = first.inPoint else { return }
         player.pause()
+        resetShuttleState()
+        cancelScrubbingState()
         previewRanges = ranges
         previewRangeIndex = 0
         seekWithoutCancellingPreview(to: inPoint)
@@ -941,9 +1139,6 @@ final class PlayerController: ObservableObject {
             proxyWasCancelled = true
             proxyProcess?.terminate()
             statusMessage = "プロキシ生成をキャンセルしています…"
-        case .analysis:
-            cancelAnalysis()
-            finishOperation(.cancelled, detail: "キーフレーム解析をキャンセルしました。")
         case nil: break
         }
     }
@@ -960,9 +1155,26 @@ final class PlayerController: ObservableObject {
 
     private func refreshPlaybackPosition() {
         guard currentURL != nil else { return }
+        if seekBasedShuttleTask != nil {
+            playbackState = .playing
+            return
+        }
+
         let seconds = player.currentTime().seconds
         if seconds.isFinite {
             currentSeconds = min(max(0, seconds), durationSeconds)
+        }
+
+        let boundaryEpsilon = max(0.01, 1 / nominalFrameRate)
+        if shuttleLevel < 0, currentSeconds <= boundaryEpsilon {
+            stopShuttle()
+            statusMessage = "動画の先頭です。"
+            return
+        }
+        if shuttleLevel > 0, currentSeconds >= durationSeconds - boundaryEpsilon {
+            stopShuttle()
+            statusMessage = "動画の終端です。"
+            return
         }
 
         if let previewRangeIndex,
@@ -1004,13 +1216,19 @@ final class PlayerController: ObservableObject {
     }
 
     private func analyzeKeyframes(sourceURL: URL) {
-        guard let ffprobeURL = Self.ffprobeURL() else { return }
+        guard let ffprobeURL = Self.ffprobeURL() else {
+            keyframeAnalysisState = .failed
+            return
+        }
         cancelAnalysis()
         let mediaDuration = durationSeconds
 
         let outputURL = Self.temporaryURL(extension: "json")
         FileManager.default.createFile(atPath: outputURL.path, contents: nil)
-        guard let outputHandle = try? FileHandle(forWritingTo: outputURL) else { return }
+        guard let outputHandle = try? FileHandle(forWritingTo: outputURL) else {
+            keyframeAnalysisState = .failed
+            return
+        }
 
         let process = Process()
         process.executableURL = ffprobeURL
@@ -1027,13 +1245,7 @@ final class PlayerController: ObservableObject {
         let errorPipe = Pipe()
         process.standardError = errorPipe
         analysisProcess = process
-        beginOperation(
-            kind: .analysis,
-            title: "キーフレームを解析中",
-            detail: sourceURL.lastPathComponent,
-            progressURL: nil,
-            expectedDuration: nil
-        )
+        keyframeAnalysisState = .running
 
         process.terminationHandler = { [weak self] completedProcess in
             try? outputHandle.close()
@@ -1045,9 +1257,9 @@ final class PlayerController: ObservableObject {
                 self.analysisProcess = nil
                 if completedProcess.terminationStatus == 0, let parsed {
                     self.keyframeIndex = parsed
-                    self.finishOperation(.completed, detail: "\(parsed.keyframes.count)個のキーフレームを検出しました。", autoDismiss: true)
+                    self.keyframeAnalysisState = .ready(count: parsed.keyframes.count)
                 } else {
-                    self.finishOperation(.failed, detail: "キーフレームを解析できませんでした。")
+                    self.keyframeAnalysisState = .failed
                 }
             }
         }
@@ -1058,13 +1270,16 @@ final class PlayerController: ObservableObject {
             try? outputHandle.close()
             try? FileManager.default.removeItem(at: outputURL)
             analysisProcess = nil
-            finishOperation(.failed, detail: "キーフレーム解析を開始できませんでした。")
+            keyframeAnalysisState = .failed
         }
     }
 
     private func cancelAnalysis() {
         analysisProcess?.terminate()
         analysisProcess = nil
+        if keyframeAnalysisState == .running {
+            keyframeAnalysisState = .idle
+        }
     }
 
     private func beginOperation(

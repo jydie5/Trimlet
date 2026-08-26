@@ -61,6 +61,21 @@ struct ContentView: View {
             controller.setOutPoint()
             return .handled
         }
+        .onKeyPress("j") {
+            guard !isClipNameFocused else { return .ignored }
+            controller.adjustShuttle(by: -1)
+            return .handled
+        }
+        .onKeyPress("k") {
+            guard !isClipNameFocused else { return .ignored }
+            controller.stopShuttle()
+            return .handled
+        }
+        .onKeyPress("l") {
+            guard !isClipNameFocused else { return .ignored }
+            controller.adjustShuttle(by: 1)
+            return .handled
+        }
         .onAppear {
             openLaunchArgumentIfPresent()
         }
@@ -195,6 +210,32 @@ struct ContentView: View {
             .labelStyle(.iconOnly)
             .help("5秒進む")
 
+            Divider()
+                .frame(height: 24)
+
+            ControlGroup {
+                Button("J") {
+                    controller.adjustShuttle(by: -1)
+                }
+                .accessibilityLabel("逆方向シャトル")
+                Button("K") {
+                    controller.stopShuttle()
+                }
+                .accessibilityLabel("シャトル停止")
+                Button("L") {
+                    controller.adjustShuttle(by: 1)
+                }
+                .accessibilityLabel("順方向シャトル")
+            }
+            .controlSize(.small)
+            .help("J：逆方向　K：停止　L：順方向（繰り返しで速度変更）")
+
+            if let description = controller.shuttleDescription {
+                Text(description)
+                    .font(.system(.caption, design: .monospaced).weight(.semibold))
+                    .foregroundStyle(.orange)
+            }
+
             if controller.playbackState == .waiting {
                 ProgressView()
                     .controlSize(.small)
@@ -219,7 +260,7 @@ struct ContentView: View {
             HStack {
                 Label("ソースタイムライン", systemImage: "film")
                     .font(.caption.weight(.semibold))
-                Text("青＝シーケンスのクリップ　緑／赤＝IN／OUT")
+                Text("紫＝作成中　青＝追加済み　緑／赤＝IN／OUT")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -240,13 +281,32 @@ struct ContentView: View {
             Slider(
                 value: Binding(
                     get: { controller.currentSeconds },
-                    set: { controller.seek(to: $0) }
+                    set: { controller.updateScrubbingPosition(to: $0) }
                 ),
-                in: 0...max(controller.durationSeconds, 0.01)
+                in: 0...max(controller.durationSeconds, 0.01),
+                onEditingChanged: { isEditing in
+                    if isEditing {
+                        controller.beginScrubbing()
+                    } else {
+                        controller.endScrubbing()
+                    }
+                }
             )
             .disabled(!controller.hasMedia)
 
             HStack(spacing: 12) {
+                switch controller.keyframeAnalysisState {
+                case .running:
+                    ProgressView()
+                        .controlSize(.mini)
+                    Text("キーフレームを解析しています…")
+                case .failed:
+                    Label("キーフレームを解析できませんでした。Accurateは利用できます", systemImage: "exclamationmark.triangle")
+                        .foregroundStyle(.orange)
+                case .ready, .idle:
+                    EmptyView()
+                }
+
                 if let index = controller.keyframeIndex {
                     Label("キーフレーム \(index.keyframes.count)個", systemImage: "line.3.horizontal.decrease")
                     if controller.exportMode == .fast, let candidate = controller.fastCandidate {
@@ -256,11 +316,9 @@ struct ContentView: View {
                         Text("この範囲は正確モードを推奨")
                             .foregroundStyle(.orange)
                     }
-                } else if controller.hasMedia {
-                    Text("キーフレームを解析しています…")
                 }
                 Spacer()
-                Text("←/→ 1f　Shift 10f　Option 5秒")
+                Text("J 逆再生　K 停止　L 順再生　←/→ 1f　Shift 10f　Option 5秒")
             }
             .font(.caption2)
             .foregroundStyle(.secondary)
@@ -763,7 +821,14 @@ private struct RangeBar: View {
                     let draftStart = min(max(draftInPoint / safeDuration, 0), 1)
                     let draftEnd = min(max(draftOutPoint / safeDuration, 0), 1)
                     RoundedRectangle(cornerRadius: 5)
-                        .stroke(Color.white.opacity(0.9), style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
+                        .fill(Color.purple.opacity(0.38))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 5)
+                                .stroke(
+                                    Color.purple.opacity(0.95),
+                                    style: StrokeStyle(lineWidth: 1.5, dash: [4, 3])
+                                )
+                        }
                         .frame(width: width * (draftEnd - draftStart), height: 26)
                         .offset(x: width * draftStart)
                 }

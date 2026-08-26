@@ -169,6 +169,16 @@ This log records decisions that define Trimlet. Change a decision by adding a ne
 - Safety invariant: Unless Trim Edit was explicitly chosen, the three-stage IN → OUT → Add flow creates a new clip and never changes an existing clip.
 - Boundary: Arbitrary sequence-time placement, gaps, overlaps, and multiple tracks are not represented by the current model. They require a separate sequence-time milestone rather than overloading list order.
 
+### D-020: Use distinct draft visuals, non-modal inspection, and conventional shuttle controls
+
+- Date: 2026-08-26
+- Status: Accepted after Mac interaction review
+- Visual state: A valid uncommitted IN/OUT draft uses translucent purple plus a dashed boundary. Retained clips remain blue, IN remains green, OUT remains red, and Fast/keyframe information remains orange. Shape and legend reinforce color.
+- Inspection: Once media is playable, automatic keyframe analysis runs without the full-screen operation panel. Running and failed states stay near the source timeline. Proxy generation and export keep cancellable progress; successful proxy completion auto-dismisses.
+- Navigation: J/K/L form a signed four-level shuttle from reverse 8x through stop to forward 8x. Unsupported native rates fall back to paced tolerant seeks. Slider drag uses responsive tolerant seeks and release performs the exact final seek.
+- Cross-platform: Windows uses the same visible meanings and shortcut state transitions with its native playback stack. It does not copy macOS playback code or UI layout.
+- References: https://helpx.adobe.com/premiere/desktop/render-and-export/render-sequences-for-playback/play-clips-in-source-monitor.html, https://support.apple.com/guide/final-cut-pro/ver90ba4ef0/mac
+
 ## Proposed decisions awaiting validation
 
 ### P-001: Project structure

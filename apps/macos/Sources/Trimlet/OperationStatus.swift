@@ -6,10 +6,16 @@ enum PlaybackState: Equatable {
     case playing
 }
 
+enum KeyframeAnalysisState: Equatable {
+    case idle
+    case running
+    case ready(count: Int)
+    case failed
+}
+
 enum OperationKind: String, Equatable {
     case export
     case proxy
-    case analysis
 }
 
 enum OperationResult: Equatable {

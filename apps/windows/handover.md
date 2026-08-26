@@ -60,11 +60,15 @@ FFmpeg discovery checks `TRIMLET_FFMPEG` / `TRIMLET_FFPROBE`, the application di
 
 ## Next implementation order
 
-1. Add preview suitability detection and a cancellable proxy cache without changing source identity.
-2. Move VFR navigation and boundaries to source PTS end to end.
-3. Expand generated and real-machine media coverage.
-4. Select a Windows distribution format and complete the binary release gate in `docs/legal/RELEASE_COMPLIANCE.md`.
-5. Add an original application icon and code signing before publishing a binary.
+1. Match the 2026-08-26 interaction contract: distinct uncommitted-range fill plus dashed boundary, blue retained ranges, and non-modal keyframe inspection state.
+2. Add J/K/L shuttle levels with visible direction/speed, plus responsive slider scrubbing followed by an exact final seek. Use the Windows-native playback rate when supported and a bounded seek fallback otherwise.
+3. Add preview suitability detection and a cancellable proxy cache without changing source identity.
+4. Move VFR navigation and boundaries to source PTS end to end.
+5. Expand generated and real-machine media coverage.
+6. Select a Windows distribution format and complete the binary release gate in `docs/legal/RELEASE_COMPLIANCE.md`.
+7. Add an original application icon and code signing before publishing a binary.
+
+The shared acceptance behavior for items 1–2 is normative in `docs/PLATFORM_CONTRACT.md`. The Mac implementation is only a behavioral reference; do not port SwiftUI or AVPlayer code into Windows.
 
 ## Collaboration rules
 

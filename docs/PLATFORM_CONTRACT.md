@@ -50,6 +50,9 @@ Both platforms must support the same primary flow:
 11. Display the same normalized keyframe PTS data and per-segment Fast candidate boundaries on Mac and Windows.
 12. Allow explicit audio-stream selection when multiple source audio streams exist.
 13. Validate video, chosen audio, segment order, and combined duration before presenting an export as complete.
+14. Distinguish a valid uncommitted IN/OUT draft from retained clips by both fill semantics and boundary style; committing changes the draft presentation into the retained presentation.
+15. Run keyframe inspection without a modal panel once playable media is visible, while keeping its state visible near the source timeline.
+16. Provide J/K/L shuttle semantics and continuous scrubbing with a precise final seek. Native playback mechanisms may differ, but direction, bounded speed changes, stop behavior, and displayed position must agree.
 
 The first Mac and Windows releases may differ visually, but neither should introduce a different editing model.
 

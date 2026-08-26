@@ -23,6 +23,10 @@
 - The earlier position-number card experiment was removed after review. The accepted card hierarchy is representative thumbnail, editable stable clip name, and IN–OUT range; sequence order is communicated by horizontal placement.
 - A generated H.264 sample produced a visible IN-adjacent thumbnail on its clip card. The default `trimlet-sample · 00:00:00:00` name was changed to `Opening IO`; the card updated without changing its thumbnail, IN–OUT range, or segment identity. Typing I/O while the name field was focused did not trigger IN/OUT shortcuts.
 - The reported “first clip disappeared after making three” case was reproduced as an accidental update: the UI had two cards, remained in Trim mode, and the first card's original-name timecode no longer matched its changed range. After separating selection from Trim Edit, a test selected the first card before each new IN/OUT operation and still produced three distinct cards; the editor stayed in Add mode until the explicit Trim Edit button was used.
+- The 2026-08-26 interaction pass loaded the 8-second H.264 sample without presenting the full-screen keyframe-analysis panel; the source timeline remained interactive and showed the ready count inline.
+- J started reverse 1x, K stopped, and repeated L advanced from forward 1x to 2x with matching direction/speed labels and visible playhead movement. The same J/K/L controls remained present on screen.
+- An IN/OUT draft rendered as a translucent purple range with a dashed edge. After Add to Sequence, the purple draft disappeared, the retained range rendered blue, and the editor reset for a new subclip.
+- A synthetic pointer drag moved the slider repeatedly across the source and released near 5 seconds. Video and timecode followed the drag, and the final exact seek settled at `00:00:05:03` on the 30 fps test source.
 
 Run the principal checks with:
 

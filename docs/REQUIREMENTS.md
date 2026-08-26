@@ -62,13 +62,16 @@ Requirement keywords follow MUST, SHOULD, and MAY.
 
 - FR-010: The app MUST provide play and pause.
 - FR-011: The app MUST provide timeline seeking and scrubbing.
+- FR-011A: During continuous slider scrubbing, preview seeks SHOULD be coalesced and may use a bounded tolerance for responsiveness. Releasing the slider MUST perform an exact seek to the displayed timestamp.
 - FR-012: The app MUST step one displayed frame forward and backward.
 - FR-013: Left and Right Arrow MUST step one frame while paused.
 - FR-014: The app MUST display current position and total duration.
 - FR-015: Time display MUST support `HH:MM:SS:FF` for constant-frame-rate media.
 - FR-016: For variable-frame-rate media, internal positions MUST be stored by timestamp rather than by a calculated frame number.
 - FR-017: The app SHOULD provide short jump backward and forward commands.
+- FR-017A: The app MUST provide discoverable J/K/L shuttle controls with matching keyboard shortcuts: J moves toward reverse, K stops, and L moves toward forward. Repeated directional input MUST expose bounded speed steps and the current direction/speed.
 - FR-018: The UI MUST remain responsive during inspection, proxy creation, seeking, and export.
+- FR-018A: Automatic keyframe inspection MUST be non-modal after playable media appears. Its running, ready, and failed states MUST be visible near the source timeline without blocking playback or editing. Proxy creation and export retain cancellable progress presentation.
 
 ### 5.3 Range selection
 
@@ -76,6 +79,7 @@ Requirement keywords follow MUST, SHOULD, and MAY.
 - FR-021: New-subclip mode MUST present the primary workflow in visible order: `1. IN point`, `2. OUT point`, `3. add to sequence`. The user MUST also be able to set IN and OUT with keyboard shortcuts.
 - FR-022: The app MUST maintain an editing sequence containing zero or more ordered clips.
 - FR-023: Every retained range MUST be visible on the source timeline and as a compact clip card in the editing sequence.
+- FR-023C: A valid draft IN/OUT range MUST use a distinct fill and dashed boundary until committed. A successful Add MUST replace that draft presentation with the retained-range presentation. Color MUST NOT be the only state cue.
 - FR-023A: Every new clip MUST receive a stable default name derived from source identity and its initial IN point. The user MUST be able to rename it. Reordering and trimming MUST preserve that name.
 - FR-023B: A clip card MUST NOT display a redundant sequence-position number; its horizontal placement already communicates sequence order.
 - FR-024: A segment MUST be rejected when IN is not earlier than OUT, lies outside the source, or overlaps another retained source range.

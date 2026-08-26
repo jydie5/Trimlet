@@ -87,7 +87,7 @@
 ### TRIM-022 — 作成中の選択範囲を専用色で塗る
 
 - Priority: P1
-- Status: Planned; implementation intentionally not started
+- Status: Implemented on Mac; human check and Windows parity pending
 - Platform: Shared visual semantics; native rendering on Mac and Windows
 - Reported: IN／OUTの緑線・赤線は見えるが、シーケンスへ追加する前の範囲は点線だけで面として判別しにくい。
 - Scope: 作成中の有効範囲を半透明の紫系＋点線で表示し、追加済みクリップは従来どおり青で表示する。追加が成功した瞬間に紫から青へ状態遷移させる。色だけに依存しない凡例、境界線、明暗両テーマのコントラストも含む。
@@ -96,7 +96,7 @@
 ### TRIM-023 — 動画読込後のキーフレーム解析を非モーダル化する
 
 - Priority: P1
-- Status: Planned; implementation intentionally not started
+- Status: Implemented on Mac; human check and Windows parity pending
 - Platform: Shared behavior; Mac implementation first
 - Reported: 動画をドロップした直後に全面表示される確認画面は、動画が既に画面へ出ているため不要に感じる。
 - Scope: 観測された画面がキーフレーム解析パネルであることを再現確認し、自動解析は背景で続けながらタイムライン内へ小さく進捗を出す。プロキシ生成、書き出し、破棄を伴う別動画への置換確認は別の安全要件として維持する。
@@ -105,7 +105,7 @@
 ### TRIM-024 — J・K・Lシャトルと高速スクラブを追加する
 
 - Priority: P1
-- Status: Planned; implementation intentionally not started
+- Status: Implemented on Mac; human check and Windows parity pending
 - Platform: Shared shortcuts and behavior; native playback implementation per platform
 - Reported: フレーム／5秒移動に加えて、映像を見ながら前後へ高速かつ自由に探索したい。
 - Scope: Premiere Pro／Final Cut Proで共通するJ（逆方向）、K（停止）、L（順方向）のシャトル操作をTrimletの操作体系へ追加する。タイムラインのドラッグ中は軽量な近似シーク、離した時点で正確なシークを行い、長尺・長GOPでも追従させる。ホバースキミングは専用タイムラインTRIM-014まで保留する。
