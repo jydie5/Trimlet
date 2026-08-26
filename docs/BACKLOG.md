@@ -1,7 +1,7 @@
 # Trimlet development backlog
 
 - Current milestone: Mac multi-range 0.3
-- Updated: 2026-08-25
+- Updated: 2026-08-26
 - Source: `HUMAN_CHECK.md`
 
 優先度はP0（次回確認を妨げる）、P1（次回確認に必要）、P2（その後の改善）の順。
@@ -83,6 +83,33 @@
 - Status: Implemented after user reproduction; human check pending
 - Reported: Creating a third clip after selecting the first card appeared to delete the first clip because the UI silently remained in trim mode and updated it.
 - Scope: card click is selection only, explicit `トリム編集` transition, separate selected/trimming identifiers, new IN/OUT remains an Add operation unless trim edit was explicitly chosen
+
+### TRIM-022 — 作成中の選択範囲を専用色で塗る
+
+- Priority: P1
+- Status: Planned; implementation intentionally not started
+- Platform: Shared visual semantics; native rendering on Mac and Windows
+- Reported: IN／OUTの緑線・赤線は見えるが、シーケンスへ追加する前の範囲は点線だけで面として判別しにくい。
+- Scope: 作成中の有効範囲を半透明の紫系＋点線で表示し、追加済みクリップは従来どおり青で表示する。追加が成功した瞬間に紫から青へ状態遷移させる。色だけに依存しない凡例、境界線、明暗両テーマのコントラストも含む。
+- Plan: [`INTERACTION_PLAN_2026-08-26.md`](INTERACTION_PLAN_2026-08-26.md)
+
+### TRIM-023 — 動画読込後のキーフレーム解析を非モーダル化する
+
+- Priority: P1
+- Status: Planned; implementation intentionally not started
+- Platform: Shared behavior; Mac implementation first
+- Reported: 動画をドロップした直後に全面表示される確認画面は、動画が既に画面へ出ているため不要に感じる。
+- Scope: 観測された画面がキーフレーム解析パネルであることを再現確認し、自動解析は背景で続けながらタイムライン内へ小さく進捗を出す。プロキシ生成、書き出し、破棄を伴う別動画への置換確認は別の安全要件として維持する。
+- Plan: [`INTERACTION_PLAN_2026-08-26.md`](INTERACTION_PLAN_2026-08-26.md)
+
+### TRIM-024 — J・K・Lシャトルと高速スクラブを追加する
+
+- Priority: P1
+- Status: Planned; implementation intentionally not started
+- Platform: Shared shortcuts and behavior; native playback implementation per platform
+- Reported: フレーム／5秒移動に加えて、映像を見ながら前後へ高速かつ自由に探索したい。
+- Scope: Premiere Pro／Final Cut Proで共通するJ（逆方向）、K（停止）、L（順方向）のシャトル操作をTrimletの操作体系へ追加する。タイムラインのドラッグ中は軽量な近似シーク、離した時点で正確なシークを行い、長尺・長GOPでも追従させる。ホバースキミングは専用タイムラインTRIM-014まで保留する。
+- Plan: [`INTERACTION_PLAN_2026-08-26.md`](INTERACTION_PLAN_2026-08-26.md)
 
 ## PoC 0.2
 
