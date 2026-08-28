@@ -179,6 +179,15 @@ This log records decisions that define Trimlet. Change a decision by adding a ne
 - Cross-platform: Windows uses the same visible meanings and shortcut state transitions with its native playback stack. It does not copy macOS playback code or UI layout.
 - References: https://helpx.adobe.com/premiere/desktop/render-and-export/render-sequences-for-playback/play-clips-in-source-monitor.html, https://support.apple.com/guide/final-cut-pro/ver90ba4ef0/mac
 
+### D-021: Publish the accepted Mac multi-range milestone as Beta 1
+
+- Date: 2026-08-28
+- Status: Accepted after the focused human interaction check
+- Decision: Publish the current Mac milestone as the source-only prerelease `v0.3.0-beta.1`, merge its reviewed branch to `main`, and use it as the behavioral baseline for the next Windows parity turn.
+- Distribution: Attach no application bundle, DMG, installer, FFmpeg/ffprobe binary, generated media, or developer build output. Production signing, notarization, dependency packaging, and clean-machine binary verification remain future gates.
+- Scope: Beta status accepts the multi-range editing interaction and does not claim that broader M2TS, long-media, A/V sync, HDR/interlace, VFR, or cancellation evaluation is complete.
+- Handover: Windows follows `apps/windows/handover.md` and `docs/PLATFORM_CONTRACT.md` with WinUI-native implementation choices.
+
 ## Proposed decisions awaiting validation
 
 ### P-001: Project structure

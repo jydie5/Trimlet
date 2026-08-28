@@ -158,7 +158,7 @@ struct ContentView: View {
                 }
                 .font(.caption)
                 .help("任意のカンパです。機能解放や利用条件の変更はありません。")
-                Text("0.3 開発版")
+                Text("0.3 β1")
                     .font(.caption2.weight(.semibold))
                     .padding(.horizontal, 7)
                     .padding(.vertical, 3)

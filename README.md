@@ -6,7 +6,7 @@ Only what you need, quickly and precisely.
 
 Trimlet is a lightweight, frame-accurate video trimming application with separate native implementations for macOS and Windows.
 
-The macOS proof of concept is implemented in SwiftUI. A native C#/WinUI 3 Windows Early Access implementation now follows the same product and media-processing contracts.
+The macOS application is now at the SwiftUI Beta stage. A native C#/WinUI 3 Windows Early Access implementation follows the same product and media-processing contracts and will catch up to the accepted Mac interaction model.
 
 ## Product goal
 
@@ -36,12 +36,12 @@ Priority inputs are MP4, MOV, M2TS, and MTS.
 
 ## Repository status
 
-- macOS: native 0.3 development milestone with multiple retained ranges, sequence preview, audio selection, and combined Fast/Accurate export.
-- Windows: source-only Early Access with native preview, range selection, audio-stream selection, and validated Fast/Accurate export.
-- Parity: the primary open → select IN/OUT → export workflow is aligned. Windows automatic preview proxies and source-PTS stepping for variable-frame-rate media remain open.
+- macOS: native `v0.3.0-beta.1` with multiple retained ranges, an editing sequence, sequence preview, audio selection, and combined Fast/Accurate export.
+- Windows: source-only Early Access with native preview, one retained range, audio-stream selection, and validated Fast/Accurate export. Its next turn is to catch up to the Mac Beta multi-range interaction model.
+- Parity: the foundational open → select IN/OUT → export workflow is aligned. Multi-range editing, J/K/L shuttle controls, responsive scrubbing, automatic preview proxies, and source-PTS stepping still differ by platform.
 - Public source releases are published under the MIT License.
 
-Latest macOS PoC source release: [v0.2.1-poc](https://github.com/jydie5/Trimlet/releases/tag/v0.2.1-poc)
+Latest macOS Beta source release: [v0.3.0-beta.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-beta.1)
 
 Windows Early Access: [v0.3.0-early-access.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-early-access.1) (source only; no installer or prebuilt executable)
 
@@ -62,7 +62,7 @@ The native UI and playback layers are intentionally not shared. Product terminol
 
 See [Repository structure](docs/architecture/REPOSITORY_STRUCTURE.md) and the [platform contract](docs/PLATFORM_CONTRACT.md).
 
-## Try the macOS PoC
+## Try the macOS Beta
 
 Prerequisites:
 
@@ -117,6 +117,7 @@ You can also help at no cost by starring or sharing the repository, reporting re
 - [Windows Early Access guide](apps/windows/README.md)
 - [Windows maintainer handover](apps/windows/handover.md)
 - [Windows-to-macOS owner handover](apps/macos/WINDOWS_EARLY_ACCESS_HANDOVER.md)
+- [v0.3.0 Beta 1 release notes](docs/releases/v0.3.0-beta.1.md)
 - [Mac PoC scope](docs/POC.md)
 - [Human-check guide](docs/HUMAN_CHECK.md)
 - [Verified environment](docs/ENVIRONMENT.md)

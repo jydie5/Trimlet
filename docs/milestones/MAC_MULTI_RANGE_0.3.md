@@ -1,6 +1,6 @@
 # Mac multi-range milestone 0.3
 
-- Status: Implemented; professional terminology and drag reorder awaiting human check
+- Status: Implemented; focused interaction check accepted for `v0.3.0-beta.1` on 2026-08-28
 - Defined: 2026-08-24
 - Goal: Reach the next human check with useful multi-cut editing while preserving Trimlet's focused single-source product.
 

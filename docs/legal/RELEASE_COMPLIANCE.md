@@ -1,7 +1,7 @@
 # GitHub release compliance checklist
 
-- Status: Windows source-only Early Access approved when the automated gate passes
-- Updated: 2026-08-21
+- Status: macOS Beta and Windows Early Access approved for source-only prereleases when the automated gate passes
+- Updated: 2026-08-28
 
 This is an engineering compliance gate, not legal advice.
 
@@ -29,6 +29,12 @@ Run `scripts/check-release-readiness.sh` before creating a tag.
 Release `v0.3.0-early-access.1` is approved only as a GitHub source prerelease. It may include the C#/WinUI source, tests, workflows, and documentation. It must not attach an installer, `.exe`, MSIX, FFmpeg/ffprobe binary, generated test media, or build output.
 
 The release notes and README must state that this is an unpackaged developer build, describe the separately installed FFmpeg requirement, and name the automatic-proxy and VFR-navigation limitations. Creating the tag remains conditional on the final repository readiness scan and Windows CI passing.
+
+## macOS Beta 1 publication record
+
+Release `v0.3.0-beta.1` is approved as a GitHub source-only prerelease after the focused interaction check accepted the multi-range workflow on 2026-08-28. It may include Swift source, Windows source, tests, workflows, contracts, and documentation. It must not attach `Trimlet.app`, a DMG, FFmpeg/ffprobe binaries, generated test media, or developer-machine build output.
+
+The release notes and README must disclose the separately installed FFmpeg requirement, the lack of production signing/notarization and binary distribution, and the remaining media-quality evaluation. The tag is created from `main` only after Mac, Windows, shared-contract, security, and source-release readiness checks pass.
 
 ## Initial publication policy
 

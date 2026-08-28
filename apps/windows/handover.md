@@ -2,6 +2,7 @@
 
 - Prepared: 2026-08-28
 - Release: `v0.3.0-early-access.1`
+- Mac baseline to catch up with: `v0.3.0-beta.1`
 - Repository: https://github.com/jydie5/Trimlet
 - Distribution: source only; no installer, signed executable, or bundled FFmpeg
 
