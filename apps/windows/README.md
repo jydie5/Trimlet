@@ -4,7 +4,7 @@
 
 The Windows source tree now contains the multi-range parity candidate for the macOS `v0.3.0-beta.1` interaction contract. It remains an unpackaged, source-only Early Access build until the Windows human check and distribution work are complete.
 
-The app accepts supported media through a picker or drag and drop, provides Windows-native playback and seeking, inspects the source with `ffprobe`, and builds an ordered editing sequence from multiple non-overlapping IN/OUT ranges. Retained clips have stable editable names, representative thumbnails, explicit trim editing, reordering, deletion, undo/redo, and continuous sequence preview.
+The app accepts supported media through a picker or drag and drop, provides Windows-native playback and seeking, inspects the source with `ffprobe`, and builds an ordered editing sequence from multiple non-overlapping IN/OUT ranges. Retained clips have stable editable names, representative thumbnails, explicit trim editing, reordering, deletion, undo/redo, and continuous sequence preview. M2TS/MTS sources and direct-playback failures use a validated, cancellable preview proxy while export continues to read the original source.
 
 Fast mode plans a keyframe-compatible candidate for every retained clip, stream-copies each segment, and concatenates the ordered results without video re-encoding. Accurate mode preserves the requested timestamps, re-encodes each segment to H.264/AAC with a working encoder discovered on the current machine, and concatenates them. Final output is validated with `ffprobe` before it receives a completed-looking name.
 
@@ -24,12 +24,12 @@ The script validates shared contracts, runs unit and integration checks with gen
 
 The implemented interaction contract matches the macOS Beta for one-source multi-range editing: a visually distinct draft, retained clips, editing-sequence manipulation, J/K/L shuttle levels, discoverable I/O shortcuts, coalesced scrubbing, non-modal keyframe analysis, sequence preview, and combined Fast/Accurate export. Windows uses WinUI-native controls and only shows the audio-stream picker when the source contains multiple streams.
 
-This Early Access is not complete platform parity:
+The current source has caught up with the accepted macOS Beta interaction and preview behavior. Windows builds a source presentation-timestamp index in the background and uses it for frame movement when ready; the inspected nominal rate remains a responsive fallback while analysis is running.
 
-- Windows-native playback has no automatic proxy fallback yet; the macOS PoC can generate a preview proxy for incompatible media.
-- Frame movement uses the inspected nominal rational frame rate rather than presentation timestamps for variable-frame-rate media.
+The remaining Early Access limitations are release and coverage gates rather than known Mac-baseline feature gaps:
+
 - There is no installer, MSIX, code signature, or supported prebuilt executable.
-- M2TS/MTS preview depends on codecs installed in Windows, although FFmpeg export may still work.
+- Long, damaged-GOP, HDR, interlaced, and cancellation cases still need broader representative-media checks on Windows machines.
 
 ## Recommended native stack
 

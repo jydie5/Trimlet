@@ -38,7 +38,7 @@ macOS版はSwiftUIによるBeta段階です。Windows Early Accessのソース�
 
 - macOS：ネイティブ`v0.3.0-beta.1`。複数区間、編集シーケンス、連続プレビュー、音声選択、複数区間の高速／正確書き出しを実装しています。
 - Windows：ソース配布のEarly Access。ネイティブ再生、複数クリップ、編集シーケンス操作、J/K/L、音声選択、連続プレビュー、検証付きの複数区間高速／正確書き出しまで実装しました。開発者確認は完了し、Windows実機のヒューマンチェック待ちです。
-- 同等性：Mac Betaで合意した複数区間の操作仕様は両OSに実装済みです。自動プレビュー用プロキシと可変フレームレート動画のPTS基準移動には引き続き差があります。
+- 同等性：Mac Betaで合意した複数区間の操作仕様は両OSに実装済みです。Windowsにも自動プレビュー用プロキシと、バックグラウンドで作る実PTSフレーム索引を実装しました。配布形式と幅広い実動画でのリリース検証は引き続きOS別の作業です。
 - macOS最新版：[v0.3.0-beta.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-beta.1)をMIT Licenseのソースのみで公開しています。
 
 Windows Early Access：[v0.3.0-early-access.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-early-access.1)（ソースのみ。インストーラーやビルド済み実行ファイルはありません）

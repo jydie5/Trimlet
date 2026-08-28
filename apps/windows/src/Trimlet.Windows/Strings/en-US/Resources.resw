@@ -132,4 +132,24 @@
   <data name="SequenceSummaryFormat" xml:space="preserve"><value>{0} clips · total {1}</value></data>
   <data name="KeyframeReadyFormat" xml:space="preserve"><value>{0} keyframes · Fast candidates shown in orange</value></data>
   <data name="OverlapMessage" xml:space="preserve"><value>This subclip overlaps a retained clip. Adjust IN or OUT.</value></data>
+  <data name="CancelProxyButton.Content" xml:space="preserve"><value>Cancel</value></data>
+  <data name="ProxyPreparingTitle" xml:space="preserve"><value>Preparing preview</value></data>
+  <data name="ProxyFallbackMessage" xml:space="preserve"><value>Direct playback failed, so Trimlet is preparing a proxy without changing the source.</value></data>
+  <data name="ProxyReadOnlyMessage" xml:space="preserve"><value>Creating a lightweight preview-only MP4. Export always uses the source media.</value></data>
+  <data name="ProxyStarting" xml:space="preserve"><value>Preparing the preview proxy…</value></data>
+  <data name="ProxyProgressFormat" xml:space="preserve"><value>{0}% · processed {1}</value></data>
+  <data name="ProxyCancelling" xml:space="preserve"><value>Stopping FFmpeg and cleaning the incomplete proxy…</value></data>
+  <data name="ProxyCancelled" xml:space="preserve"><value>Proxy generation was cancelled.</value></data>
+  <data name="ProxyCancelledTitle" xml:space="preserve"><value>Proxy generation cancelled</value></data>
+  <data name="ProxyCancelledMessage" xml:space="preserve"><value>No incomplete proxy remains. The source was not changed.</value></data>
+  <data name="ProxyFailedTitle" xml:space="preserve"><value>Could not create the proxy</value></data>
+  <data name="ProxyToolchainMissing" xml:space="preserve"><value>M2TS/MTS preview requires ffmpeg and ffprobe.</value></data>
+  <data name="ProxyCompleted" xml:space="preserve"><value>Proxy created. Loading it…</value></data>
+  <data name="ProxyReused" xml:space="preserve"><value>Loading the existing proxy…</value></data>
+  <data name="ProxyReadyTitle" xml:space="preserve"><value>Previewing with a proxy</value></data>
+  <data name="ProxyReadyMessage" xml:space="preserve"><value>Preview cache {0}. Export still uses the source media.</value></data>
+  <data name="ProxyActiveMessage" xml:space="preserve"><value>Export still uses the source media.</value></data>
+  <data name="ProxyPreviewSuffix" xml:space="preserve"><value>proxy preview</value></data>
+  <data name="FrameTimingScanningSuffix" xml:space="preserve"><value> · inspecting frame timestamps…</value></data>
+  <data name="FrameTimingReadySuffix" xml:space="preserve"><value> · {0} frame timestamps</value></data>
 </root>

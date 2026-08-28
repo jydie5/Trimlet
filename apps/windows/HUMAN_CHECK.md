@@ -20,13 +20,14 @@ Prerequisites:
 
 ## Check with local media
 
-Use non-sensitive MP4 or MOV media first. M2TS/MTS playback depends on codecs available in Windows.
+Use non-sensitive MP4 or MOV media first. M2TS/MTS uses the automatic FFmpeg preview proxy.
 
 1. Confirm the app opens with the Trimlet title and no installer.
 2. Select **Open video**, choose a supported local file, and confirm its name and compact media summary appear. The full path is available as a tooltip rather than permanent interface copy.
 3. Repeat by dragging a supported file onto the window.
 4. Confirm the media summary shows duration, dimensions, and rational frame rate. The audio picker should stay hidden for one stream and appear only when multiple streams exist.
 5. Play, pause, drag the timeline, and use the five-second and frame navigation buttons. Also check Space, Left/Right, Shift+Left/Right, I, and O. Dragging should stay responsive and release should settle on the final position.
+   - Wait for the source-timeline status to report the real-frame timestamp count. On VFR media, confirm frame buttons follow the actual displayed frames rather than equal nominal-time increments.
 6. Press **J Reverse**, **K Stop**, and **L Forward**. Repeated J/L presses should show and apply 1x, 2x, 4x, and 8x. Pressing the opposite direction should move the signed level toward stop.
 7. Move to a position and select **① Set IN [I]**. Move later and select **② Set OUT [O]**. Confirm both times and the selected duration update. The draft must appear as a purple fill with a dashed boundary, distinct from retained clips without relying on color alone. Internally, OUT remains exclusive.
 8. Select **③ Add to sequence**. Confirm the draft clears, a blue retained range appears, and a card shows a thumbnail, editable name, source IN–OUT, duration, and no sequence-position number.
@@ -37,11 +38,12 @@ Use non-sensitive MP4 or MOV media first. M2TS/MTS playback depends on codecs av
 13. Start a longer Accurate export, press **Cancel**, and confirm no `.partial.mp4` or operation work directory remains in the destination.
 14. Switch the Windows display language between English and Japanese, restart the app, and confirm the visible UI follows the selected language.
 15. Try a file path containing spaces, Japanese text, quotes, or emoji. The original file must remain unchanged and a unique destination name must be chosen when a file already exists.
+16. Open an M2TS/MTS source. Confirm cancellable proxy progress appears, playback starts from the proxy, the UI says export still uses the original, reopening reuses the validated cache, and cancellation leaves no `.partial.mp4` in `%LOCALAPPDATA%\Trimlet\Cache\Proxies`.
 
 Diagnostics for a failed operation are stored under `%LOCALAPPDATA%\Trimlet\Logs` with path-like arguments redacted.
 
 ## Expected limitations
 
-- Frame navigation uses the inspected nominal rational frame rate. Variable-frame-rate presentation-timestamp stepping is not yet implemented.
-- Automatic proxy generation for media that Windows-native playback cannot decode is not yet implemented; the app reports the preview failure without closing.
+- Real-frame timestamp indexing is non-modal. Frame controls use the inspected nominal rate until the background index is ready.
 - No MSIX or signed binary is produced. This is an unpackaged, framework-dependent developer build.
+- Broad long-media, damaged-GOP, HDR/interlace, language-switch, and cancellation coverage remains a release-validation task.

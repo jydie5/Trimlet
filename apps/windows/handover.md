@@ -2,7 +2,7 @@
 
 - Prepared: 2026-08-28
 - Published Windows release: `v0.3.0-early-access.1`
-- Current source state: multi-range parity candidate for Mac `v0.3.0-beta.1`; Windows human check pending
+- Current source state: caught up with the accepted Mac `v0.3.0-beta.1` behavior; broad Windows release validation pending
 - Repository: https://github.com/jydie5/Trimlet
 - Distribution: source only; no installer, signed executable, or bundled FFmpeg
 
@@ -10,7 +10,7 @@
 
 The native Windows workflow is implemented in C# and WinUI 3. A user can open or drop one local video, play and seek it, move by frames or seconds, collect multiple non-overlapping ranges in an ordered editing sequence, and export one validated MP4 in Fast or Accurate mode.
 
-The Mac Beta handover has been adopted in the Windows source: draft and retained ranges are distinct, clip cards have stable editable names and FFmpeg-generated thumbnails, card selection is separate from explicit trim editing, reorder/delete/undo/redo are available, sequence preview skips source gaps, and J/K/L plus visible I/O shortcuts follow the shared interaction model. The audio picker appears only for multi-audio sources.
+The Mac Beta handover has been adopted in the Windows source: draft and retained ranges are distinct, clip cards have stable editable names and FFmpeg-generated thumbnails, card selection is separate from explicit trim editing, reorder/delete/undo/redo are available, sequence preview skips source gaps, and J/K/L plus visible I/O shortcuts follow the shared interaction model. The audio picker appears only for multi-audio sources. M2TS/MTS or failed direct playback falls back to a validated, cancellable preview proxy without changing source identity, and frame controls switch from a nominal fallback to source presentation timestamps after non-modal indexing.
 
 The solution is split into:
 
@@ -55,11 +55,9 @@ FFmpeg discovery checks `TRIMLET_FFMPEG` / `TRIMLET_FFPROBE`, the application di
 
 ## Known Early Access gaps
 
-1. No automatic preview proxy is generated when Windows-native playback cannot decode the source.
-2. Frame movement uses nominal rational frame rate, not source presentation timestamps for variable-frame-rate media.
-3. The app is an unpackaged, framework-dependent developer build.
-4. MSIX/portable packaging, original release artwork, signing, and clean-machine binary verification are not complete.
-5. The large-media, damaged-GOP, HDR, and full language-switch matrices need broader real-machine coverage.
+1. The app is an unpackaged, framework-dependent developer build.
+2. MSIX/portable packaging, original release artwork, signing, and clean-machine binary verification are not complete.
+3. The large-media, damaged-GOP, HDR/interlace, cancellation, and full language-switch matrices need broader real-machine coverage.
 
 ## macOS 0.3 interaction delta adopted
 
@@ -74,15 +72,13 @@ The macOS 0.3 work treats trimming as an editing sequence rather than a single d
 
 Do not copy Mac colors or SwiftUI layout mechanically. Match the state model, discoverability, keyboard semantics, and acceptance behavior using WinUI conventions and English/Japanese resources.
 
-Developer verification covers a two-clip add flow, thumbnails, distinct timeline states, keyboard I/O, J/K/L state changes and reverse-seek fallback, Undo/Redo, and sequence preview. Generated-media integration checks cover reordered three-segment Fast and Accurate exports. The remaining gate is the user-run checklist in `HUMAN_CHECK.md` on representative media.
+Developer verification covers a two-clip add flow, thumbnails, distinct timeline states, keyboard I/O, J/K/L state changes and reverse-seek fallback, Undo/Redo, sequence preview, rename, reorder, and explicit trim update. Generated-media integration checks cover reordered three-segment Fast and Accurate exports, selected non-default audio, M2TS/AC-3 proxy generation and cache reuse, and VFR presentation-timestamp stepping. The remaining gate is the user-run checklist in `HUMAN_CHECK.md` on representative media.
 
 ## Next implementation order
 
-1. Complete the Windows human-check matrix for multi-audio, non-contiguous reordered clips, cancellation, long media, damaged GOPs, HDR/interlace, and both UI languages.
-2. Add preview suitability detection and a cancellable proxy cache without changing source identity.
-3. Move VFR navigation and boundaries to source PTS end to end.
-4. Select a Windows distribution format and complete the binary release gate in `docs/legal/RELEASE_COMPLIANCE.md`.
-5. Add original application artwork and code signing before publishing a binary.
+1. Complete the Windows human-check matrix for long media, damaged GOPs, HDR/interlace, cancellation, and both UI languages.
+2. Select a Windows distribution format and complete the binary release gate in `docs/legal/RELEASE_COMPLIANCE.md`.
+3. Add original application artwork and code signing before publishing a binary.
 
 The shared interaction behavior remains normative in `docs/PLATFORM_CONTRACT.md`. The Mac implementation is only a behavioral reference; do not port SwiftUI or AVPlayer code into Windows.
 

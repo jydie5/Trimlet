@@ -30,6 +30,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Grid ColumnSpacing="16">
@@ -324,6 +325,26 @@
             </Grid>
         </Border>
 
-        <InfoBar x:Name="StatusBar" Grid.Row="4" IsClosable="True" IsOpen="False" Severity="Informational" />
+        <Border
+            x:Name="ProxyProgressPanel"
+            Grid.Row="4"
+            Padding="10"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            CornerRadius="10"
+            Visibility="Collapsed">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="4">
+                    <TextBlock x:Name="ProxyProgressText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <ProgressBar x:Name="ProxyProgressBar" Minimum="0" Maximum="1" />
+                </StackPanel>
+                <Button x:Name="CancelProxyButton" x:Uid="CancelProxyButton" Grid.Column="1" Click="OnCancelProxyClicked" />
+            </Grid>
+        </Border>
+
+        <InfoBar x:Name="StatusBar" Grid.Row="5" IsClosable="True" IsOpen="False" Severity="Informational" />
     </Grid>
 </Page>

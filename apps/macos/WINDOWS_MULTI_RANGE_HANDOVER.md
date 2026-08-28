@@ -2,7 +2,7 @@
 
 - Prepared: 2026-08-28
 - Mac baseline reviewed: `v0.3.0-beta.1`
-- Windows state: parity candidate in source; Windows user human check pending
+- Windows state: caught up in source; broad Windows release validation pending
 
 ## What Windows adopted
 
@@ -24,20 +24,20 @@ Windows consumes `contracts/edit-list.schema.json` and `contracts/fixtures/edit-
 - Clip thumbnails are generated asynchronously with FFmpeg into a per-session cache and are not part of the export model.
 - Fast export stream-copies each keyframe-compatible segment, then concatenates those files without video re-encoding. Accurate export encodes each requested segment before concatenation.
 - The audio picker is hidden for single-audio media and shown for multi-audio media.
+- M2TS/MTS and direct-playback failures use a validated, cancellable H.264/AAC preview proxy while source identity and export input remain original.
+- Frame movement uses source presentation timestamps after a non-modal background frame index is ready, with nominal-rate stepping only during analysis.
 
 ## Verification returned to macOS
 
-- Shared contract and Windows unit tests cover edit-list identity, move/update/delete, half-open adjacency, overlap rejection, and ordered multi-range plans.
-- Generated-media integration checks cover reordered three-segment Fast and Accurate output, combined duration/order, source immutability, temporary cleanup, and paths containing Unicode, spaces, and quotes.
-- A developer visual check covered two adjacent clips, thumbnails, draft-to-retained transition, I/O, J/K/L, Undo/Redo, and sequence preview in a 1280×900 window without a page scrollbar.
+- Shared contract and Windows unit tests cover edit-list identity, move/update/delete, half-open adjacency, overlap rejection, ordered multi-range plans, proxy plans/cache identity, and irregular presentation-timestamp stepping.
+- Generated-media integration checks cover reordered three-segment Fast and Accurate output, actual color order, selected non-default audio, source immutability, temporary cleanup, M2TS/AC-3 proxy validation/cache reuse, VFR timestamps, and paths containing Unicode, spaces, and quotes.
+- Developer visual checks covered automatic proxy playback, real-frame timestamp status, two adjacent clips, thumbnails, draft-to-retained transition, rename, earlier/later reorder, explicit trim update, I/O, J/K/L, Undo/Redo, and sequence preview in a 1280×900 window without a page scrollbar.
 
 The macOS owner does not need to copy any Windows UI. Cross-platform review is only required if timestamp, overlap, export-mode, edit-list, or user-visible interaction semantics change.
 
-## Remaining Windows-only gaps
+## Remaining Windows release work
 
-- Automatic preview proxy generation
-- Source-PTS stepping for VFR media
-- Broad real-media and cancellation human checks
+- Broad real-media, long-media, HDR/interlace, damaged-GOP, cancellation, and language-switch human checks
 - Installer/portable packaging, dependency notices, artwork, signing, and clean-machine validation
 
 References: `apps/windows/handover.md`, `apps/windows/HUMAN_CHECK.md`, `docs/PLATFORM_CONTRACT.md`, and `docs/milestones/WINDOWS_MULTI_RANGE_0.3.md`.

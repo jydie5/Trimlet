@@ -35,6 +35,7 @@ public sealed partial class MainPage : Page
     private readonly MediaInspector? _inspector;
     private readonly ExportService? _exportService;
     private readonly ThumbnailService? _thumbnailService;
+    private readonly PreviewProxyService? _proxyService;
     private readonly ObservableCollection<ClipCardItem> _clipItems = [];
     private readonly Dictionary<Guid, ImageSource> _thumbnailImages = [];
     private readonly List<FrameworkElement> _retainedRangeMarkers = [];
@@ -46,9 +47,11 @@ public sealed partial class MainPage : Page
     private MediaSource? _mediaSource;
     private MediaMetadata? _metadata;
     private KeyframeIndex? _keyframeIndex;
+    private FrameTimestampIndex? _frameTimestampIndex;
     private CancellationTokenSource? _inspectionCancellation;
     private CancellationTokenSource? _thumbnailCancellation;
     private CancellationTokenSource? _exportCancellation;
+    private CancellationTokenSource? _proxyCancellation;
     private ExportResult? _lastExport;
     private EditList _editList = new();
     private Guid? _selectedSegmentId;
@@ -61,6 +64,8 @@ public sealed partial class MainPage : Page
     private DateTimeOffset _lastScrubSeek;
     private DateTimeOffset _reverseShuttleStartedAt;
     private TimeSpan _reverseShuttleStartPosition;
+    private string? _sourceFilePath;
+    private string? _proxyPath;
     private int _sequencePreviewIndex = -1;
     private int _shuttleLevel;
     private bool _updatingTimeline;
@@ -71,6 +76,10 @@ public sealed partial class MainPage : Page
     private bool _hasUserOutPoint;
     private bool _isScrubbing;
     private bool _rebuildingClipItems;
+    private bool _usesProxy;
+    private bool _proxyInProgress;
+    private bool _directPlaybackFailed;
+    private bool _frameTimingScanning;
 
     public MainPage()
     {
@@ -82,6 +91,7 @@ public sealed partial class MainPage : Page
             _inspector = new MediaInspector(_toolchain);
             _exportService = new ExportService(_toolchain, _inspector);
             _thumbnailService = new ThumbnailService(_toolchain);
+            _proxyService = new PreviewProxyService(_toolchain, _inspector);
         }
 
         ClipListView.ItemsSource = _clipItems;
@@ -157,22 +167,34 @@ public sealed partial class MainPage : Page
     {
         ResetPlayer();
         ClearRoutineStatus();
+        _sourceFilePath = file.Path;
 
         try
         {
             FileNameText.Text = file.Name;
             ToolTipService.SetToolTip(FileNameText, file.Path);
-            _mediaSource = MediaSource.CreateFromStorageFile(file);
-            _mediaPlayer.Source = _mediaSource;
+            var preferProxy = PreviewProxyService.PreferProxyForPath(file.Path);
+            if (!preferProxy)
+            {
+                SetPlaybackSource(file, usesProxy: false);
+            }
 
             if (_inspector is not null)
             {
                 _inspectionCancellation = new CancellationTokenSource();
                 await InspectMediaAsync(file.Path, _inspectionCancellation.Token);
+                if (preferProxy || _directPlaybackFailed)
+                {
+                    await StartProxyAsync();
+                }
             }
             else
             {
                 MediaDetailsText.Text = Text("InspectionUnavailable");
+                if (preferProxy)
+                {
+                    ShowStatus(InfoBarSeverity.Error, Text("ProxyFailedTitle"), Text("ProxyToolchainMissing"));
+                }
             }
         }
         catch (OperationCanceledException)
@@ -201,6 +223,11 @@ public sealed partial class MainPage : Page
 
         _metadata = await _inspector.InspectAsync(path, cancellationToken);
         _frameStep = _metadata.Video.AverageFrameRate?.FrameDuration ?? FallbackFrameStep;
+        if (_metadata.Duration.TotalSeconds > 0)
+        {
+            _duration = _metadata.Duration.ToTimeSpan();
+            TimelineSlider.Maximum = _duration.TotalSeconds;
+        }
         CurrentTimeText.Text = FormatTime(_mediaPlayer.PlaybackSession.Position);
         if (_duration > TimeSpan.Zero)
         {
@@ -212,19 +239,82 @@ public sealed partial class MainPage : Page
         UpdateRangeDisplay();
         UpdateExportAvailability();
 
+        _ = AnalyzeSourceIndexesAsync(_metadata, cancellationToken);
+    }
+
+    private async Task AnalyzeSourceIndexesAsync(MediaMetadata metadata, CancellationToken cancellationToken)
+    {
         KeyframeStatusText.Text = Text("KeyframeScanning");
         try
         {
-            _keyframeIndex = await _inspector.InspectKeyframesAsync(_metadata, cancellationToken);
+            var inspectedKeyframes = await _inspector!.InspectKeyframesAsync(metadata, cancellationToken);
+            if (!ReferenceEquals(_metadata, metadata))
+            {
+                return;
+            }
+
+            _keyframeIndex = inspectedKeyframes;
             UpdateKeyframeStatus();
             UpdateRangeTrack();
         }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
         catch (MediaOperationException exception)
         {
+            if (!ReferenceEquals(_metadata, metadata))
+            {
+                return;
+            }
+
             _keyframeIndex = null;
             KeyframeStatusText.Text = $"{Text("KeyframeUnavailable")} [{exception.ErrorCode}]";
             UpdateExportAvailability();
         }
+
+        if (!ReferenceEquals(_metadata, metadata))
+        {
+            return;
+        }
+
+        _frameTimingScanning = true;
+        UpdateKeyframeStatus();
+        try
+        {
+            var inspectedFrames = await _inspector!.InspectFrameTimestampsAsync(metadata, cancellationToken);
+            if (!ReferenceEquals(_metadata, metadata))
+            {
+                return;
+            }
+
+            _frameTimestampIndex = inspectedFrames;
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (MediaOperationException)
+        {
+            _frameTimestampIndex = null;
+        }
+        finally
+        {
+            if (ReferenceEquals(_metadata, metadata))
+            {
+                _frameTimingScanning = false;
+                UpdateKeyframeStatus();
+            }
+        }
+    }
+
+    private void SetPlaybackSource(StorageFile file, bool usesProxy)
+    {
+        _mediaPlayer.Source = null;
+        _mediaSource?.Dispose();
+        _mediaSource = MediaSource.CreateFromStorageFile(file);
+        _usesProxy = usesProxy;
+        _mediaPlayer.Source = _mediaSource;
     }
 
     public async Task OpenPathAsync(string path)
@@ -274,16 +364,43 @@ public sealed partial class MainPage : Page
             SetMediaControlsEnabled(true);
             UpdateRangeDisplay();
             UpdateRangeTrack();
-            ClearRoutineStatus();
+            if (_usesProxy && _proxyPath is not null && _metadata is not null)
+            {
+                ProxyProgressPanel.Visibility = Visibility.Collapsed;
+                MediaDetailsText.Text = $"{FormatMediaDetails(_metadata)}・{Text("ProxyPreviewSuffix")}";
+                ShowStatus(
+                    InfoBarSeverity.Informational,
+                    Text("ProxyReadyTitle"),
+                    Text("ProxyActiveMessage"));
+            }
+            else
+            {
+                ClearRoutineStatus();
+            }
             Focus(FocusState.Programmatic);
         });
     }
 
     private void OnMediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
     {
-        DispatcherQueue.TryEnqueue(() =>
+        DispatcherQueue.TryEnqueue(async () =>
         {
             SetMediaControlsEnabled(false);
+            if (!_usesProxy && _proxyService is not null && _sourceFilePath is not null)
+            {
+                _directPlaybackFailed = true;
+                if (_metadata is not null)
+                {
+                    await StartProxyAsync();
+                }
+                else
+                {
+                    ShowStatus(InfoBarSeverity.Informational, Text("ProxyPreparingTitle"), Text("ProxyFallbackMessage"));
+                }
+
+                return;
+            }
+
             ShowStatus(
                 InfoBarSeverity.Error,
                 Text("OpenFailedTitle"),
@@ -298,6 +415,122 @@ public sealed partial class MainPage : Page
             var playing = _mediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
             PlayPauseButton.Content = playing ? Text("PauseButtonText") : Text("PlayButtonText");
         });
+    }
+
+    private async Task StartProxyAsync()
+    {
+        if (_proxyInProgress || _proxyService is null || _metadata is null || _sourceFilePath is null)
+        {
+            return;
+        }
+
+        var metadata = _metadata;
+        var sourcePath = _sourceFilePath;
+
+        _proxyInProgress = true;
+        _mediaReady = false;
+        SetMediaControlsEnabled(false);
+        _mediaPlayer.Pause();
+        _mediaPlayer.Source = null;
+        _mediaSource?.Dispose();
+        _mediaSource = null;
+        _proxyCancellation?.Cancel();
+        _proxyCancellation?.Dispose();
+        _proxyCancellation = new CancellationTokenSource();
+        ProxyProgressPanel.Visibility = Visibility.Visible;
+        ProxyProgressBar.Value = 0;
+        ProxyProgressText.Text = Text("ProxyStarting");
+        CancelProxyButton.IsEnabled = true;
+        ShowStatus(InfoBarSeverity.Informational, Text("ProxyPreparingTitle"), Text("ProxyReadOnlyMessage"));
+
+        var progress = new Progress<PreviewProxyProgress>(value =>
+        {
+            if (!ReferenceEquals(_metadata, metadata) || _sourceFilePath != sourcePath)
+            {
+                return;
+            }
+
+            ProxyProgressBar.Value = value.Fraction;
+            ProxyProgressText.Text = string.Format(
+                Text("ProxyProgressFormat"),
+                Math.Round(value.Fraction * 100),
+                FormatTime(value.Elapsed));
+        });
+
+        try
+        {
+            var result = await _proxyService.GetOrCreateAsync(
+                metadata,
+                progress,
+                _proxyCancellation.Token);
+            if (!ReferenceEquals(_metadata, metadata) || _sourceFilePath != sourcePath)
+            {
+                return;
+            }
+
+            _proxyPath = result.Path;
+            var proxyFile = await StorageFile.GetFileFromPathAsync(result.Path);
+            SetPlaybackSource(proxyFile, usesProxy: true);
+            ProxyProgressBar.Value = 1;
+            ProxyProgressText.Text = result.ReusedCache
+                ? Text("ProxyReused")
+                : Text("ProxyCompleted");
+            CancelProxyButton.IsEnabled = false;
+            ShowStatus(
+                InfoBarSeverity.Success,
+                Text("ProxyReadyTitle"),
+                string.Format(Text("ProxyReadyMessage"), FormatByteSize(result.SizeBytes)));
+        }
+        catch (OperationCanceledException)
+        {
+            if (!ReferenceEquals(_metadata, metadata) || _sourceFilePath != sourcePath)
+            {
+                return;
+            }
+
+            ProxyProgressBar.Value = 0;
+            ProxyProgressText.Text = Text("ProxyCancelled");
+            CancelProxyButton.IsEnabled = false;
+            ShowStatus(InfoBarSeverity.Warning, Text("ProxyCancelledTitle"), Text("ProxyCancelledMessage"));
+        }
+        catch (MediaOperationException exception)
+        {
+            if (!ReferenceEquals(_metadata, metadata) || _sourceFilePath != sourcePath)
+            {
+                return;
+            }
+
+            ProxyProgressBar.Value = 0;
+            ProxyProgressText.Text = $"[{exception.ErrorCode}] {exception.Message}";
+            CancelProxyButton.IsEnabled = false;
+            ShowStatus(InfoBarSeverity.Error, Text("ProxyFailedTitle"), exception.Message);
+        }
+        catch (Exception exception)
+        {
+            if (!ReferenceEquals(_metadata, metadata) || _sourceFilePath != sourcePath)
+            {
+                return;
+            }
+
+            ProxyProgressBar.Value = 0;
+            ProxyProgressText.Text = exception.Message;
+            CancelProxyButton.IsEnabled = false;
+            ShowStatus(InfoBarSeverity.Error, Text("ProxyFailedTitle"), exception.Message);
+        }
+        finally
+        {
+            if (ReferenceEquals(_metadata, metadata) && _sourceFilePath == sourcePath)
+            {
+                _proxyInProgress = false;
+            }
+        }
+    }
+
+    private void OnCancelProxyClicked(object sender, RoutedEventArgs e)
+    {
+        CancelProxyButton.IsEnabled = false;
+        ProxyProgressText.Text = Text("ProxyCancelling");
+        _proxyCancellation?.Cancel();
     }
 
     private void OnPositionTimerTick(object? sender, object e)
@@ -428,6 +661,14 @@ public sealed partial class MainPage : Page
     private void StepBy(int frames)
     {
         StopShuttle(pause: true);
+        CancelPreview();
+        if (_frameTimestampIndex is not null)
+        {
+            var current = MediaTimestamp.FromTimeSpan(ClampToSource(_mediaPlayer.PlaybackSession.Position));
+            _mediaPlayer.PlaybackSession.Position = _frameTimestampIndex.Step(current, frames).ToTimeSpan();
+            return;
+        }
+
         SeekBy(TimeSpan.FromTicks(_frameStep.Ticks * frames));
     }
 
@@ -1256,9 +1497,17 @@ public sealed partial class MainPage : Page
             return;
         }
 
+        var frameTimingSuffix = _frameTimingScanning
+            ? Text("FrameTimingScanningSuffix")
+            : _frameTimestampIndex is not null
+                ? string.Format(Text("FrameTimingReadySuffix"), _frameTimestampIndex.Timestamps.Count)
+                : string.Empty;
+
         if (_keyframeIndex is null)
         {
-            KeyframeStatusText.Text = _metadata is null ? string.Empty : Text("KeyframeScanning");
+            KeyframeStatusText.Text = _metadata is null
+                ? string.Empty
+                : Text("KeyframeScanning") + frameTimingSuffix;
             return;
         }
 
@@ -1267,11 +1516,11 @@ public sealed partial class MainPage : Page
             KeyframeStatusText.Text = string.Format(
                 Text("FastCandidateFormat"),
                 FormatTime(candidate.Start.ToTimeSpan()),
-                FormatTime(candidate.End.ToTimeSpan()));
+                FormatTime(candidate.End.ToTimeSpan())) + frameTimingSuffix;
         }
         else
         {
-            KeyframeStatusText.Text = string.Format(Text("KeyframeReadyFormat"), _keyframeIndex.Keyframes.Count);
+            KeyframeStatusText.Text = string.Format(Text("KeyframeReadyFormat"), _keyframeIndex.Keyframes.Count) + frameTimingSuffix;
         }
     }
 
@@ -1411,9 +1660,13 @@ public sealed partial class MainPage : Page
         _thumbnailCancellation?.Cancel();
         _thumbnailCancellation?.Dispose();
         _thumbnailCancellation = new CancellationTokenSource();
+        _proxyCancellation?.Cancel();
+        _proxyCancellation?.Dispose();
+        _proxyCancellation = null;
         _mediaReady = false;
         _metadata = null;
         _keyframeIndex = null;
+        _frameTimestampIndex = null;
         CancelPreview();
         StopShuttle(pause: true);
         _mediaPlayer.Source = null;
@@ -1421,6 +1674,12 @@ public sealed partial class MainPage : Page
         _mediaSource = null;
         _duration = TimeSpan.Zero;
         _frameStep = FallbackFrameStep;
+        _sourceFilePath = null;
+        _proxyPath = null;
+        _usesProxy = false;
+        _proxyInProgress = false;
+        _directPlaybackFailed = false;
+        _frameTimingScanning = false;
         _editList = new EditList();
         _selectedSegmentId = null;
         _undoStack.Clear();
@@ -1442,6 +1701,7 @@ public sealed partial class MainPage : Page
         AudioStreamPanel.Visibility = Visibility.Collapsed;
         KeyframeStatusText.Text = string.Empty;
         ExportProgressPanel.Visibility = Visibility.Collapsed;
+        ProxyProgressPanel.Visibility = Visibility.Collapsed;
         _lastExport = null;
         UpdateSequenceSummary();
         UpdateRangeTrack();
@@ -1473,9 +1733,24 @@ public sealed partial class MainPage : Page
         _inspectionCancellation?.Cancel();
         _thumbnailCancellation?.Cancel();
         _exportCancellation?.Cancel();
+        _proxyCancellation?.Cancel();
         _thumbnailService?.Dispose();
         _mediaPlayer.Dispose();
         _mediaSource?.Dispose();
+    }
+
+    private static string FormatByteSize(long bytes)
+    {
+        string[] units = ["B", "KB", "MB", "GB", "TB"];
+        var value = Math.Max(0, (double)bytes);
+        var unit = 0;
+        while (value >= 1024 && unit < units.Length - 1)
+        {
+            value /= 1024;
+            unit++;
+        }
+
+        return $"{value:0.#} {units[unit]}";
     }
 
     private void InitializePicker(object picker)

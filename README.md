@@ -38,7 +38,7 @@ Priority inputs are MP4, MOV, M2TS, and MTS.
 
 - macOS: native `v0.3.0-beta.1` with multiple retained ranges, an editing sequence, sequence preview, audio selection, and combined Fast/Accurate export.
 - Windows: source-only Early Access with native preview, multiple retained clips, editing-sequence operations, J/K/L shuttle controls, audio-stream selection, sequence preview, and validated combined Fast/Accurate export. Developer checks pass; the Windows human check is pending.
-- Parity: the accepted multi-range interaction contract is implemented on both platforms. Automatic preview proxies and source-PTS stepping for variable-frame-rate media still differ by platform.
+- Parity: the accepted macOS Beta multi-range contract is implemented on both platforms. Windows now also provides automatic preview proxies and background source-PTS frame indexing; packaging and broad real-media release validation remain platform-specific work.
 - Public source releases are published under the MIT License.
 
 Latest macOS Beta source release: [v0.3.0-beta.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-beta.1)

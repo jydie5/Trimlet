@@ -199,6 +199,16 @@ This log records decisions that define Trimlet. Change a decision by adding a ne
 - Gate: Developer checks may establish a parity candidate, but Windows release status does not advance until the user completes `apps/windows/HUMAN_CHECK.md`. Preview proxy, VFR source-PTS navigation, packaging, signing, and clean-machine binary verification remain separate work.
 - Detail: See `docs/milestones/WINDOWS_MULTI_RANGE_0.3.md` and `apps/macos/WINDOWS_MULTI_RANGE_HANDOVER.md`.
 
+### D-023: Close the Windows preview and frame-navigation parity gaps
+
+- Date: 2026-08-28
+- Status: Accepted for the Windows source parity gate
+- Preview: Prefer an FFmpeg-generated H.264/AAC proxy for M2TS/MTS and fall back to it after direct-playback failure. Validate duration before atomic cache finalization, keep proxy progress cancellable, delete partial output on failure or cancellation, and retain the original path as the only inspection and export identity.
+- Frame navigation: Build a source presentation-timestamp index non-modally for every opened video. Use actual adjacent timestamps after it is ready and retain nominal rational-frame stepping only as the responsive fallback during analysis.
+- Verification: Unit tests cover proxy policy, safe arguments, cache identity, and irregular PTS navigation. Generated-media checks cover M2TS/AC-3 proxy creation/reuse, source immutability, VFR timestamps, reordered visual content, and selected non-default audio. Developer UI checks cover proxy playback, actual-frame status, rename, reorder, and trim update.
+- Boundary: Packaging, signing, clean-machine binary validation, and the broad representative-media matrix remain release gates; they are not differences in the accepted Mac Beta behavior.
+- Audit: See `docs/milestones/WINDOWS_MAC_PARITY_AUDIT_2026-08-28.md`.
+
 ## Proposed decisions awaiting validation
 
 ### P-001: Project structure

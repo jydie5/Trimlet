@@ -132,4 +132,24 @@
   <data name="SequenceSummaryFormat" xml:space="preserve"><value>{0}クリップ・合計 {1}</value></data>
   <data name="KeyframeReadyFormat" xml:space="preserve"><value>キーフレーム{0}個・高速候補はオレンジ表示</value></data>
   <data name="OverlapMessage" xml:space="preserve"><value>追加済みクリップと重なっています。INまたはOUTを調整してください。</value></data>
+  <data name="CancelProxyButton.Content" xml:space="preserve"><value>キャンセル</value></data>
+  <data name="ProxyPreparingTitle" xml:space="preserve"><value>プレビューを準備しています</value></data>
+  <data name="ProxyFallbackMessage" xml:space="preserve"><value>直接再生できないため、元動画を変えずにプロキシを準備します。</value></data>
+  <data name="ProxyReadOnlyMessage" xml:space="preserve"><value>プレビュー専用の軽量MP4を作成します。書き出しは必ず元動画を使用します。</value></data>
+  <data name="ProxyStarting" xml:space="preserve"><value>プレビュー用プロキシを準備しています…</value></data>
+  <data name="ProxyProgressFormat" xml:space="preserve"><value>{0}%・処理済み {1}</value></data>
+  <data name="ProxyCancelling" xml:space="preserve"><value>FFmpegを停止し、一時プロキシを片づけています…</value></data>
+  <data name="ProxyCancelled" xml:space="preserve"><value>プロキシ生成をキャンセルしました。</value></data>
+  <data name="ProxyCancelledTitle" xml:space="preserve"><value>プロキシ生成をキャンセルしました</value></data>
+  <data name="ProxyCancelledMessage" xml:space="preserve"><value>未完成のプロキシは残していません。元動画は変更していません。</value></data>
+  <data name="ProxyFailedTitle" xml:space="preserve"><value>プロキシを作成できませんでした</value></data>
+  <data name="ProxyToolchainMissing" xml:space="preserve"><value>M2TS／MTSのプレビューにはffmpegとffprobeが必要です。</value></data>
+  <data name="ProxyCompleted" xml:space="preserve"><value>プロキシを作成しました。読み込んでいます…</value></data>
+  <data name="ProxyReused" xml:space="preserve"><value>既存のプロキシを読み込んでいます…</value></data>
+  <data name="ProxyReadyTitle" xml:space="preserve"><value>プロキシでプレビューできます</value></data>
+  <data name="ProxyReadyMessage" xml:space="preserve"><value>プレビュー用キャッシュ {0}。書き出しは元動画を使用します。</value></data>
+  <data name="ProxyActiveMessage" xml:space="preserve"><value>書き出しは元動画を使用します。</value></data>
+  <data name="ProxyPreviewSuffix" xml:space="preserve"><value>プロキシ再生</value></data>
+  <data name="FrameTimingScanningSuffix" xml:space="preserve"><value>・実フレーム時刻を解析中…</value></data>
+  <data name="FrameTimingReadySuffix" xml:space="preserve"><value>・実フレーム時刻{0}件</value></data>
 </root>
