@@ -6,7 +6,7 @@ Only what you need, quickly and precisely.
 
 Trimlet is a lightweight, frame-accurate video trimming application with separate native implementations for macOS and Windows.
 
-The macOS application is now at the SwiftUI Beta stage. A native C#/WinUI 3 Windows Early Access implementation follows the same product and media-processing contracts and will catch up to the accepted Mac interaction model.
+The macOS application is at the SwiftUI Beta stage. The native C#/WinUI 3 Windows Early Access source now implements the same accepted multi-range interaction and media-processing contracts; Windows human verification remains the release gate.
 
 ## Product goal
 
@@ -37,8 +37,8 @@ Priority inputs are MP4, MOV, M2TS, and MTS.
 ## Repository status
 
 - macOS: native `v0.3.0-beta.1` with multiple retained ranges, an editing sequence, sequence preview, audio selection, and combined Fast/Accurate export.
-- Windows: source-only Early Access with native preview, one retained range, audio-stream selection, and validated Fast/Accurate export. Its next turn is to catch up to the Mac Beta multi-range interaction model.
-- Parity: the foundational open → select IN/OUT → export workflow is aligned. Multi-range editing, J/K/L shuttle controls, responsive scrubbing, automatic preview proxies, and source-PTS stepping still differ by platform.
+- Windows: source-only Early Access with native preview, multiple retained clips, editing-sequence operations, J/K/L shuttle controls, audio-stream selection, sequence preview, and validated combined Fast/Accurate export. Developer checks pass; the Windows human check is pending.
+- Parity: the accepted multi-range interaction contract is implemented on both platforms. Automatic preview proxies and source-PTS stepping for variable-frame-rate media still differ by platform.
 - Public source releases are published under the MIT License.
 
 Latest macOS Beta source release: [v0.3.0-beta.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-beta.1)
@@ -117,6 +117,7 @@ You can also help at no cost by starring or sharing the repository, reporting re
 - [Windows Early Access guide](apps/windows/README.md)
 - [Windows maintainer handover](apps/windows/handover.md)
 - [Windows-to-macOS owner handover](apps/macos/WINDOWS_EARLY_ACCESS_HANDOVER.md)
+- [Windows multi-range return handover](apps/macos/WINDOWS_MULTI_RANGE_HANDOVER.md)
 - [v0.3.0 Beta 1 release notes](docs/releases/v0.3.0-beta.1.md)
 - [Mac PoC scope](docs/POC.md)
 - [Human-check guide](docs/HUMAN_CHECK.md)

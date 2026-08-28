@@ -1,6 +1,6 @@
 # Trimlet for Windows human check
 
-This check covers the native Windows inspection, range-selection, and MP4-export slice.
+This check covers the Windows multi-range parity candidate based on the accepted macOS `v0.3.0-beta.1` interaction contract.
 
 ## Start
 
@@ -11,7 +11,7 @@ Set-Location (Join-Path $HOME 'trimlet')
 .\apps\windows\run-human-check.ps1
 ```
 
-The script validates shared JSON contracts, runs the Windows automated tests, performs synthetic Fast and Accurate exports, validates both outputs, builds the app, and launches Trimlet.
+The script validates shared JSON contracts, runs the Windows automated tests, performs synthetic single- and multi-range Fast/Accurate exports, validates the outputs, builds the app, and launches Trimlet.
 
 Prerequisites:
 
@@ -25,16 +25,18 @@ Use non-sensitive MP4 or MOV media first. M2TS/MTS playback depends on codecs av
 1. Confirm the app opens with the Trimlet title and no installer.
 2. Select **Open video**, choose a supported local file, and confirm its name and compact media summary appear. The full path is available as a tooltip rather than permanent interface copy.
 3. Repeat by dragging a supported file onto the window.
-4. Confirm the media summary shows duration, dimensions, rational frame rate, and the available audio streams. Detailed inspection data stays out of the main work surface.
-5. Play, pause, drag the timeline, and use the five-second and frame navigation buttons. Also check Space, Left/Right, Shift+Left/Right, I, and O.
-6. Move to a position and select **Set IN**. Move later and select **Set OUT**. Confirm both times and the selected duration update. Internally, OUT remains an exclusive boundary.
-7. Confirm Trimlet rejects IN at or after OUT and OUT at or before IN.
-8. Select **Fast**. Confirm the keyframe candidate appears below the range track when analysis completes; it may expand beyond the selected range.
-9. Select **MP4を書き出す…**, choose a destination folder, and confirm progress is shown. When complete, use **出力を表示** and play the output.
-10. Repeat with **Accurate**. Confirm its duration closely matches the selected range and the plan uses an available H.264 encoder plus AAC.
-11. Start a longer Accurate export, press **キャンセル**, and confirm no `.partial.mp4` remains in the destination.
-12. Switch the Windows display language between English and Japanese, restart the app, and confirm the visible UI follows the selected language.
-13. Try a file path containing spaces, Japanese text, quotes, or emoji. The original file must remain unchanged and a unique destination name must be chosen when a file already exists.
+4. Confirm the media summary shows duration, dimensions, and rational frame rate. The audio picker should stay hidden for one stream and appear only when multiple streams exist.
+5. Play, pause, drag the timeline, and use the five-second and frame navigation buttons. Also check Space, Left/Right, Shift+Left/Right, I, and O. Dragging should stay responsive and release should settle on the final position.
+6. Press **J Reverse**, **K Stop**, and **L Forward**. Repeated J/L presses should show and apply 1x, 2x, 4x, and 8x. Pressing the opposite direction should move the signed level toward stop.
+7. Move to a position and select **① Set IN [I]**. Move later and select **② Set OUT [O]**. Confirm both times and the selected duration update. The draft must appear as a purple fill with a dashed boundary, distinct from retained clips without relying on color alone. Internally, OUT remains exclusive.
+8. Select **③ Add to sequence**. Confirm the draft clears, a blue retained range appears, and a card shows a thumbnail, editable name, source IN–OUT, duration, and no sequence-position number.
+9. Add a second non-overlapping clip. Confirm overlap is rejected but an adjacent half-open range is allowed. Selecting a card must not enter trim mode; only **Trim edit** may load and update that clip.
+10. Rename, trim, delete, drag-reorder, and use the earlier/later buttons. Confirm stable clip identity and Undo/Redo behavior. Then select **Preview sequence** and confirm playback follows output order while skipping source gaps.
+11. Select **Fast**. Confirm every retained clip has a keyframe-compatible candidate before export; candidates may expand beyond requested boundaries.
+12. Export Fast, confirm combined weighted progress, reveal the output, and verify clip order. Repeat with **Accurate** and confirm the combined duration closely matches the requested total.
+13. Start a longer Accurate export, press **Cancel**, and confirm no `.partial.mp4` or operation work directory remains in the destination.
+14. Switch the Windows display language between English and Japanese, restart the app, and confirm the visible UI follows the selected language.
+15. Try a file path containing spaces, Japanese text, quotes, or emoji. The original file must remain unchanged and a unique destination name must be chosen when a file already exists.
 
 Diagnostics for a failed operation are stored under `%LOCALAPPDATA%\Trimlet\Logs` with path-like arguments redacted.
 

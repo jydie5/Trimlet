@@ -188,6 +188,17 @@ This log records decisions that define Trimlet. Change a decision by adding a ne
 - Scope: Beta status accepts the multi-range editing interaction and does not claim that broader M2TS, long-media, A/V sync, HDR/interlace, VFR, or cancellation evaluation is complete.
 - Handover: Windows follows `apps/windows/handover.md` and `docs/PLATFORM_CONTRACT.md` with WinUI-native implementation choices.
 
+### D-022: Adopt the Mac Beta multi-range contract in the Windows source
+
+- Date: 2026-08-28
+- Status: Accepted for Windows human-check candidate
+- Decision: Replace the Windows single-range application state with the shared immutable edit-list model and implement the accepted Mac Beta interaction semantics using WinUI-native controls.
+- Export: Plan and produce one temporary output per retained segment, then concatenate in edit-list order. Fast requires a valid keyframe candidate for every segment and keeps video stream copy; Accurate encodes every requested segment before concat. Validate the combined output before finalization and remove operation work on success, cancellation, or failure.
+- Playback: Use native positive playback rates for forward J/K/L shuttle levels. Use wall-clock-paced seeks for reverse because this Windows playback path does not provide a reliable negative native playback rate. Keep direction and speed visible.
+- Presentation: Generate representative thumbnails asynchronously into a session cache. Thumbnail failure never changes edit-list or export behavior.
+- Gate: Developer checks may establish a parity candidate, but Windows release status does not advance until the user completes `apps/windows/HUMAN_CHECK.md`. Preview proxy, VFR source-PTS navigation, packaging, signing, and clean-machine binary verification remain separate work.
+- Detail: See `docs/milestones/WINDOWS_MULTI_RANGE_0.3.md` and `apps/macos/WINDOWS_MULTI_RANGE_HANDOVER.md`.
+
 ## Proposed decisions awaiting validation
 
 ### P-001: Project structure

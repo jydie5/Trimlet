@@ -2,9 +2,11 @@
 
 ## Status
 
-Version `v0.3.0-early-access.1` is a source-only preview. It opens as an unpackaged WinUI 3 application, accepts supported media through a picker or drag and drop, provides Windows-native playback and seeking, inspects the source with `ffprobe`, records one IN/OUT range, and writes validated MP4 output through FFmpeg.
+The Windows source tree now contains the multi-range parity candidate for the macOS `v0.3.0-beta.1` interaction contract. It remains an unpackaged, source-only Early Access build until the Windows human check and distribution work are complete.
 
-Fast mode uses stream copy and reports its keyframe-expanded candidate. Accurate mode preserves the selected timestamps and converts to H.264/AAC with a working encoder discovered on the current Windows machine. Exports are written to a temporary file, checked with `ffprobe`, and only then moved to their final name.
+The app accepts supported media through a picker or drag and drop, provides Windows-native playback and seeking, inspects the source with `ffprobe`, and builds an ordered editing sequence from multiple non-overlapping IN/OUT ranges. Retained clips have stable editable names, representative thumbnails, explicit trim editing, reordering, deletion, undo/redo, and continuous sequence preview.
+
+Fast mode plans a keyframe-compatible candidate for every retained clip, stream-copies each segment, and concatenates the ordered results without video re-encoding. Accurate mode preserves the requested timestamps, re-encodes each segment to H.264/AAC with a working encoder discovered on the current machine, and concatenates them. Final output is validated with `ffprobe` before it receives a completed-looking name.
 
 Start with [the human-check guide](HUMAN_CHECK.md). Maintainers should also read [the Windows implementation handover](handover.md).
 
@@ -20,7 +22,7 @@ The script validates shared contracts, runs unit and integration checks with gen
 
 ## Current parity and limitations
 
-The core user workflow matches the macOS PoC: open one local video, navigate, set one IN/OUT range, preview it, and export in Fast or Accurate mode without modifying the source. Windows additionally exposes an audio-stream picker.
+The implemented interaction contract matches the macOS Beta for one-source multi-range editing: a visually distinct draft, retained clips, editing-sequence manipulation, J/K/L shuttle levels, discoverable I/O shortcuts, coalesced scrubbing, non-modal keyframe analysis, sequence preview, and combined Fast/Accurate export. Windows uses WinUI-native controls and only shows the audio-stream picker when the source contains multiple streams.
 
 This Early Access is not complete platform parity:
 
@@ -42,10 +44,10 @@ Pin exact SDK and package versions in the first Windows implementation change. D
 ## Implemented Windows slice
 
 1. WinUI 3 application that opens without requiring the macOS tree.
-2. Platform-independent timestamp, rational frame-rate, range, keyframe, progress, and export-plan core with tests.
+2. Platform-independent timestamp, rational frame-rate, edit-list, keyframe, progress, and single-/multi-range export-plan core with tests.
 3. `ffprobe` source inspection and keyframe indexing.
-4. Fast and Accurate FFmpeg plans with argument-safe process launch, progress, cancellation, temporary output, validation, and diagnostics.
-5. Canonical `contracts/error-codes.json` loader and validation, with both shared fixtures exercised by Windows tests.
+4. Ordered Fast and Accurate FFmpeg segment/concat plans with argument-safe process launch, weighted progress, cancellation, temporary output, validation, and diagnostics.
+5. Canonical error-code and edit-list contract validation, including reordered valid segments and overlapping invalid segments from shared fixtures.
 6. English and Japanese `.resw` resources.
 7. Repeatable unit, integration, build, launch, and human-check instructions.
 

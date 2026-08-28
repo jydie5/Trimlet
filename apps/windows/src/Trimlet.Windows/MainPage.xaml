@@ -9,298 +9,321 @@
     KeyDown="OnPageKeyDown"
     mc:Ignorable="d">
 
+    <Page.KeyboardAccelerators>
+        <KeyboardAccelerator Key="I" Invoked="OnSetInAccelerator" />
+        <KeyboardAccelerator Key="O" Invoked="OnSetOutAccelerator" />
+        <KeyboardAccelerator Key="J" Invoked="OnReverseAccelerator" />
+        <KeyboardAccelerator Key="K" Invoked="OnStopAccelerator" />
+        <KeyboardAccelerator Key="L" Invoked="OnForwardAccelerator" />
+    </Page.KeyboardAccelerators>
+
     <Grid
         AllowDrop="True"
         Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
         DragOver="OnDragOver"
         Drop="OnDrop"
         Padding="20"
-        RowSpacing="12">
+        RowSpacing="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-                <Grid ColumnSpacing="16">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Button
-                        x:Name="OpenButton"
-                        x:Uid="OpenButton"
-                        Grid.Column="1"
-                        Click="OnOpenClicked"
-                        Style="{StaticResource AccentButtonStyle}" />
-                </Grid>
+        <Grid ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button
+                x:Name="OpenButton"
+                x:Uid="OpenButton"
+                Grid.Column="1"
+                Click="OnOpenClicked"
+                Style="{StaticResource AccentButtonStyle}" />
+        </Grid>
 
-                <Grid Grid.Row="1" ColumnSpacing="16">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*" MinWidth="560" />
-                        <ColumnDefinition Width="320" />
-                    </Grid.ColumnDefinitions>
+        <Grid Grid.Row="1" ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" MinWidth="560" />
+                <ColumnDefinition Width="340" />
+            </Grid.ColumnDefinitions>
 
-                    <Grid RowSpacing="10">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
+            <Grid RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                        <Grid MinHeight="260" Background="#FF111318" CornerRadius="12">
-                            <MediaPlayerElement
-                                x:Name="PlayerElement"
-                                AreTransportControlsEnabled="False"
-                                HorizontalAlignment="Stretch"
-                                Stretch="Uniform"
-                                VerticalAlignment="Stretch" />
-                            <StackPanel
-                                x:Name="EmptyPlayerPanel"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                Spacing="8">
-                                <FontIcon FontSize="42" Foreground="White" Glyph="&#xE714;" />
-                                <TextBlock
-                                    x:Uid="NoMediaTitle"
-                                    HorizontalAlignment="Center"
-                                    Foreground="White"
-                                    FontSize="20"
-                                    FontWeight="SemiBold" />
-                                <TextBlock
-                                    x:Uid="DropHint"
-                                    HorizontalAlignment="Center"
-                                    Foreground="#FFB8BCC6" />
-                            </StackPanel>
-                        </Grid>
-
-                        <Grid Grid.Row="1" ColumnSpacing="12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock
-                                x:Name="CurrentTimeText"
-                                VerticalAlignment="Center"
-                                FontFamily="Consolas"
-                                Text="00:00:00.000" />
-                            <Slider
-                                x:Name="TimelineSlider"
-                                Grid.Column="1"
-                                IsEnabled="False"
-                                Maximum="1"
-                                StepFrequency="0.01"
-                                ValueChanged="OnTimelineValueChanged" />
-                            <TextBlock
-                                x:Name="DurationText"
-                                Grid.Column="2"
-                                VerticalAlignment="Center"
-                                FontFamily="Consolas"
-                                Text="00:00:00.000" />
-                        </Grid>
-
-                        <StackPanel Grid.Row="2" Spacing="4">
-                            <Canvas
-                                x:Name="RangeTrackCanvas"
-                                Height="10"
-                                Background="{ThemeResource ControlFillColorDefaultBrush}"
-                                SizeChanged="OnRangeTrackSizeChanged">
-                                <Border
-                                    x:Name="SelectionRangeHighlight"
-                                    Height="10"
-                                    Background="{ThemeResource AccentFillColorDefaultBrush}"
-                                    CornerRadius="5" />
-                            </Canvas>
-                            <TextBlock
-                                x:Name="KeyframeStatusText"
-                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                FontSize="12"
-                                Text="" />
-                        </StackPanel>
-
-                        <StackPanel Grid.Row="3" HorizontalAlignment="Center" Orientation="Horizontal" Spacing="8">
-                            <Button x:Name="BackFiveButton" x:Uid="BackFiveButton" Click="OnBackFiveClicked" IsEnabled="False" />
-                            <Button x:Name="BackTenFrameButton" x:Uid="BackTenFrameButton" Click="OnBackTenFrameClicked" IsEnabled="False" />
-                            <Button x:Name="BackFrameButton" x:Uid="BackFrameButton" Click="OnBackFrameClicked" IsEnabled="False" />
-                            <Button
-                                x:Name="PlayPauseButton"
-                                x:Uid="PlayButton"
-                                Click="OnPlayPauseClicked"
-                                IsEnabled="False"
-                                Style="{StaticResource AccentButtonStyle}"
-                                />
-                            <Button x:Name="ForwardFrameButton" x:Uid="ForwardFrameButton" Click="OnForwardFrameClicked" IsEnabled="False" />
-                            <Button x:Name="ForwardTenFrameButton" x:Uid="ForwardTenFrameButton" Click="OnForwardTenFrameClicked" IsEnabled="False" />
-                            <Button x:Name="ForwardFiveButton" x:Uid="ForwardFiveButton" Click="OnForwardFiveClicked" IsEnabled="False" />
-                        </StackPanel>
-                    </Grid>
-
-                    <StackPanel Grid.Column="1" Spacing="12">
-                        <Border Padding="16" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12">
-                            <StackPanel Spacing="6">
-                                <TextBlock x:Uid="MediaInfoHeading" FontSize="18" FontWeight="SemiBold" />
-                                <TextBlock
-                                    x:Name="FileNameText"
-                                    x:Uid="NoFileSelected"
-                                    FontWeight="SemiBold"
-                                    TextTrimming="CharacterEllipsis" />
-                                <TextBlock
-                                    x:Name="MediaDetailsText"
-                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                    FontSize="12"
-                                    MaxLines="2"
-                                    TextWrapping="Wrap" />
-                                <Grid ColumnSpacing="8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock
-                                        x:Uid="AudioStreamLabel"
-                                        VerticalAlignment="Center"
-                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                    <ComboBox
-                                        x:Name="AudioStreamPicker"
-                                        Grid.Column="1"
-                                        HorizontalAlignment="Stretch"
-                                        IsEnabled="False" />
-                                </Grid>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Padding="16" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12">
-                            <StackPanel Spacing="6">
-                                <Grid ColumnSpacing="12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock x:Uid="RangeHeading" FontSize="18" FontWeight="SemiBold" />
-                                    <TextBlock
-                                        x:Name="RangeDurationText"
-                                        x:Uid="RangeNotReady"
-                                        Grid.Column="1"
-                                        VerticalAlignment="Center"
-                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                        FontFamily="Consolas" />
-                                </Grid>
-                                <Grid ColumnSpacing="8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <Button
-                                        x:Name="MarkInButton"
-                                        x:Uid="MarkInButton"
-                                        Click="OnMarkInClicked"
-                                        IsEnabled="False" />
-                                    <Button
-                                        x:Name="MarkOutButton"
-                                        x:Uid="MarkOutButton"
-                                        Grid.Column="1"
-                                        Click="OnMarkOutClicked"
-                                        IsEnabled="False" />
-                                </Grid>
-                                <Grid ColumnSpacing="8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Spacing="2">
-                                        <TextBlock x:Uid="InLabel" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                        <TextBlock x:Name="InTimeText" FontFamily="Consolas" Text="00:00:00.000" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="1" Spacing="2">
-                                        <TextBlock x:Uid="OutLabel" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                        <TextBlock x:Name="OutTimeText" FontFamily="Consolas" Text="00:00:00.000" />
-                                    </StackPanel>
-                                </Grid>
-                                <Grid ColumnSpacing="8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <Button x:Name="GoToInButton" x:Uid="GoToInButton" Click="OnGoToInClicked" IsEnabled="False" />
-                                    <Button x:Name="PreviewRangeButton" x:Uid="PreviewRangeButton" Grid.Column="1" Click="OnPreviewRangeClicked" IsEnabled="False" />
-                                    <Button x:Name="GoToOutButton" x:Uid="GoToOutButton" Grid.Column="2" Click="OnGoToOutClicked" IsEnabled="False" />
-                                </Grid>
-                            </StackPanel>
-                        </Border>
+                <Grid MinHeight="250" Background="#FF111318" CornerRadius="12">
+                    <MediaPlayerElement
+                        x:Name="PlayerElement"
+                        AreTransportControlsEnabled="False"
+                        HorizontalAlignment="Stretch"
+                        Stretch="Uniform"
+                        VerticalAlignment="Stretch" />
+                    <StackPanel
+                        x:Name="EmptyPlayerPanel"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="8">
+                        <FontIcon FontSize="42" Foreground="White" Glyph="&#xE714;" />
+                        <TextBlock x:Uid="NoMediaTitle" HorizontalAlignment="Center" Foreground="White" FontSize="20" FontWeight="SemiBold" />
+                        <TextBlock x:Uid="DropHint" HorizontalAlignment="Center" Foreground="#FFB8BCC6" />
                     </StackPanel>
                 </Grid>
 
-                <Border
-                    Grid.Row="2"
-                    Padding="14"
-                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    CornerRadius="12">
-                    <Grid ColumnSpacing="20" RowSpacing="10">
+                <Grid Grid.Row="1" ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="CurrentTimeText" VerticalAlignment="Center" FontFamily="Consolas" Text="00:00:00.000" />
+                    <Slider
+                        x:Name="TimelineSlider"
+                        Grid.Column="1"
+                        IsEnabled="False"
+                        Maximum="1"
+                        PointerPressed="OnTimelinePointerPressed"
+                        PointerReleased="OnTimelinePointerReleased"
+                        StepFrequency="0.01"
+                        ValueChanged="OnTimelineValueChanged" />
+                    <TextBlock x:Name="DurationText" Grid.Column="2" VerticalAlignment="Center" FontFamily="Consolas" Text="00:00:00.000" />
+                </Grid>
+
+                <StackPanel Grid.Row="2" Spacing="3">
+                    <Canvas
+                        x:Name="RangeTrackCanvas"
+                        Height="18"
+                        Background="{ThemeResource ControlFillColorDefaultBrush}"
+                        SizeChanged="OnRangeTrackSizeChanged">
+                        <Rectangle
+                            x:Name="DraftRangeHighlight"
+                            Height="18"
+                            Fill="#557C3AED"
+                            Stroke="#FFC084FC"
+                            StrokeDashArray="3,2"
+                            StrokeThickness="1.5"
+                            Visibility="Collapsed" />
+                        <Rectangle x:Name="InMarker" Width="2" Height="18" Fill="#FF22C55E" Visibility="Collapsed" />
+                        <Rectangle x:Name="OutMarker" Width="2" Height="18" Fill="#FFEF4444" Visibility="Collapsed" />
+                        <Rectangle x:Name="PlayheadMarker" Width="2" Height="18" Fill="White" />
+                    </Canvas>
+                    <Grid ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <TextBlock
-                            x:Uid="ExportHeading"
-                            VerticalAlignment="Center"
-                            FontSize="18"
-                            FontWeight="SemiBold" />
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
-                            <RadioButton
-                                x:Name="FastModeButton"
-                                x:Uid="FastModeButton"
-                                GroupName="ExportMode"
-                                IsChecked="True" />
-                            <RadioButton
-                                x:Name="AccurateModeButton"
-                                x:Uid="AccurateModeButton"
-                                GroupName="ExportMode" />
-                        </StackPanel>
-                        <TextBlock
-                            x:Uid="ExportModeHint"
-                            Grid.Column="2"
-                            VerticalAlignment="Center"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            FontSize="12"
-                            TextTrimming="CharacterEllipsis" />
-                        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8">
-                            <Button
-                                x:Name="ExportButton"
-                                x:Uid="ExportButton"
-                                Click="OnExportClicked"
-                                IsEnabled="False"
-                                Style="{StaticResource AccentButtonStyle}" />
-                        </StackPanel>
-                        <Grid x:Name="ExportProgressPanel" Grid.Row="1" Grid.ColumnSpan="4" ColumnSpacing="12" Visibility="Collapsed">
+                        <TextBlock x:Name="KeyframeStatusText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" Text="" />
+                        <TextBlock x:Name="TimelineLegendText" x:Uid="TimelineLegend" Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" />
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel Grid.Row="3" HorizontalAlignment="Center" Spacing="5">
+                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="8">
+                        <Button x:Name="BackFiveButton" x:Uid="BackFiveButton" Click="OnBackFiveClicked" IsEnabled="False" />
+                        <Button x:Name="BackTenFrameButton" x:Uid="BackTenFrameButton" Click="OnBackTenFrameClicked" IsEnabled="False" />
+                        <Button x:Name="BackFrameButton" x:Uid="BackFrameButton" Click="OnBackFrameClicked" IsEnabled="False" />
+                        <Button x:Name="PlayPauseButton" x:Uid="PlayButton" Click="OnPlayPauseClicked" IsEnabled="False" Style="{StaticResource AccentButtonStyle}" />
+                        <Button x:Name="ForwardFrameButton" x:Uid="ForwardFrameButton" Click="OnForwardFrameClicked" IsEnabled="False" />
+                        <Button x:Name="ForwardTenFrameButton" x:Uid="ForwardTenFrameButton" Click="OnForwardTenFrameClicked" IsEnabled="False" />
+                        <Button x:Name="ForwardFiveButton" x:Uid="ForwardFiveButton" Click="OnForwardFiveClicked" IsEnabled="False" />
+                    </StackPanel>
+                    <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="6">
+                        <Button x:Name="ReverseShuttleButton" x:Uid="ReverseShuttleButton" Click="OnReverseShuttleClicked" IsEnabled="False" />
+                        <Button x:Name="StopShuttleButton" x:Uid="StopShuttleButton" Click="OnStopShuttleClicked" IsEnabled="False" />
+                        <Button x:Name="ForwardShuttleButton" x:Uid="ForwardShuttleButton" Click="OnForwardShuttleClicked" IsEnabled="False" />
+                        <TextBlock x:Name="ShuttleStatusText" x:Uid="ShuttleStopped" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Grid.Column="1" Spacing="10">
+                <Border Padding="14" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12">
+                    <StackPanel Spacing="6">
+                        <TextBlock x:Uid="MediaInfoHeading" FontSize="18" FontWeight="SemiBold" />
+                        <TextBlock x:Name="FileNameText" x:Uid="NoFileSelected" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <TextBlock x:Name="MediaDetailsText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" MaxLines="2" TextWrapping="Wrap" />
+                        <Grid x:Name="AudioStreamPanel" ColumnSpacing="8" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Uid="AudioStreamLabel" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <ComboBox x:Name="AudioStreamPicker" Grid.Column="1" HorizontalAlignment="Stretch" IsEnabled="False" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Padding="14" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12">
+                    <StackPanel Spacing="7">
+                        <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="RangeHeadingText" x:Uid="RangeHeading" FontSize="18" FontWeight="SemiBold" />
+                            <TextBlock x:Name="RangeDurationText" x:Uid="RangeNotReady" Grid.Column="1" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontFamily="Consolas" />
+                        </Grid>
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button x:Name="MarkInButton" x:Uid="MarkInButton" Click="OnMarkInClicked" IsEnabled="False" />
+                            <Button x:Name="MarkOutButton" x:Uid="MarkOutButton" Grid.Column="1" Click="OnMarkOutClicked" IsEnabled="False" />
+                        </Grid>
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Spacing="2">
+                                <TextBlock x:Uid="InLabel" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock x:Name="InTimeText" FontFamily="Consolas" Text="—" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Spacing="2">
+                                <TextBlock x:Uid="OutLabel" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock x:Name="OutTimeText" FontFamily="Consolas" Text="—" />
+                            </StackPanel>
+                        </Grid>
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button x:Name="GoToInButton" x:Uid="GoToInButton" Click="OnGoToInClicked" IsEnabled="False" />
+                            <Button x:Name="PreviewRangeButton" x:Uid="PreviewRangeButton" Grid.Column="1" Click="OnPreviewRangeClicked" IsEnabled="False" />
+                            <Button x:Name="GoToOutButton" x:Uid="GoToOutButton" Grid.Column="2" Click="OnGoToOutClicked" IsEnabled="False" />
+                        </Grid>
+                        <Grid ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <StackPanel Spacing="4">
-                                <ProgressBar x:Name="ExportProgressBar" Minimum="0" Maximum="1" />
-                                <TextBlock x:Name="ExportProgressText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            </StackPanel>
-                            <Button x:Name="CancelExportButton" x:Uid="CancelExportButton" Grid.Column="1" Click="OnCancelExportClicked" />
-                            <Button x:Name="RevealOutputButton" x:Uid="RevealOutputButton" Grid.Column="2" Click="OnRevealOutputClicked" Visibility="Collapsed" />
+                            <Button x:Name="CommitRangeButton" x:Uid="AddToSequenceButton" Click="OnCommitRangeClicked" IsEnabled="False" Style="{StaticResource AccentButtonStyle}" />
+                            <Button x:Name="CancelTrimButton" x:Uid="CancelTrimButton" Grid.Column="1" Click="OnCancelTrimClicked" Visibility="Collapsed" />
                         </Grid>
-                    </Grid>
+                    </StackPanel>
                 </Border>
+            </StackPanel>
+        </Grid>
 
-                <InfoBar
-                    x:Name="StatusBar"
-                    Grid.Row="3"
-                    IsClosable="True"
-                    IsOpen="False"
-                    Severity="Informational" />
+        <Border Grid.Row="2" Padding="12" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12">
+            <Grid RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid ColumnSpacing="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Uid="SequenceHeading" VerticalAlignment="Center" FontSize="18" FontWeight="SemiBold" />
+                    <TextBlock x:Name="SequenceSummaryText" x:Uid="SequenceEmpty" Grid.Column="1" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6">
+                        <Button x:Name="UndoButton" x:Uid="UndoButton" Click="OnUndoClicked" IsEnabled="False" />
+                        <Button x:Name="RedoButton" x:Uid="RedoButton" Click="OnRedoClicked" IsEnabled="False" />
+                        <Button x:Name="PreviewSequenceButton" x:Uid="PreviewSequenceButton" Click="OnPreviewSequenceClicked" IsEnabled="False" />
+                    </StackPanel>
+                </Grid>
+                <ListView
+                    x:Name="ClipListView"
+                    Grid.Row="1"
+                    AllowDrop="True"
+                    CanDragItems="True"
+                    CanReorderItems="True"
+                    DragItemsCompleted="OnClipDragItemsCompleted"
+                    IsItemClickEnabled="True"
+                    MaxHeight="132"
+                    ReorderMode="Enabled"
+                    SelectionChanged="OnClipSelectionChanged"
+                    SelectionMode="Single">
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ItemsStackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Width="340" Padding="8" Background="{ThemeResource ControlFillColorDefaultBrush}" CornerRadius="8">
+                                <Grid ColumnSpacing="8" RowSpacing="5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="84" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid Width="84" Height="52" Background="#FF20232A" CornerRadius="5">
+                                        <FontIcon HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FF8B909A" Glyph="&#xE714;" />
+                                        <Image Source="{Binding Thumbnail}" Stretch="UniformToFill" />
+                                    </Grid>
+                                    <StackPanel Grid.Column="1" Spacing="3">
+                                        <TextBox Text="{Binding Name, Mode=TwoWay}" Tag="{Binding Id}" LostFocus="OnClipNameLostFocus" Padding="5,2" />
+                                        <TextBlock Text="{Binding RangeText}" FontFamily="Consolas" FontSize="11" />
+                                        <TextBlock Text="{Binding DurationText}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="11" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="4">
+                                        <Button x:Uid="PreviewClipButton" Tag="{Binding Id}" Click="OnPreviewClipClicked" Padding="7,3" />
+                                        <Button x:Uid="TrimClipButton" Tag="{Binding Id}" Click="OnTrimClipClicked" Padding="7,3" />
+                                        <Button x:Uid="EarlierButton" Tag="{Binding Id}" Click="OnMoveEarlierClicked" Padding="7,3" />
+                                        <Button x:Uid="LaterButton" Tag="{Binding Id}" Click="OnMoveLaterClicked" Padding="7,3" />
+                                        <Button x:Uid="DeleteClipButton" Tag="{Binding Id}" Click="OnDeleteClipClicked" Padding="7,3" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="3" Padding="12" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12">
+            <Grid ColumnSpacing="18" RowSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock x:Uid="ExportHeading" VerticalAlignment="Center" FontSize="18" FontWeight="SemiBold" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                    <RadioButton x:Name="FastModeButton" x:Uid="FastModeButton" Checked="OnExportModeChanged" GroupName="ExportMode" IsChecked="True" />
+                    <RadioButton x:Name="AccurateModeButton" x:Uid="AccurateModeButton" Checked="OnExportModeChanged" GroupName="ExportMode" />
+                </StackPanel>
+                <TextBlock x:Uid="ExportModeHint" Grid.Column="2" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                <Button x:Name="ExportButton" x:Uid="ExportButton" Grid.Column="3" Click="OnExportClicked" IsEnabled="False" Style="{StaticResource AccentButtonStyle}" />
+                <Grid x:Name="ExportProgressPanel" Grid.Row="1" Grid.ColumnSpan="4" ColumnSpacing="12" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Spacing="4">
+                        <ProgressBar x:Name="ExportProgressBar" Minimum="0" Maximum="1" />
+                        <TextBlock x:Name="ExportProgressText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                    <Button x:Name="CancelExportButton" x:Uid="CancelExportButton" Grid.Column="1" Click="OnCancelExportClicked" />
+                    <Button x:Name="RevealOutputButton" x:Uid="RevealOutputButton" Grid.Column="2" Click="OnRevealOutputClicked" Visibility="Collapsed" />
+                </Grid>
+            </Grid>
+        </Border>
+
+        <InfoBar x:Name="StatusBar" Grid.Row="4" IsClosable="True" IsOpen="False" Severity="Informational" />
     </Grid>
 </Page>

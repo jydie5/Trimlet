@@ -12,7 +12,8 @@ public sealed record ExportResult(
     TimeSpan Duration,
     string VideoEncoder,
     string AudioEncoder,
-    TrimRange EffectiveRange);
+    TrimRange EffectiveRange,
+    IReadOnlyList<TrimRange>? SequenceRanges = null);
 
 public sealed class ExportService(FFmpegToolchain toolchain, MediaInspector inspector)
 {
@@ -115,6 +116,167 @@ public sealed class ExportService(FFmpegToolchain toolchain, MediaInspector insp
         }
     }
 
+    public async Task<ExportResult> ExportEditListAsync(
+        MediaMetadata metadata,
+        EditList editList,
+        ExportMode mode,
+        string outputDirectory,
+        int selectedAudioIndex,
+        KeyframeIndex? keyframes,
+        IProgress<ExportProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        editList.Validate(metadata.Duration);
+        if (editList.IsEmpty)
+        {
+            throw new MediaOperationException("invalid_range", "書き出すクリップがありません。");
+        }
+
+        var directory = Path.GetFullPath(outputDirectory);
+        Directory.CreateDirectory(directory);
+        EnsureFreeSpace(directory, metadata, editList.TotalDurationSeconds);
+
+        var outputPath = UniqueOutputPath(directory, Path.GetFileNameWithoutExtension(metadata.SourcePath) + "-edited");
+        if (string.Equals(Path.GetFullPath(metadata.SourcePath), outputPath, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new MediaOperationException("output_conflict", "元動画と同じ場所には書き出せません。別の保存先を選択してください。");
+        }
+
+        var operationDirectory = Path.Combine(directory, $".trimlet-{Guid.NewGuid():N}.partial");
+        var temporaryPath = Path.Combine(directory, $".{Path.GetFileNameWithoutExtension(outputPath)}.{Guid.NewGuid():N}.partial.mp4");
+        var diagnosticsPath = CreateDiagnosticsPath();
+        var accurateEncoder = mode == ExportMode.Accurate
+            ? await toolchain.SelectH264EncoderAsync(cancellationToken)
+            : "copy";
+        Directory.CreateDirectory(operationDirectory);
+        MultiRangeExportPlan plan;
+        try
+        {
+            plan = MultiRangeExportPlanner.Create(
+                metadata,
+                editList,
+                mode,
+                operationDirectory,
+                temporaryPath,
+                selectedAudioIndex,
+                accurateEncoder,
+                keyframes);
+        }
+        catch (InvalidDataException exception)
+        {
+            DeleteDirectoryIfExists(operationDirectory);
+            throw new MediaOperationException("invalid_range", exception.Message);
+        }
+
+        var stageDiagnostics = new List<(IReadOnlyList<string> Arguments, ProcessResult Result, IReadOnlyList<string> Progress)>();
+        try
+        {
+            await File.WriteAllTextAsync(plan.ConcatListPath, plan.ConcatListContents, cancellationToken);
+            var completedDuration = 0d;
+            for (var index = 0; index < plan.SegmentPlans.Count; index++)
+            {
+                var segmentPlan = plan.SegmentPlans[index];
+                var progressLines = new List<string>();
+                progress?.Report(new ExportProgress(
+                    0.9 * completedDuration / plan.ExpectedDuration,
+                    TimeSpan.FromSeconds(completedDuration),
+                    $"segment:{index + 1}/{plan.SegmentPlans.Count}"));
+                var result = await ProcessRunner.RunAsync(
+                    toolchain.FFmpegPath,
+                    segmentPlan.Arguments,
+                    line =>
+                    {
+                        progressLines.Add(line);
+                        if (FFmpegProgress.ElapsedFromBlock(line) is not { } elapsed)
+                        {
+                            return;
+                        }
+
+                        var processed = completedDuration + Math.Min(elapsed.TotalSeconds, segmentPlan.EffectiveRange.DurationSeconds);
+                        progress?.Report(new ExportProgress(
+                            Math.Clamp(0.9 * processed / plan.ExpectedDuration, 0, 0.9),
+                            TimeSpan.FromSeconds(processed),
+                            $"segment:{index + 1}/{plan.SegmentPlans.Count}"));
+                    },
+                    cancellationToken);
+                stageDiagnostics.Add((segmentPlan.Arguments, result, progressLines));
+                if (result.ExitCode != 0)
+                {
+                    throw new MediaOperationException(
+                        "export_failed",
+                        $"クリップ{index + 1}の書き出しに失敗しました。診断ログを確認するか、正確モードを試してください。",
+                        result.StandardError);
+                }
+
+                completedDuration += segmentPlan.EffectiveRange.DurationSeconds;
+            }
+
+            var concatProgress = new List<string>();
+            var concatResult = await ProcessRunner.RunAsync(
+                toolchain.FFmpegPath,
+                plan.ConcatArguments,
+                line =>
+                {
+                    concatProgress.Add(line);
+                    if (FFmpegProgress.ElapsedFromBlock(line) is not { } elapsed)
+                    {
+                        return;
+                    }
+
+                    var fraction = Math.Clamp(elapsed.TotalSeconds / plan.ExpectedDuration, 0, 1);
+                    progress?.Report(new ExportProgress(
+                        0.9 + fraction * 0.07,
+                        elapsed,
+                        "concatenating"));
+                },
+                cancellationToken);
+            stageDiagnostics.Add((plan.ConcatArguments, concatResult, concatProgress));
+            await WriteMultiDiagnosticsAsync(diagnosticsPath, plan, stageDiagnostics, cancellationToken);
+            if (concatResult.ExitCode != 0)
+            {
+                throw new MediaOperationException("export_failed", "クリップの結合に失敗しました。", concatResult.StandardError);
+            }
+
+            progress?.Report(new ExportProgress(0.98, TimeSpan.FromSeconds(plan.ExpectedDuration), "validating"));
+            var validation = await ValidateOutputAsync(
+                temporaryPath,
+                plan.ExpectedDuration,
+                plan.ExpectsAudio,
+                mode,
+                metadata.Video.AverageFrameRate,
+                cancellationToken);
+            if (!validation.IsValid)
+            {
+                throw new MediaOperationException("output_validation_failed", validation.Message, validation.Diagnostics);
+            }
+
+            File.Move(temporaryPath, outputPath, overwrite: false);
+            progress?.Report(new ExportProgress(1, validation.Duration, "completed"));
+            return new ExportResult(
+                outputPath,
+                diagnosticsPath,
+                validation.Duration,
+                plan.VideoEncoder,
+                plan.AudioEncoder,
+                plan.EffectiveRanges[0],
+                plan.EffectiveRanges);
+        }
+        catch (OperationCanceledException)
+        {
+            DeleteIfExists(temporaryPath);
+            throw;
+        }
+        catch
+        {
+            DeleteIfExists(temporaryPath);
+            throw;
+        }
+        finally
+        {
+            DeleteDirectoryIfExists(operationDirectory);
+        }
+    }
+
     public static void RevealInExplorer(string path)
     {
         var startInfo = new ProcessStartInfo
@@ -186,7 +348,10 @@ public sealed class ExportService(FFmpegToolchain toolchain, MediaInspector insp
         throw new MediaOperationException("output_conflict", "保存先に同名ファイルが多すぎます。別のフォルダーを選択してください。");
     }
 
-    private static void EnsureFreeSpace(string directory, MediaMetadata metadata, TrimRange range)
+    private static void EnsureFreeSpace(string directory, MediaMetadata metadata, TrimRange range) =>
+        EnsureFreeSpace(directory, metadata, range.DurationSeconds);
+
+    private static void EnsureFreeSpace(string directory, MediaMetadata metadata, double durationSeconds)
     {
         var root = Path.GetPathRoot(directory);
         if (string.IsNullOrEmpty(root))
@@ -196,7 +361,7 @@ public sealed class ExportService(FFmpegToolchain toolchain, MediaInspector insp
 
         var drive = new DriveInfo(root);
         var sourceBytesPerSecond = new FileInfo(metadata.SourcePath).Length / Math.Max(metadata.Duration.TotalSeconds, 0.001);
-        var estimatedBytes = Math.Max(256L * 1024 * 1024, (long)(sourceBytesPerSecond * range.Duration.TotalSeconds * 1.25));
+        var estimatedBytes = Math.Max(256L * 1024 * 1024, (long)(sourceBytesPerSecond * durationSeconds * 1.25));
         if (drive.AvailableFreeSpace < estimatedBytes)
         {
             throw new MediaOperationException(
@@ -239,6 +404,36 @@ public sealed class ExportService(FFmpegToolchain toolchain, MediaInspector insp
         await File.WriteAllTextAsync(path, text, cancellationToken);
     }
 
+    private static async Task WriteMultiDiagnosticsAsync(
+        string path,
+        MultiRangeExportPlan plan,
+        IReadOnlyList<(IReadOnlyList<string> Arguments, ProcessResult Result, IReadOnlyList<string> Progress)> stages,
+        CancellationToken cancellationToken)
+    {
+        var lines = new List<string>
+        {
+            $"Trimlet multi-range export {DateTimeOffset.Now:O}",
+            $"Segments: {plan.SegmentPlans.Count}",
+            $"Encoder: {plan.VideoEncoder} / {plan.AudioEncoder}",
+        };
+        for (var index = 0; index < stages.Count; index++)
+        {
+            var stage = stages[index];
+            var redactedArguments = stage.Arguments.Select(argument =>
+                Path.IsPathFullyQualified(argument) ? $"<path:{Path.GetFileName(argument)}>" : argument);
+            lines.AddRange([
+                "",
+                $"Stage {index + 1}",
+                $"Arguments: {string.Join(' ', redactedArguments)}",
+                $"Exit code: {stage.Result.ExitCode}",
+                string.Join(Environment.NewLine, stage.Progress),
+                stage.Result.StandardError,
+            ]);
+        }
+
+        await File.WriteAllTextAsync(path, string.Join(Environment.NewLine, lines), cancellationToken);
+    }
+
     private static void DeleteIfExists(string path)
     {
         try
@@ -255,6 +450,23 @@ public sealed class ExportService(FFmpegToolchain toolchain, MediaInspector insp
         catch (UnauthorizedAccessException)
         {
             // The incomplete suffix prevents a failed cleanup from looking finished.
+        }
+    }
+
+    private static void DeleteDirectoryIfExists(string path)
+    {
+        try
+        {
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path, recursive: true);
+            }
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
         }
     }
 }

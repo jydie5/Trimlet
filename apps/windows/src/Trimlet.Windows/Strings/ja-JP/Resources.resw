@@ -18,8 +18,8 @@
   <data name="AudioStreamLabel.Text" xml:space="preserve"><value>主音声</value></data>
   <data name="NoFileSelected.Text" xml:space="preserve"><value>ファイルが選択されていません</value></data>
   <data name="RangeHeading.Text" xml:space="preserve"><value>選択範囲</value></data>
-  <data name="MarkInButton.Content" xml:space="preserve"><value>INを設定</value></data>
-  <data name="MarkOutButton.Content" xml:space="preserve"><value>OUTを設定</value></data>
+  <data name="MarkInButton.Content" xml:space="preserve"><value>① INを設定  [I]</value></data>
+  <data name="MarkOutButton.Content" xml:space="preserve"><value>② OUTを設定  [O]</value></data>
   <data name="RangeGuide.Text" xml:space="preserve"><value>動画を開き、IN → 移動 → OUT の順に設定します。</value></data>
   <data name="GoToInButton.Content" xml:space="preserve"><value>INへ</value></data>
   <data name="PreviewRangeButton.Content" xml:space="preserve"><value>範囲を再生</value></data>
@@ -103,4 +103,33 @@
   <data name="ExportCancelledMessage" xml:space="preserve"><value>完成品に見えるファイルは残していません。</value></data>
   <data name="ExportCancelling" xml:space="preserve"><value>FFmpegを停止し、一時ファイルを片づけています…</value></data>
   <data name="ExportFailedTitle" xml:space="preserve"><value>安全に書き出しを中止しました</value></data>
+  <data name="TimelineLegend.Text" xml:space="preserve"><value>作成中 ⋯  追加済み ■  高速候補 □</value></data>
+  <data name="ReverseShuttleButton.Content" xml:space="preserve"><value>J  逆再生</value></data>
+  <data name="StopShuttleButton.Content" xml:space="preserve"><value>K  停止</value></data>
+  <data name="ForwardShuttleButton.Content" xml:space="preserve"><value>L  順再生</value></data>
+  <data name="ShuttleStopped.Text" xml:space="preserve"><value>停止中・J／L連打で1×、2×、4×、8×</value></data>
+  <data name="ShuttleStoppedText" xml:space="preserve"><value>停止中・J／L連打で1×、2×、4×、8×</value></data>
+  <data name="ShuttleReverseFormat" xml:space="preserve"><value>逆再生 {0}×</value></data>
+  <data name="ShuttleForwardFormat" xml:space="preserve"><value>順再生 {0}×</value></data>
+  <data name="AddToSequenceButton.Content" xml:space="preserve"><value>③ シーケンスへ追加</value></data>
+  <data name="CancelTrimButton.Content" xml:space="preserve"><value>トリムを中止</value></data>
+  <data name="SequenceHeading.Text" xml:space="preserve"><value>編集シーケンス</value></data>
+  <data name="SequenceEmpty.Text" xml:space="preserve"><value>クリップなし・①〜③で追加</value></data>
+  <data name="UndoButton.Content" xml:space="preserve"><value>元に戻す</value></data>
+  <data name="RedoButton.Content" xml:space="preserve"><value>やり直す</value></data>
+  <data name="PreviewSequenceButton.Content" xml:space="preserve"><value>シーケンスを再生</value></data>
+  <data name="PreviewClipButton.Content" xml:space="preserve"><value>再生</value></data>
+  <data name="TrimClipButton.Content" xml:space="preserve"><value>トリム編集</value></data>
+  <data name="EarlierButton.Content" xml:space="preserve"><value>←</value></data>
+  <data name="LaterButton.Content" xml:space="preserve"><value>→</value></data>
+  <data name="DeleteClipButton.Content" xml:space="preserve"><value>削除</value></data>
+  <data name="RangeHeadingText" xml:space="preserve"><value>新しいサブクリップ</value></data>
+  <data name="TrimModeHeadingText" xml:space="preserve"><value>トリム編集</value></data>
+  <data name="AddToSequenceButtonText" xml:space="preserve"><value>③ シーケンスへ追加</value></data>
+  <data name="ApplyTrimButtonText" xml:space="preserve"><value>トリムを適用</value></data>
+  <data name="ClipDurationFormat" xml:space="preserve"><value>{0}</value></data>
+  <data name="SequenceEmptyText" xml:space="preserve"><value>クリップなし・①〜③で追加</value></data>
+  <data name="SequenceSummaryFormat" xml:space="preserve"><value>{0}クリップ・合計 {1}</value></data>
+  <data name="KeyframeReadyFormat" xml:space="preserve"><value>キーフレーム{0}個・高速候補はオレンジ表示</value></data>
+  <data name="OverlapMessage" xml:space="preserve"><value>追加済みクリップと重なっています。INまたはOUTを調整してください。</value></data>
 </root>

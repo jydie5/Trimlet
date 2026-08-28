@@ -18,8 +18,8 @@
   <data name="AudioStreamLabel.Text" xml:space="preserve"><value>Primary audio</value></data>
   <data name="NoFileSelected.Text" xml:space="preserve"><value>No file selected</value></data>
   <data name="RangeHeading.Text" xml:space="preserve"><value>Selection</value></data>
-  <data name="MarkInButton.Content" xml:space="preserve"><value>Set IN</value></data>
-  <data name="MarkOutButton.Content" xml:space="preserve"><value>Set OUT</value></data>
+  <data name="MarkInButton.Content" xml:space="preserve"><value>① Set IN  [I]</value></data>
+  <data name="MarkOutButton.Content" xml:space="preserve"><value>② Set OUT  [O]</value></data>
   <data name="RangeGuide.Text" xml:space="preserve"><value>Open a video, then set IN → move → set OUT.</value></data>
   <data name="GoToInButton.Content" xml:space="preserve"><value>Go to IN</value></data>
   <data name="PreviewRangeButton.Content" xml:space="preserve"><value>Preview</value></data>
@@ -103,4 +103,33 @@
   <data name="ExportCancelledMessage" xml:space="preserve"><value>No completed-looking output was left behind.</value></data>
   <data name="ExportCancelling" xml:space="preserve"><value>Stopping FFmpeg and cleaning the temporary file…</value></data>
   <data name="ExportFailedTitle" xml:space="preserve"><value>Export failed safely</value></data>
+  <data name="TimelineLegend.Text" xml:space="preserve"><value>draft ⋯  retained ■  Fast □</value></data>
+  <data name="ReverseShuttleButton.Content" xml:space="preserve"><value>J  Reverse</value></data>
+  <data name="StopShuttleButton.Content" xml:space="preserve"><value>K  Stop</value></data>
+  <data name="ForwardShuttleButton.Content" xml:space="preserve"><value>L  Forward</value></data>
+  <data name="ShuttleStopped.Text" xml:space="preserve"><value>Stopped · repeat J/L for 1×, 2×, 4×, 8×</value></data>
+  <data name="ShuttleStoppedText" xml:space="preserve"><value>Stopped · repeat J/L for 1×, 2×, 4×, 8×</value></data>
+  <data name="ShuttleReverseFormat" xml:space="preserve"><value>Reverse {0}×</value></data>
+  <data name="ShuttleForwardFormat" xml:space="preserve"><value>Forward {0}×</value></data>
+  <data name="AddToSequenceButton.Content" xml:space="preserve"><value>③ Add to sequence</value></data>
+  <data name="CancelTrimButton.Content" xml:space="preserve"><value>Cancel trim</value></data>
+  <data name="SequenceHeading.Text" xml:space="preserve"><value>Editing sequence</value></data>
+  <data name="SequenceEmpty.Text" xml:space="preserve"><value>No clips · use steps ①–③</value></data>
+  <data name="UndoButton.Content" xml:space="preserve"><value>Undo</value></data>
+  <data name="RedoButton.Content" xml:space="preserve"><value>Redo</value></data>
+  <data name="PreviewSequenceButton.Content" xml:space="preserve"><value>Preview sequence</value></data>
+  <data name="PreviewClipButton.Content" xml:space="preserve"><value>Preview</value></data>
+  <data name="TrimClipButton.Content" xml:space="preserve"><value>Trim edit</value></data>
+  <data name="EarlierButton.Content" xml:space="preserve"><value>←</value></data>
+  <data name="LaterButton.Content" xml:space="preserve"><value>→</value></data>
+  <data name="DeleteClipButton.Content" xml:space="preserve"><value>Delete</value></data>
+  <data name="RangeHeadingText" xml:space="preserve"><value>New subclip</value></data>
+  <data name="TrimModeHeadingText" xml:space="preserve"><value>Trim edit</value></data>
+  <data name="AddToSequenceButtonText" xml:space="preserve"><value>③ Add to sequence</value></data>
+  <data name="ApplyTrimButtonText" xml:space="preserve"><value>Apply trim</value></data>
+  <data name="ClipDurationFormat" xml:space="preserve"><value>{0}</value></data>
+  <data name="SequenceEmptyText" xml:space="preserve"><value>No clips · use steps ①–③</value></data>
+  <data name="SequenceSummaryFormat" xml:space="preserve"><value>{0} clips · total {1}</value></data>
+  <data name="KeyframeReadyFormat" xml:space="preserve"><value>{0} keyframes · Fast candidates shown in orange</value></data>
+  <data name="OverlapMessage" xml:space="preserve"><value>This subclip overlaps a retained clip. Adjust IN or OUT.</value></data>
 </root>

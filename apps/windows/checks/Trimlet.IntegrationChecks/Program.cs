@@ -70,12 +70,43 @@ try
     Require(File.Exists(accurate.OutputPath), "Accurate export was not finalized.");
     Require(Math.Abs(accurate.Duration.TotalSeconds - requested.DurationSeconds) < 0.25, "Accurate export duration missed the selected range.");
     Require(!string.Equals(fast.OutputPath, accurate.OutputPath, StringComparison.OrdinalIgnoreCase), "Existing output was overwritten instead of receiving a unique name.");
+
+    var editList = new EditList([
+        new EditSegment(Guid.NewGuid(), "Ending", Range(6.2, 7.0)),
+        new EditSegment(Guid.NewGuid(), "Intro", Range(0.2, 1.0)),
+        new EditSegment(Guid.NewGuid(), "Middle", Range(3.2, 4.0)),
+    ]);
+    var multiAccurate = await exportService.ExportEditListAsync(
+        metadata,
+        editList,
+        ExportMode.Accurate,
+        checkRoot,
+        0,
+        keyframes);
+    Require(File.Exists(multiAccurate.OutputPath), "Multi-range Accurate export was not finalized.");
+    Require(Math.Abs(multiAccurate.Duration.TotalSeconds - editList.TotalDurationSeconds) < 0.35, "Multi-range Accurate duration missed the edit-list total.");
+    Require(multiAccurate.SequenceRanges?.Count == 3, "Multi-range Accurate result lost its segment order.");
+    Require(Math.Abs(multiAccurate.SequenceRanges![0].In.TotalSeconds - 6.2) < 0.001, "Reordered first segment was not preserved.");
+
+    var multiFast = await exportService.ExportEditListAsync(
+        metadata,
+        editList,
+        ExportMode.Fast,
+        checkRoot,
+        0,
+        keyframes);
+    Require(File.Exists(multiFast.OutputPath), "Multi-range Fast export was not finalized.");
+    Require(multiFast.VideoEncoder == "copy", "Multi-range Fast export re-encoded video.");
+    Require(multiFast.SequenceRanges?.Count == 3, "Multi-range Fast result lost its candidates.");
     Require(await Sha256Async(sourcePath) == sourceHash, "The source file changed during export.");
     Require(!Directory.EnumerateFiles(checkRoot, "*.partial.mp4").Any(), "An incomplete export file remained.");
+    Require(!Directory.EnumerateDirectories(checkRoot, "*.partial").Any(), "A multi-range operation directory remained.");
 
     Console.WriteLine($"PASS: inspected {metadata.Video.Codec} {metadata.Video.Width}x{metadata.Video.Height} with {keyframes.Keyframes.Count} keyframes.");
     Console.WriteLine($"PASS: Fast output {fast.Duration.TotalSeconds:0.000}s ({fast.VideoEncoder}/{fast.AudioEncoder}).");
     Console.WriteLine($"PASS: Accurate output {accurate.Duration.TotalSeconds:0.000}s ({accurate.VideoEncoder}/{accurate.AudioEncoder}).");
+    Console.WriteLine($"PASS: Multi-range Accurate output {multiAccurate.Duration.TotalSeconds:0.000}s in reordered edit-list order.");
+    Console.WriteLine($"PASS: Multi-range Fast output {multiFast.Duration.TotalSeconds:0.000}s with {multiFast.SequenceRanges!.Count} candidates.");
     Console.WriteLine("PASS: Unicode, spaces, quotes, temporary finalization, and output validation completed.");
     return 0;
 }
@@ -100,3 +131,6 @@ static async Task<string> Sha256Async(string path)
     await using var stream = File.OpenRead(path);
     return Convert.ToHexString(await SHA256.HashDataAsync(stream));
 }
+
+static TrimRange Range(double @in, double @out) =>
+    new(MediaTimestamp.FromSeconds(@in), MediaTimestamp.FromSeconds(@out));
