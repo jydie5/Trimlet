@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "three-segments-reordered",
+      "valid": true,
+      "input": {
+        "schemaVersion": 1,
+        "segments": [
+          {
+            "id": "middle",
+            "in": { "value": 3000000, "timescale": 60000 },
+            "out": { "value": 3900000, "timescale": 60000 }
+          },
+          {
+            "id": "intro",
+            "in": { "value": 600000, "timescale": 60000 },
+            "out": { "value": 1200000, "timescale": 60000 }
+          },
+          {
+            "id": "ending",
+            "in": { "value": 7200000, "timescale": 60000 },
+            "out": { "value": 7800000, "timescale": 60000 }
+          }
+        ]
+      }
+    },
+    {
+      "id": "overlap-rejected",
+      "valid": false,
+      "input": {
+        "schemaVersion": 1,
+        "segments": [
+          {
+            "id": "first",
+            "in": { "value": 600000, "timescale": 60000 },
+            "out": { "value": 1200000, "timescale": 60000 }
+          },
+          {
+            "id": "overlap",
+            "in": { "value": 900000, "timescale": 60000 },
+            "out": { "value": 1500000, "timescale": 60000 }
+          }
+        ]
+      }
+    }
+  ]
+}

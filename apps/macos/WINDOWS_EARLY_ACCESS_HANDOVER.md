@@ -4,6 +4,8 @@
 - Windows release: `v0.3.0-early-access.1`
 - Audience: macOS implementation owner
 
+This records the inbound Windows-to-macOS handover at Early Access 1. The macOS implementation subsequently advanced to `v0.3.0-beta.1`; the current outbound requirements for the Windows catch-up turn are in `apps/windows/handover.md` and `docs/PLATFORM_CONTRACT.md`.
+
 ## What reached parity
 
 Windows now implements the same core single-video workflow as the macOS PoC:

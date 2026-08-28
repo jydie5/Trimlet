@@ -6,27 +6,40 @@
 
 Trimletは、macOSとWindowsでそれぞれネイティブ実装する、軽量でフレーム正確な動画切り出しアプリです。
 
-macOS PoCはSwiftUIで実装済みです。Windows版もC#／WinUI 3によるネイティブ実装として、同じ製品仕様とメディア処理契約に従うEarly Access段階へ進みました。
+macOS版はSwiftUIによるBeta段階です。Windows版もC#／WinUI 3によるネイティブ実装として、同じ製品仕様とメディア処理契約に従って追従開発します。
 
 ## 目的
 
-大容量動画をファイル全体ごとメモリへ読み込まずに開き、1つのIN／OUT範囲を指定してMP4へ書き出します。
+大容量動画をファイル全体ごとメモリへ読み込まずに開き、複数のIN／OUT区間を並べて1本のMP4へ書き出します。
 
 操作は次の流れに絞ります。
 
 1. 動画を開く、またはドロップする。
 2. 必要な位置をすばやく探す。
-3. IN点とOUT点を正確に設定する。
-4. 高速モードまたはフレーム正確モードで書き出す。
+3. IN点とOUT点を設定して必要区間を追加・並べ替える。
+4. 区間を連続プレビューし、音声を選ぶ。
+5. 高速モードまたはフレーム正確モードで1本に書き出す。
 
 優先入力形式はMP4、MOV、M2TS、MTSです。
 
+## 主な編集機能
+
+- 1本の元動画から複数のサブクリップを作成し、編集シーケンス上で並べ替えて1本のMP4へ書き出せます。
+- 作成中のIN／OUT範囲は紫、追加済みクリップは青、IN点は緑、OUT点は赤で区別します。
+- 各クリップには代表サムネイル、編集できるクリップ名、IN–OUT時間を表示します。
+- 左右キーで1フレーム、Shift＋左右キーで10フレーム、Option＋左右キーで5秒移動できます。
+- `J`＝逆再生、`K`＝停止、`L`＝順再生のシャトル操作に対応し、`J`／`L`の連打で1倍、2倍、4倍、8倍へ速度を変更できます。
+- `I`でIN点、`O`でOUT点を設定できます。ショートカットは対応する画面ボタンにも表示され、キーボード操作は必須ではありません。
+- スライダーやトラックパッドで連続シークし、操作を終えた位置で正確に合わせます。
+- 高速モードは可能な範囲で映像を再エンコードせず、フレーム正確モードはVideoToolboxによるハードウェア支援を優先して正確な境界を書き出します。
+- 複数音声ストリームの選択、連続プレビュー、進捗表示、キャンセル、書き出し後の検証に対応します。
+
 ## 現在の状態
 
-- macOS：ネイティブPoC 0.2。直接再生、自動プレビュー用プロキシ、範囲選択、高速／正確書き出しを実装済みです。
-- Windows：ソース配布のEarly Access。ネイティブ再生、範囲選択、音声ストリーム選択、検証付きの高速／正確書き出しを実装済みです。
-- 同等性：動画を開く → IN／OUTを選ぶ → 書き出す、という主要フローは揃いました。Windowsの自動プレビュー用プロキシと可変フレームレート動画のPTS基準移動は未実装です。
-- macOS最新版：[v0.2.1-poc](https://github.com/jydie5/Trimlet/releases/tag/v0.2.1-poc)をMIT Licenseでソース公開しています。
+- macOS：ネイティブ`v0.3.0-beta.1`。複数区間、編集シーケンス、連続プレビュー、音声選択、複数区間の高速／正確書き出しを実装しています。
+- Windows：ソース配布のEarly Access。ネイティブ再生、単一区間、音声ストリーム選択、検証付きの高速／正確書き出しまで実装済みで、次にMac Betaの複数区間と操作体系へ追従します。
+- 同等性：動画を開く → IN／OUTを選ぶ → 書き出す、という基礎フローは揃っています。複数区間、J/K/L、高速スクラブ、自動プレビュー用プロキシ、可変フレームレート動画のPTS基準移動には差があります。
+- macOS最新版：[v0.3.0-beta.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-beta.1)をMIT Licenseのソースのみで公開しています。
 
 Windows Early Access：[v0.3.0-early-access.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-early-access.1)（ソースのみ。インストーラーやビルド済み実行ファイルはありません）
 
@@ -47,7 +60,7 @@ UI、再生API、ハードウェア制御のソースは共有しません。用
 
 [リポジトリ構成の判断](docs/architecture/REPOSITORY_STRUCTURE.md)と[Mac／Windows共通契約](docs/PLATFORM_CONTRACT.md)を参照してください。
 
-## macOS PoCを試す
+## macOS Betaを試す
 
 必要なもの：
 
@@ -61,6 +74,7 @@ UI、再生API、ハードウェア制御のソースは共有しません。用
 
 ```bash
 swift run --package-path apps/macos TrimletCoreChecks
+swift run --package-path apps/macos TrimletIntegrationChecks
 ```
 
 生成動画と`dist/`はGitの対象外です。
@@ -101,6 +115,7 @@ TrimletはMIT Licenseの無料ソフトウェアです。役立った場合は�
 - [Windows Early Accessガイド](apps/windows/README.md)
 - [Windows保守担当へのhandover](apps/windows/handover.md)
 - [WindowsからmacOS担当へのhandover](apps/macos/WINDOWS_EARLY_ACCESS_HANDOVER.md)
+- [v0.3.0 Beta 1リリースノート](docs/releases/v0.3.0-beta.1.md)
 - [Mac PoCの範囲](docs/POC.md)
 - [ヒューマンチェック手順](docs/HUMAN_CHECK.md)
 - [検証環境](docs/ENVIRONMENT.md)

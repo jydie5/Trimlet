@@ -6,29 +6,42 @@ Only what you need, quickly and precisely.
 
 Trimlet is a lightweight, frame-accurate video trimming application with separate native implementations for macOS and Windows.
 
-The macOS proof of concept is implemented in SwiftUI. A native C#/WinUI 3 Windows Early Access implementation now follows the same product and media-processing contracts.
+The macOS application is now at the SwiftUI Beta stage. A native C#/WinUI 3 Windows Early Access implementation follows the same product and media-processing contracts and will catch up to the accepted Mac interaction model.
 
 ## Product goal
 
-Trimlet opens large video files without loading the whole file into memory, lets the user mark one IN/OUT range, and exports the selected range as MP4.
+Trimlet opens large video files without loading the whole file into memory, lets the user collect and order multiple IN/OUT ranges, and exports one combined MP4.
 
 It intentionally focuses on one workflow:
 
 1. Open or drop a video.
 2. Find the desired range quickly.
-3. Mark IN and OUT precisely.
-4. Export in Fast or Accurate mode.
+3. Mark, add, and reorder retained IN/OUT ranges.
+4. Continuously preview the sequence and choose an audio stream.
+5. Export one combined file in Fast or Accurate mode.
 
 Priority inputs are MP4, MOV, M2TS, and MTS.
 
+## Editing features
+
+- Create multiple subclips from one source, reorder them in an editing sequence, and export one combined MP4.
+- Distinguish the active IN/OUT draft in purple, retained clips in blue, the IN point in green, and the OUT point in red.
+- Show a representative thumbnail, editable clip name, and IN–OUT time range for every retained clip.
+- Move by one frame with Left/Right, ten frames with Shift+Left/Right, or five seconds with Option+Left/Right.
+- Shuttle with `J` for reverse, `K` for stop, and `L` for forward; repeated `J` or `L` presses select 1x, 2x, 4x, or 8x.
+- Set IN with `I` and OUT with `O`. These shortcuts are shown on their corresponding controls, and keyboard use remains optional.
+- Scrub continuously with the slider or trackpad, followed by an exact seek when the gesture ends.
+- Use Fast mode to avoid video re-encoding where possible, or Accurate mode to prioritize exact boundaries with hardware-assisted VideoToolbox encoding.
+- Select among multiple audio streams, continuously preview the sequence, monitor or cancel export, and validate the completed output.
+
 ## Repository status
 
-- macOS: native PoC 0.2 with direct preview, automatic preview proxies, range selection, and Fast/Accurate export.
-- Windows: source-only Early Access with native preview, range selection, audio-stream selection, and validated Fast/Accurate export.
-- Parity: the primary open → select IN/OUT → export workflow is aligned. Windows automatic preview proxies and source-PTS stepping for variable-frame-rate media remain open.
+- macOS: native `v0.3.0-beta.1` with multiple retained ranges, an editing sequence, sequence preview, audio selection, and combined Fast/Accurate export.
+- Windows: source-only Early Access with native preview, one retained range, audio-stream selection, and validated Fast/Accurate export. Its next turn is to catch up to the Mac Beta multi-range interaction model.
+- Parity: the foundational open → select IN/OUT → export workflow is aligned. Multi-range editing, J/K/L shuttle controls, responsive scrubbing, automatic preview proxies, and source-PTS stepping still differ by platform.
 - Public source releases are published under the MIT License.
 
-Latest macOS PoC source release: [v0.2.1-poc](https://github.com/jydie5/Trimlet/releases/tag/v0.2.1-poc)
+Latest macOS Beta source release: [v0.3.0-beta.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-beta.1)
 
 Windows Early Access: [v0.3.0-early-access.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-early-access.1) (source only; no installer or prebuilt executable)
 
@@ -49,7 +62,7 @@ The native UI and playback layers are intentionally not shared. Product terminol
 
 See [Repository structure](docs/architecture/REPOSITORY_STRUCTURE.md) and the [platform contract](docs/PLATFORM_CONTRACT.md).
 
-## Try the macOS PoC
+## Try the macOS Beta
 
 Prerequisites:
 
@@ -63,6 +76,7 @@ Core checks can be run with:
 
 ```bash
 swift run --package-path apps/macos TrimletCoreChecks
+swift run --package-path apps/macos TrimletIntegrationChecks
 ```
 
 Generated media and `dist/` are local-only and ignored by Git.
@@ -103,6 +117,7 @@ You can also help at no cost by starring or sharing the repository, reporting re
 - [Windows Early Access guide](apps/windows/README.md)
 - [Windows maintainer handover](apps/windows/handover.md)
 - [Windows-to-macOS owner handover](apps/macos/WINDOWS_EARLY_ACCESS_HANDOVER.md)
+- [v0.3.0 Beta 1 release notes](docs/releases/v0.3.0-beta.1.md)
 - [Mac PoC scope](docs/POC.md)
 - [Human-check guide](docs/HUMAN_CHECK.md)
 - [Verified environment](docs/ENVIRONMENT.md)

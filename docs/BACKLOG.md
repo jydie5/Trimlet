@@ -1,10 +1,115 @@
 # Trimlet development backlog
 
-- Current milestone: Mac PoC 0.2
-- Updated: 2026-08-14
-- Source: `HUMAN_CHECK_2026-08-14.md`
+- Current milestone: Windows parity with Mac `v0.3.0-beta.1`
+- Updated: 2026-08-28
+- Source: `HUMAN_CHECK.md`
 
 優先度はP0（次回確認を妨げる）、P1（次回確認に必要）、P2（その後の改善）の順。
+
+## Mac multi-range 0.3
+
+### TRIM-010 — 複数の残す区間を編集する
+
+- Priority: P0
+- Status: Implemented; automated checks and focused human check passed for Mac Beta 1
+- Scope: integer timestamp segments, overlap rejection, selection, update, delete, output-order move, Undo/Redo
+
+### TRIM-011 — 編集シーケンスを連続プレビューする
+
+- Priority: P0
+- Status: Implemented; human timing check pending
+- Scope: selected-segment preview, ordered sequence preview, gap skipping, final-OUT stop, manual-operation cancellation
+
+### TRIM-012 — 複数区間を1本へ書き出す
+
+- Priority: P0
+- Status: Implemented; generated-media checks pass locally
+- Scope: Accurate and Fast temporary segments, concat stage, combined progress, cancellation cleanup, output validation
+
+### TRIM-013 — 音声ストリームを選択する
+
+- Priority: P1
+- Status: Implemented; multi-audio human check pending
+- Scope: ffprobe stream inspection, Japanese display labels, absolute FFmpeg stream mapping
+
+### TRIM-014 — 長尺向け専用タイムライン
+
+- Priority: P1
+- Status: Next after Mac Beta 1; sequence-time design remains separate from Windows parity
+- Scope: zoom, pan, segment-edge dragging, thumbnails or waveform, keyframe snapping
+
+### TRIM-015 — Accurate出力ポリシーを製品化する
+
+- Priority: P1
+- Status: Open
+- Scope: encoder usability probe, quality policy, VFR PTS, interlace, HDR/color/rotation metadata, diagnostics
+
+### TRIM-016 — 区間作成の順序をUIだけで理解できるようにする
+
+- Priority: P0
+- Status: Implemented; focused human check passed for Mac Beta 1
+- Reported: 2026-08-25 human check showed that Add-before-IN/OUT and IN/OUT-before-Add were indistinguishable
+- Scope: empty initial boundaries, numbered IN → OUT → Add to Sequence flow, always-visible editing sequence, separate new-subclip/trim modes, post-add reset
+
+### TRIM-017 — 編集シーケンスを直接並べ替える
+
+- Priority: P0
+- Status: Implemented; focused human check passed for Mac Beta 1
+- Scope: drag-and-drop clip reordering, visible drop target, earlier/later accessibility alternative, undo/redo compatibility
+
+### TRIM-018 — 時間配置型のプロ向けタイムライン
+
+- Priority: P1
+- Status: Open; separate design milestone
+- Scope: absolute sequence positions, empty gaps, snapping, overlaps or transitions, multiple visual/audio tracks, zoom and pan
+- Boundary: Current drag operation changes the order of contiguous clips only. Do not simulate free placement until project storage, preview, export, and undo all share a sequence-time model.
+
+### TRIM-019 — 並べ替えても変わらないクリップ名
+
+- Priority: P0
+- Status: Implemented; focused human check passed for Mac Beta 1
+- Scope: source name plus initial IN timecode as the default, user rename, no position number, preservation through trim/reorder/undo data snapshots
+
+### TRIM-020 — クリップカードの代表サムネイル
+
+- Priority: P1
+- Status: Implemented for Mac session memory; focused human check passed for Mac Beta 1
+- Scope: image near IN point, asynchronous AVFoundation generation from the playable asset/proxy, per-segment cancellation, placeholder and failure state
+- Follow-up: persistent source/timestamp cache and bounded eviction when project save or very large clip counts are introduced
+
+### TRIM-021 — カード選択とトリム編集を分離する
+
+- Priority: P0
+- Status: Implemented after user reproduction; human check pending
+- Reported: Creating a third clip after selecting the first card appeared to delete the first clip because the UI silently remained in trim mode and updated it.
+- Scope: card click is selection only, explicit `トリム編集` transition, separate selected/trimming identifiers, new IN/OUT remains an Add operation unless trim edit was explicitly chosen
+
+### TRIM-022 — 作成中の選択範囲を専用色で塗る
+
+- Priority: P1
+- Status: Implemented and human-accepted on Mac; Windows parity pending
+- Platform: Shared visual semantics; native rendering on Mac and Windows
+- Reported: IN／OUTの緑線・赤線は見えるが、シーケンスへ追加する前の範囲は点線だけで面として判別しにくい。
+- Scope: 作成中の有効範囲を半透明の紫系＋点線で表示し、追加済みクリップは従来どおり青で表示する。追加が成功した瞬間に紫から青へ状態遷移させる。色だけに依存しない凡例、境界線、明暗両テーマのコントラストも含む。
+- Plan: [`INTERACTION_PLAN_2026-08-26.md`](INTERACTION_PLAN_2026-08-26.md)
+
+### TRIM-023 — 動画読込後のキーフレーム解析を非モーダル化する
+
+- Priority: P1
+- Status: Implemented and developer-verified on Mac; Windows parity pending
+- Platform: Shared behavior; Mac implementation first
+- Reported: 動画をドロップした直後に全面表示される確認画面は、動画が既に画面へ出ているため不要に感じる。
+- Scope: 観測された画面がキーフレーム解析パネルであることを再現確認し、自動解析は背景で続けながらタイムライン内へ小さく進捗を出す。プロキシ生成、書き出し、破棄を伴う別動画への置換確認は別の安全要件として維持する。
+- Plan: [`INTERACTION_PLAN_2026-08-26.md`](INTERACTION_PLAN_2026-08-26.md)
+
+### TRIM-024 — J・K・Lシャトルと高速スクラブを追加する
+
+- Priority: P1
+- Status: Implemented and human-accepted on Mac; Windows parity pending
+- Platform: Shared shortcuts and behavior; native playback implementation per platform
+- Reported: フレーム／5秒移動に加えて、映像を見ながら前後へ高速かつ自由に探索したい。
+- Scope: Premiere Pro／Final Cut Proで共通するJ（逆方向）、K（停止）、L（順方向）のシャトル操作をTrimletの操作体系へ追加する。タイムラインのドラッグ中は軽量な近似シーク、離した時点で正確なシークを行い、長尺・長GOPでも追従させる。ホバースキミングは専用タイムラインTRIM-014まで保留する。
+- Plan: [`INTERACTION_PLAN_2026-08-26.md`](INTERACTION_PLAN_2026-08-26.md)
 
 ## PoC 0.2
 

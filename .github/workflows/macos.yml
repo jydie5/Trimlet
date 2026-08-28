@@ -4,11 +4,15 @@ on:
   push:
     paths:
       - "apps/macos/**"
+      - "contracts/**"
+      - "scripts/validate-contracts.sh"
       - "scripts/build-poc-app.sh"
       - ".github/workflows/macos.yml"
   pull_request:
     paths:
       - "apps/macos/**"
+      - "contracts/**"
+      - "scripts/validate-contracts.sh"
       - "scripts/build-poc-app.sh"
       - ".github/workflows/macos.yml"
 
@@ -19,10 +23,16 @@ jobs:
   build-and-check:
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Toolchain
         run: swift --version
       - name: Build
         run: swift build --package-path apps/macos
       - name: Core behavior checks
         run: swift run --package-path apps/macos TrimletCoreChecks
+      - name: Shared contract checks
+        run: scripts/validate-contracts.sh
+      - name: Ensure FFmpeg integration tools
+        run: command -v ffmpeg >/dev/null && command -v ffprobe >/dev/null || brew install ffmpeg
+      - name: Generated-media multi-range checks
+        run: swift run --package-path apps/macos TrimletIntegrationChecks

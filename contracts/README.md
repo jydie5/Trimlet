@@ -15,5 +15,7 @@ This directory contains platform-neutral inputs used to keep the native macOS an
 - `error-codes.json`: canonical cross-platform error identifiers and meanings.
 - `export-plan.schema.json`: interchange shape for an export plan.
 - `fixtures/export-plan-cases.json`: initial contract cases both implementations must pass.
+- `edit-list.schema.json`: ordered retained ranges for multi-range editing.
+- `fixtures/edit-list-cases.json`: valid reordered and invalid overlapping edit-list cases.
 
 Run `scripts/validate-contracts.sh` on macOS/Linux or `scripts/validate-contracts.ps1` on Windows.

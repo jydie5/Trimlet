@@ -22,15 +22,20 @@ mkdir -p "$MEDIA_DIR"
     -hide_banner -loglevel error -y \
     -f lavfi -i "testsrc2=size=1280x720:rate=30" \
     -f lavfi -i "sine=frequency=440:sample_rate=48000" \
+    -f lavfi -i "sine=frequency=880:sample_rate=48000" \
     -t 8 \
+    -map 0:v:0 -map 1:a:0 -map 2:a:0 \
     -c:v libx264 -g 30 -keyint_min 30 -sc_threshold 0 -pix_fmt yuv420p \
     -c:a aac -b:a 128k \
+    -metadata:s:a:0 language=jpn -metadata:s:a:0 handler_name="Main 440 Hz" \
+    -metadata:s:a:1 language=eng -metadata:s:a:1 handler_name="Alternate 880 Hz" \
     -movflags +faststart \
     "$MEDIA_DIR/trimlet-sample.mp4"
 
 "$FFMPEG" \
     -hide_banner -loglevel error -y \
     -i "$MEDIA_DIR/trimlet-sample.mp4" \
+    -map 0:v:0 -map 0:a \
     -c:v copy \
     -c:a ac3 -b:a 192k \
     -f mpegts \

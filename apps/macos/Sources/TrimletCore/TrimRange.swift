@@ -48,7 +48,7 @@ public enum ExportMode: String, CaseIterable, Identifiable, Sendable {
 
     public var title: String {
         switch self {
-        case .fast: "高速・無劣化"
+        case .fast: "高速"
         case .accurate: "フレーム正確"
         }
     }
@@ -56,7 +56,7 @@ public enum ExportMode: String, CaseIterable, Identifiable, Sendable {
     public var explanation: String {
         switch self {
         case .fast:
-            "再エンコードせず高速に切り出します。位置は近くのキーフレームに寄る場合があります。"
+            "映像を再エンコードせず高速に切り出します。位置はキーフレームに寄り、音声は互換性のため変換する場合があります。"
         case .accurate:
             "指定位置を優先し、Apple Siliconのハードウェア機能でH.264へ変換します。"
         }

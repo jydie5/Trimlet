@@ -1,7 +1,7 @@
 # Trimlet Mac/Windows platform contract
 
-- Status: Draft 0.1
-- Updated: 2026-08-16
+- Status: Draft 0.2
+- Updated: 2026-08-24
 - Purpose: Keep separately implemented Mac and Windows applications behaviorally aligned in one monorepo.
 
 ## 1. Boundary of this contract
@@ -21,7 +21,13 @@ Both implementations use these concepts and labels:
 | IN point | IN点 | Inclusive start of the selected range |
 | OUT point | OUT点 | End boundary of the selected range |
 | Selected range | 選択範囲 | Interval from IN to OUT; valid only when OUT is later than IN |
-| Fast mode | 高速・無劣化 | Stream copy where compatible; cut may follow keyframe constraints |
+| Source timeline | ソースタイムライン | Source-time view containing the playhead, IN/OUT, and retained ranges |
+| Subclip | サブクリップ | A non-destructive source range created by setting IN and OUT |
+| Clip | クリップ | A retained subclip with a stable identity in the editing sequence |
+| Clip name | クリップ名 | A user-editable label attached to clip identity, independent of sequence position |
+| Clip thumbnail | クリップサムネイル | A representative frame near the clip IN point |
+| Editing sequence | 編集シーケンス | Ordered, contiguous clips that become the output |
+| Fast mode | 高速 | Video stream copy where compatible; cut may follow keyframe constraints and audio may require conversion |
 | Accurate mode | フレーム正確 | Timestamp-prioritized export; re-encode when required |
 | Proxy | プロキシ | Temporary preview media; never the final export source |
 
@@ -35,13 +41,18 @@ Both platforms must support the same primary flow:
 2. Inspect streams and determine preview compatibility.
 3. Provide direct preview or a proxy path without changing the source.
 4. Play, pause, scrub, jump, and step one displayed frame in either direction.
-5. Set one IN point and one OUT point.
-6. Display and preview the selected range.
-7. Choose Fast or Accurate export.
-8. Export a new MP4 with progress, cancellation, and a recoverable error state.
-9. Move by one frame, ten frames, or five seconds using equivalent visible controls and platform-appropriate shortcuts.
-10. Display the same normalized keyframe PTS data and Fast candidate boundaries on Mac and Windows.
-11. Validate video, expected audio, and duration before presenting an export as complete.
+5. Set a draft IN point and OUT point and add the subclip to the editing sequence.
+6. Display, trim, remove, drag-reorder, and preview retained clips.
+7. Continuously preview the editing sequence while skipping unused source ranges.
+8. Choose Fast or Accurate export.
+9. Join the edit list into a new MP4 with progress, cancellation, and a recoverable error state.
+10. Move by one frame, ten frames, or five seconds using equivalent visible controls and platform-appropriate shortcuts.
+11. Display the same normalized keyframe PTS data and per-segment Fast candidate boundaries on Mac and Windows.
+12. Allow explicit audio-stream selection when multiple source audio streams exist.
+13. Validate video, chosen audio, segment order, and combined duration before presenting an export as complete.
+14. Distinguish a valid uncommitted IN/OUT draft from retained clips by both fill semantics and boundary style; committing changes the draft presentation into the retained presentation.
+15. Run keyframe inspection without a modal panel once playable media is visible, while keeping its state visible near the source timeline.
+16. Provide J/K/L shuttle semantics and continuous scrubbing with a precise final seek. Native playback mechanisms may differ, but direction, bounded speed changes, stop behavior, and displayed position must agree.
 
 The first Mac and Windows releases may differ visually, but neither should introduce a different editing model.
 
@@ -69,6 +80,11 @@ Platform hardware encoders may produce different binary output. Behavioral parit
 - The canonical internal unit is the source presentation timestamp, represented without assuming a constant frame duration.
 - Project interchange must not store only a human-readable frame number.
 - A range is valid only when `outTimestamp > inTimestamp`.
+- A clip has a stable identifier and exactly one valid source range.
+- A clip name remains attached to the same clip after trimming or reordering. Sequence position is communicated by placement, not a redundant position number on the card.
+- An editing sequence preserves explicit output order. Source ranges in one sequence must not overlap, even when output order differs from source chronology.
+- Draft IN/OUT values are not exported until added to or used to trim a clip in the editing sequence.
+- The current editing sequence is contiguous: moving a clip changes order but does not create a gap, overlap, or track.
 - The UI may display `HH:MM:SS:FF` for constant-frame-rate sources.
 - For variable-frame-rate sources, frame display is informational; saved edit boundaries remain timestamp-based.
 - Seeking and range validation clamp positions to `[0, sourceDuration]`.
@@ -83,10 +99,13 @@ If a shared project JSON format is added, timestamps should be represented as an
     "sizeBytes": 123456789,
     "modifiedAt": "2026-08-14T00:00:00Z"
   },
-  "range": {
-    "in": { "value": 60000, "timescale": 60000 },
-    "out": { "value": 660000, "timescale": 60000 }
-  },
+  "segments": [
+    {
+      "id": "intro",
+      "in": { "value": 60000, "timescale": 60000 },
+      "out": { "value": 660000, "timescale": 60000 }
+    }
+  ],
   "exportMode": "fast"
 }
 ```
@@ -101,6 +120,7 @@ The sample is a compatibility direction, not a frozen schema until the project-s
 - Convert audio only when required for MP4 compatibility.
 - Explain before export that boundaries may move to a nearby keyframe.
 - Never claim frame accuracy when stream-copy constraints prevent it.
+- For multiple ranges, create a candidate for each segment and join the resulting compatible temporary segments without video re-encoding.
 
 ### Accurate mode
 
@@ -108,6 +128,7 @@ The sample is a compatibility direction, not a frozen schema until the project-s
 - Re-encode video when necessary.
 - Use a platform hardware encoder when it is available and produces a compliant result.
 - Default to H.264/AAC MP4.
+- For multiple ranges, reset timestamps for each segment and join them in edit-list order with continuous output timestamps.
 
 ### Shared safety invariants
 
@@ -151,9 +172,12 @@ The functional shortcuts should match where platform conventions do not conflict
 - Left/Right Arrow while editing: one frame backward/forward.
 - `I`: set IN.
 - `O`: set OUT.
+- `J`: reverse shuttle; repeated presses increase the bounded reverse speed.
+- `K`: stop shuttle playback.
+- `L`: forward shuttle; repeated presses increase the bounded forward speed.
 - Open and Save/Export use the platform's conventional modifier key.
 
-Every shortcut must have a visible control; keyboard use is never mandatory.
+Every shortcut must have a visible control; keyboard use is never mandatory. The visible control must pair unfamiliar editing keys with their meaning rather than display a bare letter only (for example, `J Reverse`, `K Stop`, `L Forward`, `Set IN [I]`, and `Set OUT [O]`). A nearby hint or tooltip must disclose that repeated J/L presses change shuttle speed.
 
 ## 10. Cross-platform acceptance matrix
 
@@ -168,6 +192,8 @@ Mac and Windows builds should run the same behavioral scenarios using equivalent
 7. Prevent source overwrite.
 8. Show a recoverable error for broken or unsupported media.
 9. Repeat key scenarios with paths containing spaces, Japanese text, quotes, and emoji.
+10. Create three retained ranges, reorder them, continuously preview them, and export one combined MP4 in both modes.
+11. Select a non-default source audio stream and verify the combined output uses it.
 
 Each platform records open-to-usable time, seek time, frame-step time, peak memory, export speed, A/V sync, and cut-boundary difference. Results may differ, but failures and accepted tolerances must be documented.
 

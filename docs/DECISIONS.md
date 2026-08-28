@@ -131,6 +131,63 @@ This log records decisions that define Trimlet. Change a decision by adding a ne
 - Interface: Treat the application as a focused desktop work surface. Keep public taglines and general product explanations in README, release, or About material unless the text changes the user's next action. See `docs/PRODUCT_DESIGN.md`.
 - Consequence: A future Windows binary remains blocked on packaging, dependency provenance and notices, original artwork, signing, an SBOM, and clean-machine verification.
 
+### D-016: Add an ordered multi-range workflow without becoming a general NLE
+
+- Date: 2026-08-24
+- Status: Accepted; supersedes the one-range limit in D-005 while retaining its single-source intent
+- Decision: Keep one source file, but allow multiple non-overlapping retained IN/OUT segments with explicit output order, undo/redo, sequence preview, audio selection, and one combined export.
+- Boundary: Do not add multiple source clips, tracks, transitions, titles, effects, or independent audio editing in this milestone.
+- Fast terminology: Use the user-facing label `Fast` / `高速`, not `lossless` / `無劣化`. Video is stream-copied when compatible, but keyframe expansion and possible audio conversion must remain visible.
+- Shared contract: Store retained boundaries as integer timestamp values plus timescales and expose the edit-list contract to both native implementations.
+- Detail: See `docs/milestones/MAC_MULTI_RANGE_0.3.md` and `docs/architecture/MULTI_RANGE_EDITING.md`.
+
+### D-017: Make range creation a visible three-step state machine
+
+- Date: 2026-08-25
+- Status: Accepted after the first Mac 0.3 human check
+- Problem: Showing draft IN/OUT, Add, and Update together did not reveal whether Add came before or after boundary selection. Preselecting the whole source made the ambiguity worse.
+- Decision: New ranges use a visible three-stage creation flow; source open and successful Add leave both boundaries unset. Selecting an output card enters a separate edit state. D-018 defines the final user-visible labels as `1 IN → 2 OUT → 3 Add to Sequence` and Apply Trim.
+- AviUtl reference: Preserve the useful relationship between time-axis objects, selection, and visible results, without importing a multi-layer NLE or general object system into Trimlet.
+
+### D-018: Use editing terminology and direct sequence manipulation
+
+- Date: 2026-08-25
+- Status: Accepted after terminology review
+- Decision: User-visible names are `Source Timeline` / `ソースタイムライン`, `Subclip` / `サブクリップ`, `Clip` / `クリップ`, `Editing Sequence` / `編集シーケンス`, and `Trim` / `トリム`. Internal `EditSegment` and `EditList` names remain implementation details.
+- Interaction: Clips can be dragged to change their order in the contiguous editing sequence. Earlier/later buttons remain available for keyboard and accessibility use.
+- Identity: A stable editable clip name is attached to the segment UUID. The default combines the source name and initial IN timecode. Reordering and trimming never rename the clip, and cards show no redundant position number.
+- Card content: Show a representative frame near IN, clip name, and IN–OUT time. Thumbnail generation is an asynchronous presentation layer and never affects export.
+- Reference: Final Cut Pro exposes filmstrips and clip-name display independently and supports renaming clips in its timeline index; Premiere exposes clip name and IN/OUT timecode as distinct display data. Trimlet adopts that information hierarchy without copying either application's full timeline surface.
+- Sources: https://support.apple.com/guide/final-cut-pro/verb8e5d346/mac, https://support.apple.com/guide/final-cut-pro/view-your-project-in-the-timeline-index-ver4e30596/12.3/mac/15.6, https://helpx.adobe.com/premiere/desktop/organize-media/apply-labeling/timecode-display-options.html
+
+### D-019: Separate clip selection from destructive trim editing
+
+- Date: 2026-08-25
+- Status: Accepted after a reproduced human-check failure
+- Problem: Clicking a card previously loaded its boundaries into the shared editor. A later IN/OUT operation could therefore update that clip when the user believed they were adding another one, making the original appear deleted.
+- Decision: Card click performs selection only. Preview, rename, reorder, and delete operate on selection. Existing IN/OUT values are loaded only after the explicit `Trim Edit` action, tracked by a separate trimming identifier.
+- Safety invariant: Unless Trim Edit was explicitly chosen, the three-stage IN → OUT → Add flow creates a new clip and never changes an existing clip.
+- Boundary: Arbitrary sequence-time placement, gaps, overlaps, and multiple tracks are not represented by the current model. They require a separate sequence-time milestone rather than overloading list order.
+
+### D-020: Use distinct draft visuals, non-modal inspection, and conventional shuttle controls
+
+- Date: 2026-08-26
+- Status: Accepted after Mac interaction review
+- Visual state: A valid uncommitted IN/OUT draft uses translucent purple plus a dashed boundary. Retained clips remain blue, IN remains green, OUT remains red, and Fast/keyframe information remains orange. Shape and legend reinforce color.
+- Inspection: Once media is playable, automatic keyframe analysis runs without the full-screen operation panel. Running and failed states stay near the source timeline. Proxy generation and export keep cancellable progress; successful proxy completion auto-dismisses.
+- Navigation: J/K/L form a signed four-level shuttle from reverse 8x through stop to forward 8x. Unsupported native rates fall back to paced tolerant seeks. Slider drag uses responsive tolerant seeks and release performs the exact final seek.
+- Cross-platform: Windows uses the same visible meanings and shortcut state transitions with its native playback stack. It does not copy macOS playback code or UI layout.
+- References: https://helpx.adobe.com/premiere/desktop/render-and-export/render-sequences-for-playback/play-clips-in-source-monitor.html, https://support.apple.com/guide/final-cut-pro/ver90ba4ef0/mac
+
+### D-021: Publish the accepted Mac multi-range milestone as Beta 1
+
+- Date: 2026-08-28
+- Status: Accepted after the focused human interaction check
+- Decision: Publish the current Mac milestone as the source-only prerelease `v0.3.0-beta.1`, merge its reviewed branch to `main`, and use it as the behavioral baseline for the next Windows parity turn.
+- Distribution: Attach no application bundle, DMG, installer, FFmpeg/ffprobe binary, generated media, or developer build output. Production signing, notarization, dependency packaging, and clean-machine binary verification remain future gates.
+- Scope: Beta status accepts the multi-range editing interaction and does not claim that broader M2TS, long-media, A/V sync, HDR/interlace, VFR, or cancellation evaluation is complete.
+- Handover: Windows follows `apps/windows/handover.md` and `docs/PLATFORM_CONTRACT.md` with WinUI-native implementation choices.
+
 ## Proposed decisions awaiting validation
 
 ### P-001: Project structure

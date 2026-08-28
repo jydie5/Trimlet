@@ -4,9 +4,39 @@ $ProjectDir = Split-Path -Parent $PSScriptRoot
 $Errors = Get-Content (Join-Path $ProjectDir "contracts/error-codes.json") -Raw | ConvertFrom-Json
 $Schema = Get-Content (Join-Path $ProjectDir "contracts/export-plan.schema.json") -Raw | ConvertFrom-Json
 $Fixtures = Get-Content (Join-Path $ProjectDir "contracts/fixtures/export-plan-cases.json") -Raw | ConvertFrom-Json
+$EditSchema = Get-Content (Join-Path $ProjectDir "contracts/edit-list.schema.json") -Raw | ConvertFrom-Json
+$EditFixtures = Get-Content (Join-Path $ProjectDir "contracts/fixtures/edit-list-cases.json") -Raw | ConvertFrom-Json
 
-if ($Errors.schemaVersion -ne 1 -or $Fixtures.schemaVersion -ne 1) {
+if ($Errors.schemaVersion -ne 1 -or $Fixtures.schemaVersion -ne 1 -or $EditFixtures.schemaVersion -ne 1 -or $EditSchema.properties.schemaVersion.const -ne 1) {
     throw "Unsupported shared contract schema version"
+}
+
+$EditCaseIds = @{}
+foreach ($Case in $EditFixtures.cases) {
+    if ($EditCaseIds.ContainsKey($Case.id)) { throw "Duplicate edit-list fixture id: $($Case.id)" }
+    $EditCaseIds[$Case.id] = $true
+    $SegmentIds = @{}
+    $Ranges = @()
+    $ValidRanges = $true
+    foreach ($Segment in $Case.input.segments) {
+        if ($SegmentIds.ContainsKey($Segment.id)) { throw "Duplicate segment id: $($Segment.id)" }
+        $SegmentIds[$Segment.id] = $true
+        $Start = [double]$Segment.in.value / [double]$Segment.in.timescale
+        $End = [double]$Segment.out.value / [double]$Segment.out.timescale
+        if ($Start -ge $End) { $ValidRanges = $false }
+        $Ranges += ,@($Start, $End)
+    }
+    $HasOverlap = $false
+    for ($I = 0; $I -lt $Ranges.Count; $I++) {
+        for ($J = $I + 1; $J -lt $Ranges.Count; $J++) {
+            if ($Ranges[$I][0] -lt $Ranges[$J][1] -and $Ranges[$J][0] -lt $Ranges[$I][1]) {
+                $HasOverlap = $true
+            }
+        }
+    }
+    if ([bool]$Case.valid -ne ($ValidRanges -and -not $HasOverlap)) {
+        throw "Edit-list validity mismatch: $($Case.id)"
+    }
 }
 
 $Ids = @($Errors.errors | ForEach-Object { $_.id })
@@ -30,4 +60,4 @@ foreach ($Case in $Fixtures.cases) {
     if ($Left -ge $Right) { throw "Invalid range in $($Case.id)" }
 }
 
-Write-Host "Shared contracts: $($CaseIds.Count) fixture cases and $($Ids.Count) error codes passed"
+Write-Host "Shared contracts: $($CaseIds.Count) export cases, $($EditCaseIds.Count) edit-list cases, and $($Ids.Count) error codes passed"
