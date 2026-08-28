@@ -22,6 +22,18 @@ It intentionally focuses on one workflow:
 
 Priority inputs are MP4, MOV, M2TS, and MTS.
 
+## Editing features
+
+- Create multiple subclips from one source, reorder them in an editing sequence, and export one combined MP4.
+- Distinguish the active IN/OUT draft in purple, retained clips in blue, the IN point in green, and the OUT point in red.
+- Show a representative thumbnail, editable clip name, and IN–OUT time range for every retained clip.
+- Move by one frame with Left/Right, ten frames with Shift+Left/Right, or five seconds with Option+Left/Right.
+- Shuttle with `J` for reverse, `K` for stop, and `L` for forward; repeated `J` or `L` presses select 1x, 2x, 4x, or 8x.
+- Set IN with `I` and OUT with `O`. These shortcuts are shown on their corresponding controls, and keyboard use remains optional.
+- Scrub continuously with the slider or trackpad, followed by an exact seek when the gesture ends.
+- Use Fast mode to avoid video re-encoding where possible, or Accurate mode to prioritize exact boundaries with hardware-assisted VideoToolbox encoding.
+- Select among multiple audio streams, continuously preview the sequence, monitor or cancel export, and validate the completed output.
+
 ## Repository status
 
 - macOS: native 0.3 development milestone with multiple retained ranges, sequence preview, audio selection, and combined Fast/Accurate export.

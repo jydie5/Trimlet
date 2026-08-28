@@ -1,6 +1,6 @@
 # Trimlet Windows maintainer handover
 
-- Prepared: 2026-08-21
+- Prepared: 2026-08-28
 - Release: `v0.3.0-early-access.1`
 - Repository: https://github.com/jydie5/Trimlet
 - Distribution: source only; no installer, signed executable, or bundled FFmpeg
@@ -58,10 +58,26 @@ FFmpeg discovery checks `TRIMLET_FFMPEG` / `TRIMLET_FFPROBE`, the application di
 4. MSIX/portable packaging, original release artwork, signing, and clean-machine binary verification are not complete.
 5. The large-media, damaged-GOP, HDR, and full language-switch matrices need broader real-machine coverage.
 
+## macOS 0.3 interaction delta to adopt
+
+The macOS 0.3 work now treats trimming as an editing sequence rather than a single disposable range. The interaction checkpoint was accepted on 2026-08-28 and the shared behavior is recorded in `docs/PLATFORM_CONTRACT.md`; it should guide the next Windows iteration:
+
+- Keep an uncommitted IN/OUT range visually distinct from retained clips. The Mac reference uses a translucent purple fill with a dashed boundary for the draft, blue for retained clips, green for IN, and red for OUT. Windows may use native styling, but draft versus retained state must not rely on color alone.
+- Add multiple retained subclips with stable identity, editable names, representative thumbnails, source IN–OUT time, drag reorder, trim, delete, undo/redo, sequence preview, and combined export.
+- Expose `J Reverse`, `K Stop`, and `L Forward` as meaningful controls. Repeated J/L presses select the bounded 1x, 2x, 4x, and 8x levels; the current direction and speed remain visible.
+- Expose the existing `I` and `O` commands on the Set IN and Set OUT buttons with keycap-like hints. A user must be able to discover the shortcut without opening documentation.
+- Keep continuous slider or precision-touchpad scrubbing responsive, then perform an exact seek when the gesture ends.
+- Keep keyframe inspection non-modal after playable media is visible. Proxy generation and export remain cancellable operations with visible progress.
+
+Do not copy Mac colors or SwiftUI layout mechanically. Match the state model, discoverability, keyboard semantics, and acceptance behavior using WinUI conventions and English/Japanese resources.
+
 ## Next implementation order
 
 1. Match the 2026-08-26 interaction contract: distinct uncommitted-range fill plus dashed boundary, blue retained ranges, and non-modal keyframe inspection state.
 2. Add J/K/L shuttle levels with visible direction/speed, plus responsive slider scrubbing followed by an exact final seek. Use the Windows-native playback rate when supported and a bounded seek fallback otherwise.
+   - Do not present bare `J`／`K`／`L` buttons. Pair each key with its meaning: reverse, stop, and forward. Show that repeated J/L presses increase the bounded shuttle speed.
+   - Show `I` on the Set IN control and `O` on the Set OUT control using a keycap-like hint. The button remains primary; keyboard use is optional.
+   - Keep the hints next to the controls they affect. Do not depend on a separate manual or an always-visible paragraph of shortcut text.
 3. Add preview suitability detection and a cancellable proxy cache without changing source identity.
 4. Move VFR navigation and boundaries to source PTS end to end.
 5. Expand generated and real-machine media coverage.

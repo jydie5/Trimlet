@@ -27,6 +27,7 @@
 - J started reverse 1x, K stopped, and repeated L advanced from forward 1x to 2x with matching direction/speed labels and visible playhead movement. The same J/K/L controls remained present on screen.
 - An IN/OUT draft rendered as a translucent purple range with a dashed edge. After Add to Sequence, the purple draft disappeared, the retained range rendered blue, and the editor reset for a new subclip.
 - A synthetic pointer drag moved the slider repeatedly across the source and released near 5 seconds. Video and timecode followed the drag, and the final exact seek settled at `00:00:05:03` on the 30 fps test source.
+- On 2026-08-28, the user accepted the focused interaction checkpoint covering visible `J Reverse`／`K Stop`／`L Forward` meaning, visible `I`／`O` hints, purple draft-to-blue retained-range feedback, two-finger seek, three retained clips, and repeated playback controls. This acceptance authorized committing and handing the interaction contract to the Windows implementation turn.
 
 Run the principal checks with:
 
@@ -40,7 +41,7 @@ scripts/check-release-readiness.sh
 
 ### Remaining 0.3 gate
 
-Automated and developer-side verification is complete for the Mac 0.3 implementation. The remaining gate is the user's interaction and media-quality evaluation using `HUMAN_CHECK.md`, including repeated playback, edit-list timing, M2TS proxy behavior, long-media responsiveness, A/V sync, cancellation, and visual density.
+Automated and developer-side verification is complete for the Mac 0.3 implementation, and the focused interaction checkpoint passed on 2026-08-28. Broader release evaluation still covers edit-list output timing, M2TS proxy behavior, long-media responsiveness, A/V sync, cancellation, and visual density using `HUMAN_CHECK.md`.
 
 ## Mac PoC 0.1/0.2 verification
 

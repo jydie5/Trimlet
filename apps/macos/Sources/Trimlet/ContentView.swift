@@ -213,22 +213,41 @@ struct ContentView: View {
             Divider()
                 .frame(height: 24)
 
-            ControlGroup {
-                Button("J") {
+            HStack(spacing: 4) {
+                Button {
                     controller.adjustShuttle(by: -1)
+                } label: {
+                    HStack(spacing: 5) {
+                        ShortcutKey("J")
+                        Text("逆再生")
+                    }
                 }
                 .accessibilityLabel("逆方向シャトル")
-                Button("K") {
+                .buttonStyle(.bordered)
+                Button {
                     controller.stopShuttle()
+                } label: {
+                    HStack(spacing: 5) {
+                        ShortcutKey("K")
+                        Text("停止")
+                    }
                 }
                 .accessibilityLabel("シャトル停止")
-                Button("L") {
+                .buttonStyle(.bordered)
+                Button {
                     controller.adjustShuttle(by: 1)
+                } label: {
+                    HStack(spacing: 5) {
+                        ShortcutKey("L")
+                        Text("順再生")
+                    }
                 }
                 .accessibilityLabel("順方向シャトル")
+                .buttonStyle(.bordered)
             }
             .controlSize(.small)
-            .help("J：逆方向　K：停止　L：順方向（繰り返しで速度変更）")
+            .fixedSize()
+            .help("J：逆再生　K：停止　L：順再生（J／Lを連打すると速度が変わります）")
 
             if let description = controller.shuttleDescription {
                 Text(description)
@@ -318,7 +337,7 @@ struct ContentView: View {
                     }
                 }
                 Spacer()
-                Text("J 逆再生　K 停止　L 順再生　←/→ 1f　Shift 10f　Option 5秒")
+                Text("J／L 連打で速度変更　←/→ 1f　Shift 10f　Option 5秒")
             }
             .font(.caption2)
             .foregroundStyle(.secondary)
@@ -353,6 +372,7 @@ struct ContentView: View {
                     value: controller.trimRange.inPoint,
                     tint: .green,
                     actionTitle: "現在位置をIN点に",
+                    shortcutKey: "I",
                     action: { controller.setInPoint() },
                     jump: controller.trimRange.inPoint == nil ? nil : { controller.goToInPoint() }
                 )
@@ -366,6 +386,7 @@ struct ContentView: View {
                     value: controller.trimRange.outPoint,
                     tint: .red,
                     actionTitle: "現在位置をOUT点に",
+                    shortcutKey: "O",
                     action: { controller.setOutPoint() },
                     jump: controller.trimRange.outPoint == nil ? nil : { controller.goToOutPoint() },
                     isActionDisabled: controller.trimRange.inPoint == nil
@@ -449,6 +470,7 @@ struct ContentView: View {
         value: Double?,
         tint: Color,
         actionTitle: String,
+        shortcutKey: String,
         action: @escaping () -> Void,
         jump: (() -> Void)?,
         isActionDisabled: Bool = false
@@ -469,8 +491,14 @@ struct ContentView: View {
             }
 
             HStack {
-                Button(actionTitle, action: action)
+                Button(action: action) {
+                    HStack(spacing: 6) {
+                        Text(actionTitle)
+                        ShortcutKey(shortcutKey)
+                    }
+                }
                     .disabled(isActionDisabled)
+                    .help("\(actionTitle)（\(shortcutKey)キー）")
                 if let jump {
                     Button("移動", action: jump)
                 }
@@ -769,6 +797,28 @@ struct ContentView: View {
             }
         }
         return types
+    }
+}
+
+private struct ShortcutKey: View {
+    let key: String
+
+    init(_ key: String) {
+        self.key = key
+    }
+
+    var body: some View {
+        Text(key)
+            .font(.system(.caption2, design: .rounded).weight(.bold))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 1)
+            .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 4))
+            .overlay {
+                RoundedRectangle(cornerRadius: 4)
+                    .stroke(Color.secondary.opacity(0.35), lineWidth: 0.75)
+            }
+            .accessibilityHidden(true)
     }
 }
 

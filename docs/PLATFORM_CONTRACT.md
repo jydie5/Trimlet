@@ -172,9 +172,12 @@ The functional shortcuts should match where platform conventions do not conflict
 - Left/Right Arrow while editing: one frame backward/forward.
 - `I`: set IN.
 - `O`: set OUT.
+- `J`: reverse shuttle; repeated presses increase the bounded reverse speed.
+- `K`: stop shuttle playback.
+- `L`: forward shuttle; repeated presses increase the bounded forward speed.
 - Open and Save/Export use the platform's conventional modifier key.
 
-Every shortcut must have a visible control; keyboard use is never mandatory.
+Every shortcut must have a visible control; keyboard use is never mandatory. The visible control must pair unfamiliar editing keys with their meaning rather than display a bare letter only (for example, `J Reverse`, `K Stop`, `L Forward`, `Set IN [I]`, and `Set OUT [O]`). A nearby hint or tooltip must disclose that repeated J/L presses change shuttle speed.
 
 ## 10. Cross-platform acceptance matrix
 
