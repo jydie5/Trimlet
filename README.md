@@ -6,7 +6,11 @@ Only what you need, quickly and precisely.
 
 Trimlet is a lightweight, frame-accurate video trimming application with separate native implementations for macOS and Windows.
 
-The macOS application is at the SwiftUI Beta stage. The native C#/WinUI 3 Windows Early Access source now implements the same accepted multi-range interaction and media-processing contracts; Windows human verification remains the release gate.
+The macOS application is at the SwiftUI Beta stage. The native C#/WinUI 3 Windows Early Access source now implements the same accepted multi-range interaction and media-processing contracts; its feature-focused human check was accepted on 2026-08-28.
+
+![Trimlet for Windows showing two retained clips, thumbnails, source ranges, and frame-aware navigation](docs/images/windows-multirange-early-access.jpg)
+
+_Windows Early Access using generated, non-personal test media._
 
 ## Product goal
 
@@ -37,7 +41,7 @@ Priority inputs are MP4, MOV, M2TS, and MTS.
 ## Repository status
 
 - macOS: native `v0.3.0-beta.1` with multiple retained ranges, an editing sequence, sequence preview, audio selection, and combined Fast/Accurate export.
-- Windows: source-only Early Access with native preview, multiple retained clips, editing-sequence operations, J/K/L shuttle controls, audio-stream selection, sequence preview, and validated combined Fast/Accurate export. Developer checks pass; the Windows human check is pending.
+- Windows: source-only Early Access with native preview, multiple retained clips, editing-sequence operations, J/K/L shuttle controls, audio-stream selection, sequence preview, and validated combined Fast/Accurate export. Developer checks and the feature-focused human check pass.
 - Parity: the accepted macOS Beta multi-range contract is implemented on both platforms. Windows now also provides automatic preview proxies and background source-PTS frame indexing; packaging and broad real-media release validation remain platform-specific work.
 - Public source releases are published under the MIT License.
 

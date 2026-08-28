@@ -2,7 +2,7 @@
 
 ## Status
 
-The Windows source tree now contains the multi-range parity candidate for the macOS `v0.3.0-beta.1` interaction contract. It remains an unpackaged, source-only Early Access build until the Windows human check and distribution work are complete.
+The Windows source tree implements the macOS `v0.3.0-beta.1` interaction contract, and the feature-focused human check was accepted on 2026-08-28. It remains an unpackaged, source-only Early Access build until distribution work is complete.
 
 The app accepts supported media through a picker or drag and drop, provides Windows-native playback and seeking, inspects the source with `ffprobe`, and builds an ordered editing sequence from multiple non-overlapping IN/OUT ranges. Retained clips have stable editable names, representative thumbnails, explicit trim editing, reordering, deletion, undo/redo, and continuous sequence preview. M2TS/MTS sources and direct-playback failures use a validated, cancellable preview proxy while export continues to read the original source.
 

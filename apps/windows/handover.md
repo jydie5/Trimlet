@@ -2,7 +2,7 @@
 
 - Prepared: 2026-08-28
 - Published Windows release: `v0.3.0-early-access.1`
-- Current source state: caught up with the accepted Mac `v0.3.0-beta.1` behavior; broad Windows release validation pending
+- Current source state: caught up with the accepted Mac `v0.3.0-beta.1` behavior; feature-focused human check accepted; broad Windows release validation pending
 - Repository: https://github.com/jydie5/Trimlet
 - Distribution: source only; no installer, signed executable, or bundled FFmpeg
 
@@ -72,7 +72,7 @@ The macOS 0.3 work treats trimming as an editing sequence rather than a single d
 
 Do not copy Mac colors or SwiftUI layout mechanically. Match the state model, discoverability, keyboard semantics, and acceptance behavior using WinUI conventions and English/Japanese resources.
 
-Developer verification covers a two-clip add flow, thumbnails, distinct timeline states, keyboard I/O, J/K/L state changes and reverse-seek fallback, Undo/Redo, sequence preview, rename, reorder, and explicit trim update. Generated-media integration checks cover reordered three-segment Fast and Accurate exports, selected non-default audio, M2TS/AC-3 proxy generation and cache reuse, and VFR presentation-timestamp stepping. The remaining gate is the user-run checklist in `HUMAN_CHECK.md` on representative media.
+Developer verification covers a two-clip add flow, thumbnails, distinct timeline states, keyboard I/O, J/K/L state changes and reverse-seek fallback, Undo/Redo, sequence preview, rename, reorder, and explicit trim update. Generated-media integration checks cover reordered three-segment Fast and Accurate exports, selected non-default audio, M2TS/AC-3 proxy generation and cache reuse, and VFR presentation-timestamp stepping. The user accepted the feature-focused human check on 2026-08-28; `HUMAN_CHECK.md` remains the regression and representative-media checklist.
 
 ## Next implementation order
 

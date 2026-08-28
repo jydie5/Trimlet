@@ -209,6 +209,14 @@ This log records decisions that define Trimlet. Change a decision by adding a ne
 - Boundary: Packaging, signing, clean-machine binary validation, and the broad representative-media matrix remain release gates; they are not differences in the accepted Mac Beta behavior.
 - Audit: See `docs/milestones/WINDOWS_MAC_PARITY_AUDIT_2026-08-28.md`.
 
+### D-024: Accept the Windows feature-focused human check
+
+- Date: 2026-08-28
+- Status: Accepted by the user
+- Decision: Treat the Windows interaction and functional surface as passed for merging the Mac parity work. The accepted scope includes opening media, navigation, IN/OUT creation, retained clips, rename, reorder, explicit trim, sequence controls, proxy preview, and Fast/Accurate export behavior covered by the developer and generated-media evidence.
+- Evidence: Publish the generated-media Windows screenshot at `docs/images/windows-multirange-early-access.jpg`; it contains no personal source media.
+- Boundary: This acceptance does not publish a Windows binary or waive packaging, signing, dependency-notice, clean-machine, long-media, damaged-GOP, HDR/interlace, cancellation, or language-switch validation.
+
 ## Proposed decisions awaiting validation
 
 ### P-001: Project structure

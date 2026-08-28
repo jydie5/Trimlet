@@ -2,7 +2,7 @@
 
 - Date: 2026-08-28
 - Baseline: macOS `v0.3.0-beta.1`
-- State: implemented and developer-verified; Windows user human check pending
+- State: implemented, developer-verified, and feature-focused human check accepted on 2026-08-28
 
 ## Delivered
 
@@ -22,7 +22,7 @@
 - Generated-media integration: single-range Fast/Accurate plus reordered three-segment Fast/Accurate output passed, including sampled output color order, selected non-default audio, duration validation, source immutability, partial cleanup, and special-character paths. M2TS/AC-3 proxy validation/cache reuse and irregular VFR presentation timestamps also passed.
 - Visual operation check: automatic M2TS proxy playback, VFR actual-frame status, two adjacent clips with thumbnails, no card overlap or page scrollbar at 1280×900, rename persistence, earlier/later reorder, explicit trim update, Undo/Redo, sequence preview, and visible J/K/L state.
 
-Shared PowerShell contract validation also passed. CI status belongs in the pull request; the remaining user-facing manual gate is `apps/windows/HUMAN_CHECK.md`.
+Shared PowerShell contract validation and GitHub CI also passed. The user accepted the feature-focused human check on 2026-08-28. `apps/windows/HUMAN_CHECK.md` remains the repeatable regression and representative-media checklist.
 
 ## Not claimed
 
