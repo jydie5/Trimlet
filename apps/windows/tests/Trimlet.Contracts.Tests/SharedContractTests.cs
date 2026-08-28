@@ -60,9 +60,47 @@ public sealed class SharedContractTests
         }
     }
 
+    [TestMethod]
+    public void EveryEditListFixtureMatchesWindowsValidation()
+    {
+        using var document = JsonDocument.Parse(File.ReadAllText(ContractPath("fixtures", "edit-list-cases.json")));
+        var cases = document.RootElement.GetProperty("cases").EnumerateArray().ToArray();
+        Assert.HasCount(2, cases);
+
+        foreach (var fixture in cases)
+        {
+            var segments = fixture.GetProperty("input").GetProperty("segments").EnumerateArray()
+                .Select(segment => new EditSegment(
+                    StableGuid(segment.GetProperty("id").GetString()!),
+                    segment.GetProperty("id").GetString()!,
+                    new TrimRange(
+                        ReadTimestamp(segment.GetProperty("in")),
+                        ReadTimestamp(segment.GetProperty("out")))))
+                .ToArray();
+            var expectedValid = fixture.GetProperty("valid").GetBoolean();
+
+            try
+            {
+                var editList = new EditList(segments);
+                Assert.IsTrue(expectedValid, fixture.GetProperty("id").GetString());
+                Assert.HasCount(segments.Length, editList.Segments);
+            }
+            catch (InvalidDataException)
+            {
+                Assert.IsFalse(expectedValid, fixture.GetProperty("id").GetString());
+            }
+        }
+    }
+
     private static MediaTimestamp ReadTimestamp(JsonElement element) => new(
         element.GetProperty("value").GetInt64(),
         element.GetProperty("timescale").GetInt32());
+
+    private static Guid StableGuid(string value)
+    {
+        var bytes = System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(value));
+        return new Guid(bytes);
+    }
 
     private static string ContractPath(params string[] segments) =>
         Path.Combine([AppContext.BaseDirectory, "contracts", .. segments]);

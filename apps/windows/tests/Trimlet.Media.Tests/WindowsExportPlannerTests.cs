@@ -54,6 +54,40 @@ public sealed class WindowsExportPlannerTests
     }
 
     [TestMethod]
+    public void MultiRangePlanPreservesEditOrderAndBuildsConcatStage()
+    {
+        var metadata = Metadata(@"C:\source.mp4", "h264", "aac");
+        var ending = new EditSegment(Guid.NewGuid(), "Ending", Range(6, 7));
+        var intro = new EditSegment(Guid.NewGuid(), "Intro", Range(1, 2));
+        var list = new EditList([ending, intro]);
+        var keyframes = new KeyframeIndex(metadata.Duration, [
+            MediaTimestamp.FromSeconds(0),
+            MediaTimestamp.FromSeconds(1),
+            MediaTimestamp.FromSeconds(2),
+            MediaTimestamp.FromSeconds(6),
+            MediaTimestamp.FromSeconds(7),
+            MediaTimestamp.FromSeconds(8),
+        ]);
+
+        var plan = MultiRangeExportPlanner.Create(
+            metadata,
+            list,
+            ExportMode.Fast,
+            @"C:\output\.work",
+            @"C:\output\.result.partial.mp4",
+            0,
+            "copy",
+            keyframes);
+
+        Assert.HasCount(2, plan.SegmentPlans);
+        Assert.AreEqual(6, plan.SegmentPlans[0].EffectiveRange.In.TotalSeconds, 0.000001);
+        Assert.AreEqual(1, plan.SegmentPlans[1].EffectiveRange.In.TotalSeconds, 0.000001);
+        Assert.IsTrue(plan.ConcatArguments.Contains("concat"));
+        StringAssert.Contains(plan.ConcatListContents, "segment-000.mp4");
+        Assert.AreEqual(2, plan.ExpectedDuration, 0.000001);
+    }
+
+    [TestMethod]
     public async Task ProcessRunnerTerminatesAChildProcessWhenCancelled()
     {
         var command = Environment.GetEnvironmentVariable("ComSpec");
@@ -84,4 +118,7 @@ public sealed class WindowsExportPlannerTests
         [new AudioStreamInfo(1, 0, audioCodec, 2, "stereo", 48000, "jpn", true)],
         false,
         DateTimeOffset.UtcNow);
+
+    private static TrimRange Range(double @in, double @out) =>
+        new(MediaTimestamp.FromSeconds(@in), MediaTimestamp.FromSeconds(@out));
 }

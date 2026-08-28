@@ -11,7 +11,8 @@ public static class ProcessRunner
         string executable,
         IReadOnlyList<string> arguments,
         Action<string>? standardOutputLine = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool captureStandardOutput = true)
     {
         var startInfo = new ProcessStartInfo
         {
@@ -48,8 +49,8 @@ public static class ProcessRunner
 
         var output = new StringBuilder();
         var errors = new StringBuilder();
-        var outputTask = ReadLinesAsync(process.StandardOutput, output, standardOutputLine);
-        var errorTask = ReadLinesAsync(process.StandardError, errors, null);
+        var outputTask = ReadLinesAsync(process.StandardOutput, output, standardOutputLine, captureStandardOutput);
+        var errorTask = ReadLinesAsync(process.StandardError, errors, null, capture: true);
 
         using var cancellationRegistration = cancellationToken.Register(() =>
         {
@@ -90,11 +91,19 @@ public static class ProcessRunner
         return new ProcessResult(process.ExitCode, output.ToString(), errors.ToString());
     }
 
-    private static async Task ReadLinesAsync(StreamReader reader, StringBuilder destination, Action<string>? callback)
+    private static async Task ReadLinesAsync(
+        StreamReader reader,
+        StringBuilder destination,
+        Action<string>? callback,
+        bool capture)
     {
         while (await reader.ReadLineAsync() is { } line)
         {
-            destination.AppendLine(line);
+            if (capture)
+            {
+                destination.AppendLine(line);
+            }
+
             callback?.Invoke(line);
         }
     }

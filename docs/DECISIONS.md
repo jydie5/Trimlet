@@ -188,6 +188,35 @@ This log records decisions that define Trimlet. Change a decision by adding a ne
 - Scope: Beta status accepts the multi-range editing interaction and does not claim that broader M2TS, long-media, A/V sync, HDR/interlace, VFR, or cancellation evaluation is complete.
 - Handover: Windows follows `apps/windows/handover.md` and `docs/PLATFORM_CONTRACT.md` with WinUI-native implementation choices.
 
+### D-022: Adopt the Mac Beta multi-range contract in the Windows source
+
+- Date: 2026-08-28
+- Status: Accepted for Windows human-check candidate
+- Decision: Replace the Windows single-range application state with the shared immutable edit-list model and implement the accepted Mac Beta interaction semantics using WinUI-native controls.
+- Export: Plan and produce one temporary output per retained segment, then concatenate in edit-list order. Fast requires a valid keyframe candidate for every segment and keeps video stream copy; Accurate encodes every requested segment before concat. Validate the combined output before finalization and remove operation work on success, cancellation, or failure.
+- Playback: Use native positive playback rates for forward J/K/L shuttle levels. Use wall-clock-paced seeks for reverse because this Windows playback path does not provide a reliable negative native playback rate. Keep direction and speed visible.
+- Presentation: Generate representative thumbnails asynchronously into a session cache. Thumbnail failure never changes edit-list or export behavior.
+- Gate: Developer checks may establish a parity candidate, but Windows release status does not advance until the user completes `apps/windows/HUMAN_CHECK.md`. Preview proxy, VFR source-PTS navigation, packaging, signing, and clean-machine binary verification remain separate work.
+- Detail: See `docs/milestones/WINDOWS_MULTI_RANGE_0.3.md` and `apps/macos/WINDOWS_MULTI_RANGE_HANDOVER.md`.
+
+### D-023: Close the Windows preview and frame-navigation parity gaps
+
+- Date: 2026-08-28
+- Status: Accepted for the Windows source parity gate
+- Preview: Prefer an FFmpeg-generated H.264/AAC proxy for M2TS/MTS and fall back to it after direct-playback failure. Validate duration before atomic cache finalization, keep proxy progress cancellable, delete partial output on failure or cancellation, and retain the original path as the only inspection and export identity.
+- Frame navigation: Build a source presentation-timestamp index non-modally for every opened video. Use actual adjacent timestamps after it is ready and retain nominal rational-frame stepping only as the responsive fallback during analysis.
+- Verification: Unit tests cover proxy policy, safe arguments, cache identity, and irregular PTS navigation. Generated-media checks cover M2TS/AC-3 proxy creation/reuse, source immutability, VFR timestamps, reordered visual content, and selected non-default audio. Developer UI checks cover proxy playback, actual-frame status, rename, reorder, and trim update.
+- Boundary: Packaging, signing, clean-machine binary validation, and the broad representative-media matrix remain release gates; they are not differences in the accepted Mac Beta behavior.
+- Audit: See `docs/milestones/WINDOWS_MAC_PARITY_AUDIT_2026-08-28.md`.
+
+### D-024: Accept the Windows feature-focused human check
+
+- Date: 2026-08-28
+- Status: Accepted by the user
+- Decision: Treat the Windows interaction and functional surface as passed for merging the Mac parity work. The accepted scope includes opening media, navigation, IN/OUT creation, retained clips, rename, reorder, explicit trim, sequence controls, proxy preview, and Fast/Accurate export behavior covered by the developer and generated-media evidence.
+- Evidence: Publish the generated-media Windows screenshot at `docs/images/windows-multirange-early-access.jpg`; it contains no personal source media.
+- Boundary: This acceptance does not publish a Windows binary or waive packaging, signing, dependency-notice, clean-machine, long-media, damaged-GOP, HDR/interlace, cancellation, or language-switch validation.
+
 ## Proposed decisions awaiting validation
 
 ### P-001: Project structure

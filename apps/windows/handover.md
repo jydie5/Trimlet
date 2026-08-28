@@ -1,14 +1,16 @@
 # Trimlet Windows maintainer handover
 
 - Prepared: 2026-08-28
-- Release: `v0.3.0-early-access.1`
-- Mac baseline to catch up with: `v0.3.0-beta.1`
+- Published Windows release: `v0.3.0-early-access.1`
+- Current source state: caught up with the accepted Mac `v0.3.0-beta.1` behavior; feature-focused human check accepted; broad Windows release validation pending
 - Repository: https://github.com/jydie5/Trimlet
 - Distribution: source only; no installer, signed executable, or bundled FFmpeg
 
 ## Current implementation
 
-The first native Windows workflow is implemented in C# and WinUI 3. A user can open or drop one local video, play and seek it, move by frames or seconds, set one IN/OUT range, select an audio stream, preview the range, and export a validated MP4 in Fast or Accurate mode.
+The native Windows workflow is implemented in C# and WinUI 3. A user can open or drop one local video, play and seek it, move by frames or seconds, collect multiple non-overlapping ranges in an ordered editing sequence, and export one validated MP4 in Fast or Accurate mode.
+
+The Mac Beta handover has been adopted in the Windows source: draft and retained ranges are distinct, clip cards have stable editable names and FFmpeg-generated thumbnails, card selection is separate from explicit trim editing, reorder/delete/undo/redo are available, sequence preview skips source gaps, and J/K/L plus visible I/O shortcuts follow the shared interaction model. The audio picker appears only for multi-audio sources. M2TS/MTS or failed direct playback falls back to a validated, cancellable preview proxy without changing source identity, and frame controls switch from a nominal fallback to source presentation timestamps after non-modal indexing.
 
 The solution is split into:
 
@@ -29,12 +31,12 @@ Run the complete local gate from the repository root:
 
 ## Product invariants
 
-- One source file and one IN/OUT range at a time.
+- One source file and multiple non-overlapping retained IN/OUT ranges in explicit output order.
 - Source media is read-only.
 - OUT is an exclusive boundary and must be greater than IN.
 - Fast mode may expand to compatible keyframes and must disclose that behavior.
 - Accurate mode prioritizes the selected timestamps and re-encodes when required.
-- Export uses a partial file, validates it with `ffprobe`, then finalizes it.
+- Multi-range export creates per-operation temporary segments, concatenates them in edit-list order, validates the combined partial output with `ffprobe`, then finalizes it.
 - Cancellation or failure must not leave completed-looking output.
 - Media paths are process arguments, never interpolated shell text.
 - Payments are optional and unlock no feature.
@@ -53,15 +55,13 @@ FFmpeg discovery checks `TRIMLET_FFMPEG` / `TRIMLET_FFPROBE`, the application di
 
 ## Known Early Access gaps
 
-1. No automatic preview proxy is generated when Windows-native playback cannot decode the source.
-2. Frame movement uses nominal rational frame rate, not source presentation timestamps for variable-frame-rate media.
-3. The app is an unpackaged, framework-dependent developer build.
-4. MSIX/portable packaging, original release artwork, signing, and clean-machine binary verification are not complete.
-5. The large-media, damaged-GOP, HDR, and full language-switch matrices need broader real-machine coverage.
+1. The app is an unpackaged, framework-dependent developer build.
+2. MSIX/portable packaging, original release artwork, signing, and clean-machine binary verification are not complete.
+3. The large-media, damaged-GOP, HDR/interlace, cancellation, and full language-switch matrices need broader real-machine coverage.
 
-## macOS 0.3 interaction delta to adopt
+## macOS 0.3 interaction delta adopted
 
-The macOS 0.3 work now treats trimming as an editing sequence rather than a single disposable range. The interaction checkpoint was accepted on 2026-08-28 and the shared behavior is recorded in `docs/PLATFORM_CONTRACT.md`; it should guide the next Windows iteration:
+The macOS 0.3 work treats trimming as an editing sequence rather than a single disposable range. The interaction checkpoint was accepted on 2026-08-28, recorded in `docs/PLATFORM_CONTRACT.md`, and implemented in the current Windows source:
 
 - Keep an uncommitted IN/OUT range visually distinct from retained clips. The Mac reference uses a translucent purple fill with a dashed boundary for the draft, blue for retained clips, green for IN, and red for OUT. Windows may use native styling, but draft versus retained state must not rely on color alone.
 - Add multiple retained subclips with stable identity, editable names, representative thumbnails, source IN–OUT time, drag reorder, trim, delete, undo/redo, sequence preview, and combined export.
@@ -72,20 +72,15 @@ The macOS 0.3 work now treats trimming as an editing sequence rather than a sing
 
 Do not copy Mac colors or SwiftUI layout mechanically. Match the state model, discoverability, keyboard semantics, and acceptance behavior using WinUI conventions and English/Japanese resources.
 
+Developer verification covers a two-clip add flow, thumbnails, distinct timeline states, keyboard I/O, J/K/L state changes and reverse-seek fallback, Undo/Redo, sequence preview, rename, reorder, and explicit trim update. Generated-media integration checks cover reordered three-segment Fast and Accurate exports, selected non-default audio, M2TS/AC-3 proxy generation and cache reuse, and VFR presentation-timestamp stepping. The user accepted the feature-focused human check on 2026-08-28; `HUMAN_CHECK.md` remains the regression and representative-media checklist.
+
 ## Next implementation order
 
-1. Match the 2026-08-26 interaction contract: distinct uncommitted-range fill plus dashed boundary, blue retained ranges, and non-modal keyframe inspection state.
-2. Add J/K/L shuttle levels with visible direction/speed, plus responsive slider scrubbing followed by an exact final seek. Use the Windows-native playback rate when supported and a bounded seek fallback otherwise.
-   - Do not present bare `J`／`K`／`L` buttons. Pair each key with its meaning: reverse, stop, and forward. Show that repeated J/L presses increase the bounded shuttle speed.
-   - Show `I` on the Set IN control and `O` on the Set OUT control using a keycap-like hint. The button remains primary; keyboard use is optional.
-   - Keep the hints next to the controls they affect. Do not depend on a separate manual or an always-visible paragraph of shortcut text.
-3. Add preview suitability detection and a cancellable proxy cache without changing source identity.
-4. Move VFR navigation and boundaries to source PTS end to end.
-5. Expand generated and real-machine media coverage.
-6. Select a Windows distribution format and complete the binary release gate in `docs/legal/RELEASE_COMPLIANCE.md`.
-7. Add an original application icon and code signing before publishing a binary.
+1. Complete the Windows human-check matrix for long media, damaged GOPs, HDR/interlace, cancellation, and both UI languages.
+2. Select a Windows distribution format and complete the binary release gate in `docs/legal/RELEASE_COMPLIANCE.md`.
+3. Add original application artwork and code signing before publishing a binary.
 
-The shared acceptance behavior for items 1–2 is normative in `docs/PLATFORM_CONTRACT.md`. The Mac implementation is only a behavioral reference; do not port SwiftUI or AVPlayer code into Windows.
+The shared interaction behavior remains normative in `docs/PLATFORM_CONTRACT.md`. The Mac implementation is only a behavioral reference; do not port SwiftUI or AVPlayer code into Windows.
 
 ## Collaboration rules
 
@@ -96,4 +91,4 @@ The shared acceptance behavior for items 1–2 is normative in `docs/PLATFORM_CO
 - Pull requests must disclose media provenance and dependency or license changes.
 - Diagnostics must keep media paths redacted.
 
-The cross-platform follow-up is recorded in [`../macos/WINDOWS_EARLY_ACCESS_HANDOVER.md`](../macos/WINDOWS_EARLY_ACCESS_HANDOVER.md).
+The original Early Access handover remains in [`../macos/WINDOWS_EARLY_ACCESS_HANDOVER.md`](../macos/WINDOWS_EARLY_ACCESS_HANDOVER.md). The current parity return is [`../macos/WINDOWS_MULTI_RANGE_HANDOVER.md`](../macos/WINDOWS_MULTI_RANGE_HANDOVER.md).

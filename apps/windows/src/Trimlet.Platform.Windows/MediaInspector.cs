@@ -150,6 +150,40 @@ public sealed class MediaInspector(FFmpegToolchain toolchain)
         }
     }
 
+    public async Task<FrameTimestampIndex> InspectFrameTimestampsAsync(
+        MediaMetadata metadata,
+        CancellationToken cancellationToken = default)
+    {
+        var timestamps = new List<MediaTimestamp>();
+        var result = await ProcessRunner.RunAsync(
+            toolchain.FFprobePath,
+            [
+                "-v", "error",
+                "-select_streams", "v:0",
+                "-show_entries", "frame=best_effort_timestamp_time",
+                "-show_frames",
+                "-of", "default=noprint_wrappers=1:nokey=1",
+                metadata.SourcePath,
+            ],
+            line =>
+            {
+                if (ParseDouble(line.Trim()) is { } raw)
+                {
+                    var relative = Math.Max(0, raw - metadata.StartTimestamp.TotalSeconds);
+                    timestamps.Add(MediaTimestamp.FromSeconds(relative));
+                }
+            },
+            cancellationToken,
+            captureStandardOutput: false);
+
+        if (result.ExitCode != 0)
+        {
+            throw new MediaOperationException("source_unreadable", "フレーム時刻を解析できませんでした。", result.StandardError);
+        }
+
+        return new FrameTimestampIndex(metadata.Duration, timestamps);
+    }
+
     private static string? GetString(JsonElement element, string name)
     {
         if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(name, out var value))

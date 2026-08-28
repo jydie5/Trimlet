@@ -6,7 +6,11 @@
 
 Trimletは、macOSとWindowsでそれぞれネイティブ実装する、軽量でフレーム正確な動画切り出しアプリです。
 
-macOS版はSwiftUIによるBeta段階です。Windows版もC#／WinUI 3によるネイティブ実装として、同じ製品仕様とメディア処理契約に従って追従開発します。
+macOS版はSwiftUIによるBeta段階です。Windows Early Accessのソースにも、同じ複数区間の操作仕様とメディア処理契約を実装しました。機能面のヒューマンチェックは2026-08-28に合格しました。
+
+![2つのクリップ、サムネイル、元動画の範囲、実フレーム移動を表示したTrimlet Windows版](docs/images/windows-multirange-early-access.jpg)
+
+_個人情報を含まない合成テスト動画を使用したWindows Early Access画面です。_
 
 ## 目的
 
@@ -37,8 +41,8 @@ macOS版はSwiftUIによるBeta段階です。Windows版もC#／WinUI 3による
 ## 現在の状態
 
 - macOS：ネイティブ`v0.3.0-beta.1`。複数区間、編集シーケンス、連続プレビュー、音声選択、複数区間の高速／正確書き出しを実装しています。
-- Windows：ソース配布のEarly Access。ネイティブ再生、単一区間、音声ストリーム選択、検証付きの高速／正確書き出しまで実装済みで、次にMac Betaの複数区間と操作体系へ追従します。
-- 同等性：動画を開く → IN／OUTを選ぶ → 書き出す、という基礎フローは揃っています。複数区間、J/K/L、高速スクラブ、自動プレビュー用プロキシ、可変フレームレート動画のPTS基準移動には差があります。
+- Windows：ソース配布のEarly Access。ネイティブ再生、複数クリップ、編集シーケンス操作、J/K/L、音声選択、連続プレビュー、検証付きの複数区間高速／正確書き出しまで実装しました。開発者確認と機能面のヒューマンチェックは合格しています。
+- 同等性：Mac Betaで合意した複数区間の操作仕様は両OSに実装済みです。Windowsにも自動プレビュー用プロキシと、バックグラウンドで作る実PTSフレーム索引を実装しました。配布形式と幅広い実動画でのリリース検証は引き続きOS別の作業です。
 - macOS最新版：[v0.3.0-beta.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-beta.1)をMIT Licenseのソースのみで公開しています。
 
 Windows Early Access：[v0.3.0-early-access.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-early-access.1)（ソースのみ。インストーラーやビルド済み実行ファイルはありません）
@@ -115,6 +119,7 @@ TrimletはMIT Licenseの無料ソフトウェアです。役立った場合は�
 - [Windows Early Accessガイド](apps/windows/README.md)
 - [Windows保守担当へのhandover](apps/windows/handover.md)
 - [WindowsからmacOS担当へのhandover](apps/macos/WINDOWS_EARLY_ACCESS_HANDOVER.md)
+- [Windows複数区間追従後のhandover](apps/macos/WINDOWS_MULTI_RANGE_HANDOVER.md)
 - [v0.3.0 Beta 1リリースノート](docs/releases/v0.3.0-beta.1.md)
 - [Mac PoCの範囲](docs/POC.md)
 - [ヒューマンチェック手順](docs/HUMAN_CHECK.md)

@@ -109,6 +109,7 @@ public static class WindowsExportPlanner
         arguments.AddRange([
             "-map_metadata", "0",
             "-map_chapters", "0",
+            "-avoid_negative_ts", "make_zero",
             "-movflags", "+faststart+use_metadata_tags",
             temporaryOutputPath,
         ]);
