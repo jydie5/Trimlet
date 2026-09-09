@@ -10,6 +10,7 @@
     mc:Ignorable="d">
 
     <Page.KeyboardAccelerators>
+        <KeyboardAccelerator Key="S" Modifiers="Control" Invoked="OnSaveProjectAccelerator" />
         <KeyboardAccelerator Key="I" Invoked="OnSetInAccelerator" />
         <KeyboardAccelerator Key="O" Invoked="OnSetOutAccelerator" />
         <KeyboardAccelerator Key="J" Invoked="OnReverseAccelerator" />
@@ -38,6 +39,18 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <DropDownButton x:Uid="ProjectMenu">
+                    <DropDownButton.Flyout>
+                        <MenuFlyout Placement="Bottom">
+                            <MenuFlyoutItem x:Name="OpenProjectItem" x:Uid="OpenProjectItem" Click="OnOpenProjectClicked" />
+                            <MenuFlyoutItem x:Name="SaveAsProjectItem" x:Uid="SaveAsProjectItem" Click="OnSaveAsProjectClicked" />
+                        </MenuFlyout>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
+                <Button x:Name="SaveProjectButton" x:Uid="SaveProjectButton" Click="OnSaveProjectClicked" IsEnabled="False" />
+                <TextBlock x:Name="ProjectTitleText" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
             <Button
                 x:Name="OpenButton"
                 x:Uid="OpenButton"
@@ -46,7 +59,8 @@
                 Style="{StaticResource AccentButtonStyle}" />
         </Grid>
 
-        <Grid Grid.Row="1" ColumnSpacing="16">
+        <ContentControl x:Name="EditingWorkspace" Grid.Row="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+        <Grid ColumnSpacing="16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*" MinWidth="560" />
                 <ColumnDefinition Width="340" />
@@ -60,7 +74,7 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <Grid MinHeight="250" Background="#FF111318" CornerRadius="12">
+                <Grid MinHeight="160" Background="#FF111318" CornerRadius="12">
                     <MediaPlayerElement
                         x:Name="PlayerElement"
                         AreTransportControlsEnabled="False"
@@ -87,6 +101,7 @@
                     <TextBlock x:Name="CurrentTimeText" VerticalAlignment="Center" FontFamily="Consolas" Text="00:00:00.000" />
                     <Slider
                         x:Name="TimelineSlider"
+                        Visibility="Collapsed"
                         Grid.Column="1"
                         IsEnabled="False"
                         Maximum="1"
@@ -94,27 +109,50 @@
                         PointerReleased="OnTimelinePointerReleased"
                         StepFrequency="0.01"
                         ValueChanged="OnTimelineValueChanged" />
+                    <TextBlock x:Name="PlaybackClockText" Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="12" />
                     <TextBlock x:Name="DurationText" Grid.Column="2" VerticalAlignment="Center" FontFamily="Consolas" Text="00:00:00.000" />
                 </Grid>
 
                 <StackPanel Grid.Row="2" Spacing="3">
                     <Canvas
                         x:Name="RangeTrackCanvas"
-                        Height="18"
-                        Background="{ThemeResource ControlFillColorDefaultBrush}"
+                        Height="84"
+                        Background="#FF202630"
+                        PointerPressed="OnSourcePointerPressed"
+                        PointerMoved="OnSourcePointerMoved"
+                        PointerReleased="OnSourcePointerReleased"
+                        PointerCanceled="OnSourcePointerCanceled"
+                        PointerCaptureLost="OnSourcePointerCanceled"
+                        PointerWheelChanged="OnSourceWheelChanged"
                         SizeChanged="OnRangeTrackSizeChanged">
                         <Rectangle
                             x:Name="DraftRangeHighlight"
-                            Height="18"
+                            Height="32"
                             Fill="#557C3AED"
                             Stroke="#FFC084FC"
                             StrokeDashArray="3,2"
                             StrokeThickness="1.5"
                             Visibility="Collapsed" />
-                        <Rectangle x:Name="InMarker" Width="2" Height="18" Fill="#FF22C55E" Visibility="Collapsed" />
-                        <Rectangle x:Name="OutMarker" Width="2" Height="18" Fill="#FFEF4444" Visibility="Collapsed" />
-                        <Rectangle x:Name="PlayheadMarker" Width="2" Height="18" Fill="White" />
+                        <Border x:Name="InMarker" Width="24" Height="32" BorderThickness="0,2,2,2" BorderBrush="#FF4ADE80" Visibility="Collapsed" IsHitTestVisible="False">
+                            <TextBlock Text="IN" FontSize="10" Foreground="#FF4ADE80" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                        </Border>
+                        <Border x:Name="OutMarker" Width="24" Height="32" BorderThickness="2,2,0,2" BorderBrush="#FFFB7185" Visibility="Collapsed" IsHitTestVisible="False">
+                            <TextBlock Text="OUT" FontSize="9" Foreground="#FFFB7185" VerticalAlignment="Center" HorizontalAlignment="Center" />
+                        </Border>
+                        <Rectangle x:Name="PlayheadMarker" Width="1" Height="72" Fill="White" IsHitTestVisible="False" />
+                        <TextBlock x:Name="PlayheadTriangle" Text="▼" Foreground="White" FontSize="12" IsHitTestVisible="False" />
                     </Canvas>
+                    <Grid>
+                        <TextBlock x:Name="TimelineFeedbackText" VerticalAlignment="Center" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="4">
+                            <Button Content="−" Click="OnZoomOutClicked" Padding="8,1" AutomationProperties.Name="Zoom out" />
+                            <Button Content="+" Click="OnZoomInClicked" Padding="8,1" AutomationProperties.Name="Zoom in" />
+                            <Button x:Uid="TimelineFitButton" Click="OnFitTimelineClicked" Padding="8,1" />
+                            <Button x:Uid="TimelineFitRangeButton" Click="OnFitRangeClicked" Padding="8,1" />
+                            <Button Content="‹" Click="OnPanLeftClicked" Padding="8,1" AutomationProperties.Name="Pan left" />
+                            <Button Content="›" Click="OnPanRightClicked" Padding="8,1" AutomationProperties.Name="Pan right" />
+                        </StackPanel>
+                    </Grid>
                     <Grid ColumnSpacing="10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
@@ -216,7 +254,9 @@
             </StackPanel>
         </Grid>
 
-        <Border Grid.Row="2" Padding="12" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12">
+        </ContentControl>
+        <ContentControl x:Name="SequencePanel" Grid.Row="2" HorizontalContentAlignment="Stretch">
+        <Border Padding="12" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12">
             <Grid RowSpacing="8">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -290,7 +330,9 @@
             </Grid>
         </Border>
 
-        <Border Grid.Row="3" Padding="12" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12">
+        </ContentControl>
+        <ContentControl x:Name="ExportPanel" Grid.Row="3" HorizontalContentAlignment="Stretch">
+        <Border Padding="12" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="12">
             <Grid ColumnSpacing="18" RowSpacing="8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -325,6 +367,7 @@
             </Grid>
         </Border>
 
+        </ContentControl>
         <Border
             x:Name="ProxyProgressPanel"
             Grid.Row="4"

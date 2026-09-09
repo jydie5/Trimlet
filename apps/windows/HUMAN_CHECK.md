@@ -1,5 +1,27 @@
 # Trimlet for Windows human check
 
+## New development delta — 2026-09-09
+
+The 2026-08-28 pass remains historical; it does not accept these additions.
+See [developer results](BUILD10_PARITY_RETURN.md) before running this matrix.
+
+- [ ] Paused IN → upper-ruler seek → OUT; IN stays fixed. Body drag only seeks.
+- [ ] IN/OUT padded clicks do not jump; independent drags cannot cross. Repeat
+      with a one-frame range and at both source edges, light/dark and high DPI.
+- [ ] Losing pointer capture restores the draft and releases gesture ownership.
+- [ ] Physical two-finger trackpad input seeks; zoom/pan/fit only change viewport.
+- [ ] Existing trim Apply is one Undo unit; cancel preserves the retained clip.
+- [ ] Save/Open a two-clip Mac project, retaining order, IDs, names, fraction
+      pairs, mode and absolute audio index; reopen the Windows save on Mac.
+- [ ] Move project/media together; then move only media and relink. Changed
+      size/time requires explicit choice. Missing audio warns and marks dirty.
+- [ ] Save, Don't Save and Cancel on opening another source/project and closing.
+      Failed save keeps the previous file; rejected project keeps existing edits.
+- [ ] Repeat dialogs and controls in English and Japanese; verify no clipping.
+
+For public screenshot reproduction use `scripts/create-windows-demo.ps1`; the
+generated video is original demo material and stays outside the repository.
+
 This check covers the Windows multi-range parity candidate based on the accepted macOS `v0.3.0-beta.1` interaction contract.
 
 ## Start
