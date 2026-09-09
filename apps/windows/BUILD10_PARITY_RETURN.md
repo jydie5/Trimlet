@@ -8,6 +8,8 @@ See [Beta download and limitations](BETA_DOWNLOAD.md) and
 [binary publication verification](BETA_RELEASE_VERIFICATION.md) for `v0.4.0-beta.1`.
 The original parity-check results below are historical and do not imply expanded human acceptance.
 
+Beta 2 follow-up: Windows adds consent-based first-use acquisition of a pinned LGPL 3.0 FFmpeg build. This is Windows-only and does not authorize Mac bundling or automatically port the installer. See [verification](BETA2_VERIFICATION.md) and [licensing/distribution boundary](../../docs/legal/VIDEO_TOOL_ACQUISITION.md). Mac maintainers should keep the same user-facing manual-setup reduction goal but review their own platform's binaries and terms.
+
 ## Implemented
 
 - Shared `.trimlet` version 1, closed JSON with required fields and 8 MiB limits,

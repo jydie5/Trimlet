@@ -91,6 +91,7 @@ public sealed record FFmpegToolchain(string FFmpegPath, string FFprobePath)
             }
         }
 
-        return null;
+        var managedTool = Path.Combine(VideoToolSetup.BinDirectory, fileName);
+        return VideoToolSetup.IsInstalled && File.Exists(managedTool) ? managedTool : null;
     }
 }

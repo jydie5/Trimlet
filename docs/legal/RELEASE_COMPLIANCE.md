@@ -44,6 +44,10 @@ README installation instructions may direct users to obtain FFmpeg separately, b
 
 ## Future binary release gate
 
+### Windows Beta 2 automatic acquisition — 2026-09-09
+
+The owner requested removal of manual FFmpeg preparation. Beta 2 adds consent-based direct acquisition from a pinned upstream LGPL 3.0 release, with size/hash verification, bounded extraction, cancellation and per-user storage. Trimlet release archives still contain no FFmpeg files. This is not authorization to mirror arbitrary FFmpeg builds or claim complete patent/copyright clearance. See [the exact package and distribution boundary](VIDEO_TOOL_ACQUISITION.md). A future offline bundled build still needs corresponding-source and dependency review.
+
 ### Windows unsigned portable beta exception — 2026-09-09
 
 The repository owner explicitly requested a downloadable Windows binary beta. `v0.4.0-beta.1` therefore permits a self-contained, unsigned x64 ZIP as a GitHub prerelease. This does not change the historical source-only tags or approve a signed/production release. No Mac binary is published under this tag.

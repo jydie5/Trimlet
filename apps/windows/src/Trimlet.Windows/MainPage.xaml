@@ -49,6 +49,7 @@
                     </DropDownButton.Flyout>
                 </DropDownButton>
                 <Button x:Name="SaveProjectButton" x:Uid="SaveProjectButton" Click="OnSaveProjectClicked" IsEnabled="False" />
+                <Button x:Name="VideoToolsButton" x:Uid="VideoToolsButton" Click="OnVideoToolsClicked" />
                 <TextBlock x:Name="ProjectTitleText" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             </StackPanel>
             <Button

@@ -12,9 +12,9 @@ Trimletは、動画の切り出しに絞ったデスクトップアプリです�
 
 ## ダウンロードして使う
 
-**[Windows版をダウンロード（x64 ZIP）](https://github.com/jydie5/Trimlet/releases/download/v0.4.0-beta.1/Trimlet-0.4.0-beta.1-win-x64.zip)** · [はじめて使う方へ](docs/user-guide.ja.md)
+**[Windows版をダウンロード（x64 ZIP）](https://github.com/jydie5/Trimlet/releases/download/v0.4.0-beta.2/Trimlet-0.4.0-beta.2-win-x64.zip)** · [はじめて使う方へ](docs/user-guide.ja.md)
 
-現在のWindows版は **0.4.0 Beta 1（試験公開版）** です。.NETは同梱していますが、**動画処理用のFFmpegを別途追加する必要があります**。署名はなく、開発環境以外での検証も未完了です。ファイルの追加に不慣れな方は、先に利用ガイドをご確認ください。
+現在のWindows版は **0.4.0 Beta 2（試験公開版）** です。.NETは同梱しています。初回に **「動画ツール → 同意して準備する」** を押すと、動画処理に必要なファイルを自動で取得します。コマンドや手動のファイル配置は不要です。初回のネット接続と表示される配布元の条件への同意が必要です。署名はなく、クリーン環境での検証は未完了です。
 
 **Mac版は、ダウンロードしてすぐ使えるアプリをまだ配布していません。** 自分でビルドする方向けにソースを公開しています。[開発手順はこちら](DEVELOPING.ja.md)。GitHubの「Source code」は、起動できるアプリではありません。
 
