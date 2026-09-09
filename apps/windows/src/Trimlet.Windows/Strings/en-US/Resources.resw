@@ -152,4 +152,31 @@
   <data name="ProxyPreviewSuffix" xml:space="preserve"><value>proxy preview</value></data>
   <data name="FrameTimingScanningSuffix" xml:space="preserve"><value> · inspecting frame timestamps…</value></data>
   <data name="FrameTimingReadySuffix" xml:space="preserve"><value> · {0} frame timestamps</value></data>
+  <data name="ProjectMenu.Content" xml:space="preserve"><value>Project</value></data>
+  <data name="OpenProjectItem.Text" xml:space="preserve"><value>Open project…</value></data>
+  <data name="SaveAsProjectItem.Text" xml:space="preserve"><value>Save as…</value></data>
+  <data name="SaveProjectButton.Content" xml:space="preserve"><value>Save</value></data>
+  <data name="TimelineFitButton.Content" xml:space="preserve"><value>Fit</value></data>
+  <data name="ProjectUntitled" xml:space="preserve"><value>Untitled project</value></data>
+  <data name="ProjectCancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="ProjectSave" xml:space="preserve"><value>Save</value></data>
+  <data name="ProjectDiscard" xml:space="preserve"><value>Don't save</value></data>
+  <data name="ProjectUnsavedTitle" xml:space="preserve"><value>Save changes?</value></data>
+  <data name="ProjectUnsavedMessage" xml:space="preserve"><value>Save your clips and settings before continuing.</value></data>
+  <data name="ProjectSourceTitle" xml:space="preserve"><value>Locate source video</value></data>
+  <data name="ProjectSourceChanged" xml:space="preserve"><value>The source differs from the saved reference. Use this video or choose another source.</value></data>
+  <data name="ProjectUseSource" xml:space="preserve"><value>Use this video</value></data>
+  <data name="ProjectRelink" xml:space="preserve"><value>Locate video…</value></data>
+  <data name="ProjectErrorTitle" xml:space="preserve"><value>Project could not be completed</value></data>
+  <data name="ProjectSaveError" xml:space="preserve"><value>Could not save. Check space and permissions, and save on the same drive as the video. The existing project was not replaced.</value></data>
+  <data name="ProjectOpenError" xml:space="preserve"><value>Could not open this project. Check its format, source video, and saved ranges.</value></data>
+  <data name="TimelineAdjustIn" xml:space="preserve"><value>Adjust IN</value></data>
+  <data name="TimelineAdjustOut" xml:space="preserve"><value>Adjust OUT</value></data>
+  <data name="TimelineSeek" xml:space="preserve"><value>Seek</value></data>
+  <data name="SourceClock" xml:space="preserve"><value>Source</value></data>
+  <data name="SequenceClock" xml:space="preserve"><value>Sequence</value></data>
+  <data name="TrimDraftTitle" xml:space="preserve"><value>Apply or cancel the current trim first.</value></data>
+  <data name="TimelineFitRangeButton.Content" xml:space="preserve"><value>Fit range</value></data>
+  <data name="AccurateTimelineHint" xml:space="preserve"><value>Accurate export uses the selected boundaries</value></data>
+  <data name="ProjectAudioFallback" xml:space="preserve"><value>The saved audio stream is missing. The available default is selected; save to keep this change.</value></data>
 </root>

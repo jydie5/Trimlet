@@ -1,5 +1,12 @@
 # Trimlet Windows maintainer handover
 
+## Windows return — 2026-09-09
+
+Project persistence and the build 10 interaction delta are implemented in Windows
+development source. Read [BUILD10_PARITY_RETURN.md](BUILD10_PARITY_RETURN.md) for
+actual developer verification and remaining human checks. Historical release
+versions and Early Access acceptance below are unchanged.
+
 ## New Mac development delta — 2026-09-09
 
 Read [TIMELINE_INTERACTION_HANDOVER.md](TIMELINE_INTERACTION_HANDOVER.md) before
@@ -89,7 +96,7 @@ Developer verification covers a two-clip add flow, thumbnails, distinct timeline
 
 ## Next implementation order
 
-1. Implement shared `.trimlet` project persistence from [`PROJECT_PERSISTENCE_HANDOVER.md`](PROJECT_PERSISTENCE_HANDOVER.md), including fixtures, relink, dirty state, and native dialogs.
+1. Complete cross-platform project-resume acceptance for the implemented persistence, including relink, dirty state, and native dialogs; see [the return](BUILD10_PARITY_RETURN.md).
 2. Complete the Windows human-check matrix for project resume, long media, damaged GOPs, HDR/interlace, cancellation, and both UI languages.
 3. Select a Windows distribution format and complete the binary release gate in `docs/legal/RELEASE_COMPLIANCE.md`.
 4. Add original application artwork and code signing before publishing a binary.

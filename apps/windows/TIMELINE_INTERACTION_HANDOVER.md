@@ -1,5 +1,9 @@
 # Mac → Windows: source timeline interaction, development build 10
 
+Windows update, 2026-09-09: implemented in Windows development source. See
+[the return and verification record](BUILD10_PARITY_RETURN.md). The Mac
+preparation and acceptance record below remains historical and unchanged.
+
 Prepared 2026-09-09. This is an implementation handover, **not a release or
 human-acceptance announcement**. Windows implementation was not modified in this
 task. This handover accompanies the Mac build 10 source update. Pull the latest

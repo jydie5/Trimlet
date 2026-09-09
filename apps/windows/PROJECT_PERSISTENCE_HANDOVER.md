@@ -2,7 +2,7 @@
 
 - Prepared: 2026-08-28
 - Mac state: implemented for 0.4 human check
-- Windows state: implementation pending
+- Windows state: implemented in development source on 2026-09-09; [verification and remaining acceptance](BUILD10_PARITY_RETURN.md)
 - Normative schema: `contracts/project.schema.json`
 
 ## Required behavior

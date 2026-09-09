@@ -1,5 +1,24 @@
 # Trimlet for Windows — Early Access
 
+## Current development update — 2026-09-09
+
+Project Open/Save/Save As and the Mac build 10 timeline semantics are implemented.
+Use **Project → Open project**, **Save** (`Ctrl+S`), or **Project → Save as**.
+Projects keep ordered clips, names, exact rational endpoints, mode and audio;
+uncommitted drafts and playback/viewport state are session-only. Keep the project
+on the same drive as its source, and move them together to retain relative links.
+Moved/mismatched sources can be explicitly relinked when opening a project.
+
+Seek in the ruler or range body; drag an outward IN/OUT grip to adjust that end.
+Use +/−, pan arrows, Fit and Fit Range to navigate a long source. Existing-clip
+trims are applied explicitly and create one Undo step. Windows VFR navigation
+and original-source export are retained.
+
+![Windows editing workspace](../../docs/images/windows-workspace-2026-09.png)
+
+[Return to Mac maintainer and actual verification](BUILD10_PARITY_RETURN.md).
+These additions are development source, with new human acceptance pending.
+
 ## Status
 
 The Windows source tree implements the macOS `v0.3.0-beta.1` interaction contract, and the feature-focused human check was accepted on 2026-08-28. It remains an unpackaged, source-only Early Access build until distribution work is complete.

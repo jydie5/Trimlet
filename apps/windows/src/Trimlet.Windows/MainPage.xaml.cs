@@ -126,7 +126,7 @@ public sealed partial class MainPage : Page
         var file = await picker.PickSingleFileAsync();
         if (file is not null)
         {
-            await LoadMediaAsync(file);
+            if (await ConfirmCloseAsync()) await LoadMediaAsync(file);
         }
     }
 
@@ -154,13 +154,18 @@ public sealed partial class MainPage : Page
             return;
         }
 
+        if (string.Equals(file.FileType, ".trimlet", StringComparison.OrdinalIgnoreCase))
+        {
+            await OpenProjectAsync(file.Path);
+            return;
+        }
         if (!SupportedMedia.IsSupportedPath(file.Path))
         {
             ShowStatus(InfoBarSeverity.Error, Text("UnsupportedTitle"), Text("UnsupportedMessage"));
             return;
         }
 
-        await LoadMediaAsync(file);
+        if (await ConfirmCloseAsync()) await LoadMediaAsync(file);
     }
 
     private async Task LoadMediaAsync(StorageFile file)
@@ -236,6 +241,7 @@ public sealed partial class MainPage : Page
 
         MediaDetailsText.Text = FormatMediaDetails(_metadata);
         PopulateAudioStreams(_metadata);
+        AcceptProjectState();
         UpdateRangeDisplay();
         UpdateExportAvailability();
 
@@ -319,6 +325,11 @@ public sealed partial class MainPage : Page
 
     public async Task OpenPathAsync(string path)
     {
+        if (string.Equals(Path.GetExtension(path), ".trimlet", StringComparison.OrdinalIgnoreCase))
+        {
+            await OpenProjectAsync(path);
+            return;
+        }
         if (!SupportedMedia.IsSupportedPath(path))
         {
             ShowStatus(InfoBarSeverity.Error, Text("UnsupportedTitle"), Text("UnsupportedMessage"));
@@ -535,6 +546,7 @@ public sealed partial class MainPage : Page
 
     private void OnPositionTimerTick(object? sender, object e)
     {
+        UpdateProjectDisplay();
         if (!_mediaReady)
         {
             return;
@@ -577,6 +589,7 @@ public sealed partial class MainPage : Page
         }
 
         UpdatePlayhead(position);
+        UpdateSequenceClock(position);
     }
 
     private void OnTimelinePointerPressed(object sender, PointerRoutedEventArgs e)
@@ -771,16 +784,11 @@ public sealed partial class MainPage : Page
         var candidate = ClampToSource(_mediaPlayer.PlaybackSession.Position);
         if (_hasUserOutPoint && candidate >= _outPoint)
         {
-            ShowStatus(InfoBarSeverity.Error, Text("InvalidRangeTitle"), Text("InvalidInMessage"));
-            return;
+            _hasUserOutPoint = false;
         }
 
         _inPoint = candidate;
         _hasUserInPoint = true;
-        if (_trimmingSegmentId is null)
-        {
-            _hasUserOutPoint = false;
-        }
 
         UpdateRangeDisplay();
         ClearRoutineStatus();
@@ -921,6 +929,7 @@ public sealed partial class MainPage : Page
 
     private void OnTrimClipClicked(object sender, RoutedEventArgs e)
     {
+        if (!CanReplaceTrimDraft()) return;
         if (!TryGetButtonSegment(sender, out var segment))
         {
             return;
@@ -939,6 +948,7 @@ public sealed partial class MainPage : Page
 
     private void OnDeleteClipClicked(object sender, RoutedEventArgs e)
     {
+        if (!CanReplaceTrimDraft()) return;
         if (!TryGetButtonSegment(sender, out var segment))
         {
             return;
@@ -955,6 +965,7 @@ public sealed partial class MainPage : Page
 
     private void MoveClip(object sender, int offset)
     {
+        if (!CanReplaceTrimDraft()) return;
         if (!TryGetButtonSegment(sender, out var segment))
         {
             return;
@@ -1015,6 +1026,7 @@ public sealed partial class MainPage : Page
 
     private void OnUndoClicked(object sender, RoutedEventArgs e)
     {
+        if (!CanReplaceTrimDraft()) return;
         if (_undoStack.Count == 0)
         {
             return;
@@ -1028,6 +1040,7 @@ public sealed partial class MainPage : Page
 
     private void OnRedoClicked(object sender, RoutedEventArgs e)
     {
+        if (!CanReplaceTrimDraft()) return;
         if (_redoStack.Count == 0)
         {
             return;
@@ -1247,11 +1260,13 @@ public sealed partial class MainPage : Page
         {
             UpdateExportAvailability();
             UpdateRangeTrack();
+            UpdateKeyframeStatus();
         }
     }
 
     private bool KeyboardCommandAllowed() =>
-        _mediaReady && !_isExporting && FocusManager.GetFocusedElement(XamlRoot) is not TextBox and not ComboBox;
+        _mediaReady && !_isExporting && !_projectBusy && !_confirmingClose
+        && FocusManager.GetFocusedElement(XamlRoot) is not TextBox and not ComboBox;
 
     private void OnSetInAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
@@ -1290,7 +1305,7 @@ public sealed partial class MainPage : Page
 
     private void OnPageKeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (!_mediaReady || _isExporting || e.OriginalSource is TextBox or ComboBox)
+        if (!_mediaReady || _isExporting || _projectBusy || _confirmingClose || e.OriginalSource is TextBox or ComboBox)
         {
             return;
         }
@@ -1351,6 +1366,7 @@ public sealed partial class MainPage : Page
 
     private void UpdateRangeWorkflow()
     {
+        ClipListView.CanReorderItems = ClipListView.CanDragItems = _trimmingSegmentId is null;
         var accentStyle = (Style)Application.Current.Resources["AccentButtonStyle"];
         MarkInButton.Style = _mediaReady && !_hasUserInPoint ? accentStyle : null;
         MarkOutButton.Style = _mediaReady && _hasUserInPoint && !_hasUserOutPoint ? accentStyle : null;
@@ -1366,6 +1382,7 @@ public sealed partial class MainPage : Page
         RemoveTrackElements(_retainedRangeMarkers);
         RemoveTrackElements(_fastCandidateMarkers);
         RemoveTrackElements(_keyframeMarkers);
+        RemoveTrackElements(_rulerLabels);
 
         if (!_mediaReady || _duration <= TimeSpan.Zero || RangeTrackCanvas.ActualWidth <= 0)
         {
@@ -1374,23 +1391,24 @@ public sealed partial class MainPage : Page
         }
 
         var width = RangeTrackCanvas.ActualWidth;
+        DrawRuler();
         foreach (var segment in _editList.Segments)
         {
             var marker = new Border
             {
-                Height = 18,
+                Height = 32,
                 Background = new SolidColorBrush(segment.Id == _selectedSegmentId
                     ? Microsoft.UI.ColorHelper.FromArgb(220, 30, 64, 175)
                     : Microsoft.UI.ColorHelper.FromArgb(175, 37, 99, 235)),
                 CornerRadius = new CornerRadius(3),
                 IsHitTestVisible = false,
             };
-            PlaceRange(marker, segment.Range, width, 0);
+            PlaceRange(marker, segment.Range, width, 40);
             Canvas.SetZIndex(marker, 1);
             _retainedRangeMarkers.Add(marker);
             RangeTrackCanvas.Children.Add(marker);
 
-            if (_keyframeIndex?.FastCandidate(segment.Range) is { } candidate)
+            if (CurrentExportMode() == ExportMode.Fast && _keyframeIndex?.FastCandidate(segment.Range) is { } candidate)
             {
                 var fastMarker = new Border
                 {
@@ -1400,7 +1418,7 @@ public sealed partial class MainPage : Page
                     CornerRadius = new CornerRadius(3),
                     IsHitTestVisible = false,
                 };
-                PlaceRange(fastMarker, new TrimRange(candidate.Start, candidate.End), width, 2);
+                PlaceRange(fastMarker, new TrimRange(candidate.Start, candidate.End), width, 48);
                 Canvas.SetZIndex(fastMarker, 2);
                 _fastCandidateMarkers.Add(fastMarker);
                 RangeTrackCanvas.Children.Add(fastMarker);
@@ -1410,7 +1428,7 @@ public sealed partial class MainPage : Page
         if (HasValidDraft())
         {
             DraftRangeHighlight.Visibility = Visibility.Visible;
-            PlaceRange(DraftRangeHighlight, CurrentRange(), width, 0);
+            PlaceRange(DraftRangeHighlight, CurrentRange(), width, 40);
             Canvas.SetZIndex(DraftRangeHighlight, 3);
         }
         else
@@ -1438,7 +1456,9 @@ public sealed partial class MainPage : Page
                 Opacity = 0.85,
                 IsHitTestVisible = false,
             };
-            Canvas.SetLeft(marker, width * _keyframeIndex.Keyframes[index].TotalSeconds / _duration.TotalSeconds);
+            var timestamp = _keyframeIndex.Keyframes[index].TotalSeconds;
+            if (!Geometry.Visible(timestamp)) continue;
+            Canvas.SetLeft(marker, Geometry.X(timestamp));
             Canvas.SetTop(marker, 6);
             Canvas.SetZIndex(marker, 5);
             _keyframeMarkers.Add(marker);
@@ -1448,22 +1468,24 @@ public sealed partial class MainPage : Page
 
     private void PlaceRange(FrameworkElement element, TrimRange range, double width, double top)
     {
-        var start = Math.Clamp(range.In.TotalSeconds / _duration.TotalSeconds, 0, 1);
-        var end = Math.Clamp(range.Out.TotalSeconds / _duration.TotalSeconds, 0, 1);
-        Canvas.SetLeft(element, width * start);
+        var start = Math.Clamp(Geometry.X(range.In.TotalSeconds), 24, width - 24);
+        var end = Math.Clamp(Geometry.X(range.Out.TotalSeconds), 24, width - 24);
+        Canvas.SetLeft(element, start);
         Canvas.SetTop(element, top);
-        element.Width = width * Math.Max(0, end - start);
+        element.Width = Math.Max(0, end - start);
     }
 
     private void PlacePointMarker(FrameworkElement marker, TimeSpan time, bool visible, double width, int zIndex)
     {
+        visible = visible && Geometry.Visible(time.TotalSeconds);
         marker.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
         if (!visible)
         {
             return;
         }
 
-        Canvas.SetLeft(marker, width * Math.Clamp(time.TotalSeconds / _duration.TotalSeconds, 0, 1));
+        Canvas.SetLeft(marker, Geometry.X(time.TotalSeconds) - (marker == InMarker ? 24 : 0));
+        Canvas.SetTop(marker, 40);
         Canvas.SetZIndex(marker, zIndex);
     }
 
@@ -1474,7 +1496,10 @@ public sealed partial class MainPage : Page
             return;
         }
 
-        Canvas.SetLeft(PlayheadMarker, RangeTrackCanvas.ActualWidth * Math.Clamp(position.TotalSeconds / _duration.TotalSeconds, 0, 1));
+        PlayheadMarker.Visibility = PlayheadTriangle.Visibility = Geometry.Visible(position.TotalSeconds) ? Visibility.Visible : Visibility.Collapsed;
+        Canvas.SetLeft(PlayheadMarker, Geometry.X(position.TotalSeconds));
+        Canvas.SetLeft(PlayheadTriangle, Geometry.X(position.TotalSeconds) - 6);
+        Canvas.SetZIndex(PlayheadTriangle, 7);
         Canvas.SetZIndex(PlayheadMarker, 6);
     }
 
@@ -1502,6 +1527,13 @@ public sealed partial class MainPage : Page
             : _frameTimestampIndex is not null
                 ? string.Format(Text("FrameTimingReadySuffix"), _frameTimestampIndex.Timestamps.Count)
                 : string.Empty;
+
+        if (CurrentExportMode() == ExportMode.Accurate)
+        {
+            KeyframeStatusText.Text = Text("AccurateTimelineHint");
+            ToolTipService.SetToolTip(KeyframeStatusText, frameTimingSuffix);
+            return;
+        }
 
         if (_keyframeIndex is null)
         {
@@ -1587,8 +1619,10 @@ public sealed partial class MainPage : Page
         TimeSpan.FromSeconds(Math.Clamp(value.TotalSeconds, 0, _duration.TotalSeconds));
 
     private TrimRange CurrentRange() => new(
-        MediaTimestamp.FromTimeSpan(_inPoint),
-        MediaTimestamp.FromTimeSpan(_outPoint));
+        _trimmingSegmentId is { } inId && _editList.Segment(inId) is { } inSegment && inSegment.Range.In.ToTimeSpan() == _inPoint
+            ? inSegment.Range.In : MediaTimestamp.FromTimeSpan(_inPoint),
+        _trimmingSegmentId is { } outId && _editList.Segment(outId) is { } outSegment && outSegment.Range.Out.ToTimeSpan() == _outPoint
+            ? outSegment.Range.Out : MediaTimestamp.FromTimeSpan(_outPoint));
 
     private string DefaultClipName(TrimRange range)
     {
@@ -1654,6 +1688,11 @@ public sealed partial class MainPage : Page
 
     private void ResetPlayer()
     {
+        _projectPath = null;
+        _loadedProject = null;
+        _sourceChanged = false;
+        _savedEdits = new EditList();
+        _viewportStart = _viewportSpan = 0;
         _inspectionCancellation?.Cancel();
         _inspectionCancellation?.Dispose();
         _inspectionCancellation = null;

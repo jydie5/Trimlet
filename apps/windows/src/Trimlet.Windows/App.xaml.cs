@@ -29,6 +29,18 @@ public partial class App : Application
     /// </summary>
     public App()
     {
+        UnhandledException += (_, exception) =>
+        {
+            try
+            {
+                var directory = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Trimlet", "Diagnostics");
+                System.IO.Directory.CreateDirectory(directory);
+                // Deliberately omit exception messages: media paths can occur in them.
+                System.IO.File.AppendAllText(System.IO.Path.Combine(directory, "application.log"),
+                    $"{DateTimeOffset.UtcNow:O} {exception.Exception.GetType().Name} 0x{exception.Exception.HResult:X8}\n{exception.Exception.StackTrace}\n");
+            }
+            catch { /* Logging must not mask the original failure. */ }
+        };
         InitializeComponent();
     }
 
@@ -40,7 +52,9 @@ public partial class App : Application
     {
         var initialPath = Environment.GetCommandLineArgs().Skip(1).FirstOrDefault()?.Trim().Trim('"')
             ?? args.Arguments.Trim().Trim('"');
-        MainWindow = new MainWindow(string.IsNullOrWhiteSpace(initialPath) ? null : initialPath);
+        var window = new MainWindow();
+        MainWindow = window;
         MainWindow.Activate();
+        if (!string.IsNullOrWhiteSpace(initialPath)) window.OpenInitialPath(initialPath);
     }
 }

@@ -6,13 +6,28 @@ Only what you need, quickly and precisely.
 
 Trimlet is a lightweight, frame-accurate video trimming application with separate native implementations for macOS and Windows.
 
+## The editing workspace
+
+![Trimlet on Windows: source preview, independent IN/OUT boundaries, named clips, project saving, and export](docs/images/windows-workspace-2026-09.png)
+
+_Screenshot of the running Windows development app with original, procedurally generated demo footage. It shows the whole editing workflow; no third-party video is included. [Demo recipe](scripts/create-windows-demo.ps1)._
+
+Open a video, collect the moments you want, arrange the clips, save your project, and export one MP4. Current Windows source adds portable `.trimlet` Open/Save/Save As, source relinking, unsaved-change prompts, and the revised timeline with independent outward IN/OUT grips. Use the ruler or range body to seek; zoom, pan, and fit never change the saved ranges.
+
+[Windows changes and verification](apps/windows/BUILD10_PARITY_RETURN.md) · [Run Windows](apps/windows/README.md) · [Human check](apps/windows/HUMAN_CHECK.md)
+
 ## Latest macOS UI/UX — 0.4 development build 10
 
 Find a frame, mark IN and OUT, then add the range to your editing sequence—without needing to start playback.
 
+<details>
+<summary>Mac timeline component renders (interaction details)</summary>
+
 ![Current Mac timeline components: normal range, very short range, IN only, and source edges](docs/images/timeline-build10-light.png)
 
-_Rendered from the production UI components using synthetic positions; not a screenshot of the running app. [Dark appearance](docs/images/timeline-build10-dark.png)._
+_Rendered from production UI components using synthetic positions, not a whole-app screenshot. [Dark appearance](docs/images/timeline-build10-dark.png)._
+
+</details>
 
 - **Clear workspace:** viewer and transport on the left, IN/OUT and clip details on the right, editing sequence below; Save and Export at the top.
 - **Separate playhead and range:** scrub using the upper ruler or range body. Outward IN/OUT grips adjust only their respective boundary, even for a very short range.
@@ -29,7 +44,7 @@ Build 10 is the latest development source, **not a newly published binary releas
 
 ![Windows Early Access with generated test media](docs/images/windows-multirange-early-access.jpg)
 
-Windows implements the previously accepted multi-range workflow. The latest Mac timeline and project-persistence deltas are documented for the Windows maintainer; this image does not claim build 10 parity.
+Historical screenshot of the previously accepted multi-range workflow. The current Windows workspace is shown above.
 
 </details>
 
@@ -58,13 +73,13 @@ Priority inputs are MP4, MOV, M2TS, and MTS.
 - Scrub continuously with the slider or trackpad, followed by an exact seek when the gesture ends.
 - Use Fast mode to avoid video re-encoding where possible, or Accurate mode to prioritize exact boundaries with hardware-assisted VideoToolbox encoding.
 - Select among multiple audio streams, continuously preview the sequence, monitor or cancel export, and validate the completed output.
-- On macOS development builds, save the ordered edit list as a portable `.trimlet` project, resume it later, and relink a moved or changed source explicitly.
+- On both platforms' current development source, save the ordered edit list as a portable `.trimlet` project, resume it later, and relink a moved or changed source explicitly.
 
 ## Repository status
 
 - macOS: published native `v0.3.0-beta.1`; the current 0.4 build 10 development candidate adds atomic project Save/Open, an unsaved indicator, source relinking, and the revised source-timeline interaction for human check.
-- Windows: source-only Early Access with native preview, multiple retained clips, editing-sequence operations, J/K/L shuttle controls, audio-stream selection, sequence preview, and validated combined Fast/Accurate export. Developer checks and the feature-focused human check pass.
-- Parity: the accepted macOS Beta multi-range contract is implemented on both platforms. Project persistence is currently Mac-first; Windows adoption is specified by the shared schema and handover. Packaging and broad real-media release validation remain platform-specific work.
+- Windows: source-only Early Access; current development source adds project persistence and the build 10 timeline semantics to the accepted multi-range workflow. Developer UI checks cover paused marking, independent grips, zoom, project save/resume, and unsaved-close confirmation. New human acceptance remains pending.
+- Parity: shared project version 1 and the revised interaction semantics are implemented on both platforms. Windows retains source-presentation-timestamp navigation. Packaging and broad real-media release validation remain platform-specific work; this source update is not a new binary release.
 - Public source releases are published under the MIT License.
 
 Latest macOS Beta source release: [v0.3.0-beta.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-beta.1)

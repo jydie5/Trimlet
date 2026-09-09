@@ -35,7 +35,7 @@
 ### TRIM-025 — プロジェクトを保存して再開する
 
 - Priority: P0
-- Status: Shared contract and Mac implementation complete; Mac human check and Windows implementation pending
+- Status: Shared contract and both platform implementations complete for human check; see the Windows 2026-09-09 return for developer verification
 - Platform: Shared `.trimlet` format; native file dialogs and source loading per platform
 - Scope: atomic Save/Save As/Open, relative source reference, source fingerprint, explicit relink, unsaved-change confirmation, restored clip order/name/timestamps/export mode/audio selection
 - Contract: `contracts/project.schema.json` and `contracts/fixtures/project-cases.json`

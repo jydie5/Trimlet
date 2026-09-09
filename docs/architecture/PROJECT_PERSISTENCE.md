@@ -1,6 +1,6 @@
 # Project persistence architecture
 
-- Status: Shared schema accepted; macOS implementation complete for human check
+- Status: Shared schema accepted; macOS and Windows implementations available for human check
 - Updated: 2026-08-28
 - Contract: `contracts/project.schema.json`
 
@@ -45,6 +45,10 @@ Opening another source/project and terminating the app use Save, Don't Save, and
 - `Info.plist`: `.trimlet` document type declaration.
 
 ## Explicitly session-only
+
+Windows implements the same document via `TrimletProject`, `ProjectStore`, and
+native project commands in `MainPage.Project.cs`. See [Windows verification and
+cross-platform follow-up](../../apps/windows/BUILD10_PARITY_RETURN.md).
 
 - draft IN/OUT and trim-editor mode;
 - current playhead and playback/shuttle state;

@@ -14,31 +14,49 @@ namespace Trimlet_Windows;
 /// </summary>
 public sealed partial class MainWindow : Window
 {
-    public MainWindow(string? initialPath = null)
+    public MainWindow()
     {
         InitializeComponent();
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
 
-        AppWindow.SetIcon("Assets/AppIcon.ico");
+        var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico");
+        if (System.IO.File.Exists(iconPath)) AppWindow.SetIcon(iconPath);
         SetInitialWindowBounds();
 
         // Navigate the root frame to the main page on startup.
         RootFrame.Navigate(typeof(MainPage));
-
-        if (initialPath is not null && RootFrame.Content is MainPage page)
+        AppWindow.Closing += async (sender, args) =>
         {
-            _ = page.OpenPathAsync(initialPath);
-        }
+            if (_closeApproved) return;
+            args.Cancel = true;
+            if (RootFrame.Content is MainPage current && await current.ConfirmCloseAsync())
+            {
+                _closeApproved = true;
+                Close();
+            }
+        };
+
     }
+
+    public void OpenInitialPath(string path)
+    {
+        // Media and native pickers require an activated window, not constructor-time loading.
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, async () =>
+        {
+            if (RootFrame.Content is MainPage page) await page.OpenPathAsync(path);
+        });
+    }
+
+    private bool _closeApproved;
 
     private void SetInitialWindowBounds()
     {
         var displayArea = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Primary);
         var workArea = displayArea.WorkArea;
-        var width = Math.Min(1280, workArea.Width);
-        var height = Math.Min(900, workArea.Height);
+        var width = Math.Min(1440, workArea.Width);
+        var height = Math.Min(1000, workArea.Height);
 
         AppWindow.Resize(new SizeInt32(width, height));
         AppWindow.Move(new PointInt32(

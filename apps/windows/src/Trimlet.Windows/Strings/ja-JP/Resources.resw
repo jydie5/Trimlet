@@ -152,4 +152,31 @@
   <data name="ProxyPreviewSuffix" xml:space="preserve"><value>プロキシ再生</value></data>
   <data name="FrameTimingScanningSuffix" xml:space="preserve"><value>・実フレーム時刻を解析中…</value></data>
   <data name="FrameTimingReadySuffix" xml:space="preserve"><value>・実フレーム時刻{0}件</value></data>
+  <data name="ProjectMenu.Content" xml:space="preserve"><value>プロジェクト</value></data>
+  <data name="OpenProjectItem.Text" xml:space="preserve"><value>プロジェクトを開く…</value></data>
+  <data name="SaveAsProjectItem.Text" xml:space="preserve"><value>名前を付けて保存…</value></data>
+  <data name="SaveProjectButton.Content" xml:space="preserve"><value>保存</value></data>
+  <data name="TimelineFitButton.Content" xml:space="preserve"><value>全体</value></data>
+  <data name="ProjectUntitled" xml:space="preserve"><value>名称未設定</value></data>
+  <data name="ProjectCancel" xml:space="preserve"><value>キャンセル</value></data>
+  <data name="ProjectSave" xml:space="preserve"><value>保存</value></data>
+  <data name="ProjectDiscard" xml:space="preserve"><value>保存しない</value></data>
+  <data name="ProjectUnsavedTitle" xml:space="preserve"><value>変更を保存しますか？</value></data>
+  <data name="ProjectUnsavedMessage" xml:space="preserve"><value>続ける前にクリップと設定を保存します。</value></data>
+  <data name="ProjectSourceTitle" xml:space="preserve"><value>元動画を確認</value></data>
+  <data name="ProjectSourceChanged" xml:space="preserve"><value>保存時と元動画が異なります。この動画を使用するか、別の動画を選んでください。</value></data>
+  <data name="ProjectUseSource" xml:space="preserve"><value>この動画を使用</value></data>
+  <data name="ProjectRelink" xml:space="preserve"><value>動画を指定…</value></data>
+  <data name="ProjectErrorTitle" xml:space="preserve"><value>プロジェクトの処理に失敗しました</value></data>
+  <data name="ProjectSaveError" xml:space="preserve"><value>保存できません。空き容量と権限を確認し、動画と同じドライブに保存してください。既存のプロジェクトは置き換えていません。</value></data>
+  <data name="ProjectOpenError" xml:space="preserve"><value>プロジェクトを開けません。形式、元動画、保存した範囲を確認してください。</value></data>
+  <data name="TimelineAdjustIn" xml:space="preserve"><value>INを調整</value></data>
+  <data name="TimelineAdjustOut" xml:space="preserve"><value>OUTを調整</value></data>
+  <data name="TimelineSeek" xml:space="preserve"><value>再生位置を移動</value></data>
+  <data name="SourceClock" xml:space="preserve"><value>元動画</value></data>
+  <data name="SequenceClock" xml:space="preserve"><value>シーケンス</value></data>
+  <data name="TrimDraftTitle" xml:space="preserve"><value>現在のトリムを適用またはキャンセルしてください。</value></data>
+  <data name="TimelineFitRangeButton.Content" xml:space="preserve"><value>範囲に合わせる</value></data>
+  <data name="AccurateTimelineHint" xml:space="preserve"><value>正確モードは選択した範囲で書き出します</value></data>
+  <data name="ProjectAudioFallback" xml:space="preserve"><value>保存された音声が見つからないため、標準の音声を選びました。変更を残すには保存してください。</value></data>
 </root>

@@ -1,5 +1,9 @@
 # Mac verification record
 
+Windows developer results for the 2026-09-09 project/timeline adoption are kept
+separately in [the Windows return](../apps/windows/BUILD10_PARITY_RETURN.md).
+They do not change the Mac acceptance record below.
+
 ## Mac build 10 source-timeline interaction
 
 - Implemented: 2026-09-09

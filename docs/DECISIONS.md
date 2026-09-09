@@ -240,6 +240,17 @@ This log records decisions that define Trimlet. Change a decision by adding a ne
 
 ## Proposed decisions awaiting validation
 
+### Windows implementation follow-up — 2026-09-09
+
+Adopt shared project version 1 and build 10 timeline roles using native WinUI
+input and dialogs. Preserve rational endpoints on project save and Windows VFR
+navigation. Windows project saves use a flushed same-directory temporary file
+and atomic replacement; projects must be on the source drive for portable paths.
+Keep deployment source-only until the existing binary gate is completed.
+The README introduction shows the whole running app with original procedural
+footage; component-only renders remain supplemental. Actual results and pending
+human checks are recorded in `apps/windows/BUILD10_PARITY_RETURN.md`.
+
 ### P-001: Project structure
 
 Proposed modules:
