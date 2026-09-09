@@ -16,8 +16,8 @@
     <EnableWinAppRunSupport>false</EnableWinAppRunSupport>
     <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
     <DefaultLanguage>en-US</DefaultLanguage>
-    <VersionPrefix>0.3.0</VersionPrefix>
-    <VersionSuffix>early-access.1</VersionSuffix>
+    <VersionPrefix>0.4.0</VersionPrefix>
+    <VersionSuffix>beta.1</VersionSuffix>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -79,6 +79,16 @@
   </PropertyGroup>
 
   <!-- Publish Properties -->
+  <!-- Unpackaged publish does not automatically include the app's compiled PRI. -->
+  <Target Name="PublishApplicationResources" AfterTargets="ComputeFilesToPublish">
+    <Error Condition="!Exists('$(TargetDir)$(AssemblyName).pri')" Text="Compiled application resources are missing." />
+    <ItemGroup>
+      <ResolvedFileToPublish Include="$(TargetDir)$(AssemblyName).pri">
+        <RelativePath>$(AssemblyName).pri</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
   <PropertyGroup>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>

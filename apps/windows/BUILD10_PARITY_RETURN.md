@@ -3,6 +3,11 @@
 Date: 2026-09-09. Based on Mac commit `3c7befd`. Development source only;
 this is not a binary release or a new human-acceptance result.
 
+Follow-up: the owner subsequently requested an unsigned Windows binary beta.
+See [Beta download and limitations](BETA_DOWNLOAD.md) and
+[binary publication verification](BETA_RELEASE_VERIFICATION.md) for `v0.4.0-beta.1`.
+The original parity-check results below are historical and do not imply expanded human acceptance.
+
 ## Implemented
 
 - Shared `.trimlet` version 1, closed JSON with required fields and 8 MiB limits,

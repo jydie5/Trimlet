@@ -246,10 +246,22 @@ Adopt shared project version 1 and build 10 timeline roles using native WinUI
 input and dialogs. Preserve rational endpoints on project save and Windows VFR
 navigation. Windows project saves use a flushed same-directory temporary file
 and atomic replacement; projects must be on the source drive for portable paths.
-Keep deployment source-only until the existing binary gate is completed.
+At the time of this parity update, deployment remained source-only. The subsequent
+owner-authorized unsigned beta exception below changes that distribution boundary.
 The README introduction shows the whole running app with original procedural
 footage; component-only renders remain supplemental. Actual results and pending
 human checks are recorded in `apps/windows/BUILD10_PARITY_RETURN.md`.
+
+### Windows unsigned portable beta — 2026-09-09
+
+The owner explicitly requested a downloadable beta binary. Publish Windows x64
+as `v0.4.0-beta.1`, with .NET and Windows App SDK self-contained, trimming disabled,
+compiled app resources included, dependency licenses/inventory and SHA-256 hashes.
+FFmpeg remains external; no source media or developer cache enters the ZIP.
+Use a GitHub prerelease and disclose unsigned status and pending clean-machine,
+artwork, broad-media and expanded human verification. This is a scoped experimental
+distribution exception, not completion of the signed/production gate. Mac binary
+releases and numbering decisions remain with the Mac maintainer.
 
 ### P-001: Project structure
 

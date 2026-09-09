@@ -1,4 +1,12 @@
-# Trimlet for Windows — Early Access
+# Trimlet for Windows — Beta
+
+## Download
+
+[Windows 0.4.0-beta.1 x64 ZIP](https://github.com/jydie5/Trimlet/releases/download/v0.4.0-beta.1/Trimlet-0.4.0-beta.1-win-x64.zip) · [起動方法 / setup and limitations](BETA_DOWNLOAD.md).
+
+This unsigned portable beta includes .NET and Windows App SDK runtime files, but not FFmpeg. Extract the whole ZIP and run `Trimlet.Windows.exe`. The developer build instructions below are not required for downloaded binaries.
+
+Maintainers: `scripts/publish-windows-beta.ps1 -Dotnet <dotnet.exe>` creates the archive and checksums under ignored `dist/`, including upstream notices and dependency/file inventories. It refuses to overwrite an existing output folder.
 
 ## Current development update — 2026-09-09
 
@@ -21,7 +29,7 @@ These additions are development source, with new human acceptance pending.
 
 ## Status
 
-The Windows source tree implements the macOS `v0.3.0-beta.1` interaction contract, and the feature-focused human check was accepted on 2026-08-28. It remains an unpackaged, source-only Early Access build until distribution work is complete.
+The Windows source tree implements the macOS `v0.3.0-beta.1` interaction contract, and the feature-focused human check was accepted on 2026-08-28. The 0.4.0-beta.1 archive is an experimental binary; signing, clean-machine and expanded human acceptance are still pending.
 
 The app accepts supported media through a picker or drag and drop, provides Windows-native playback and seeking, inspects the source with `ffprobe`, and builds an ordered editing sequence from multiple non-overlapping IN/OUT ranges. Retained clips have stable editable names, representative thumbnails, explicit trim editing, reordering, deletion, undo/redo, and continuous sequence preview. M2TS/MTS sources and direct-playback failures use a validated, cancellable preview proxy while export continues to read the original source.
 

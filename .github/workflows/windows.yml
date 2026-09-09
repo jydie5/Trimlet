@@ -6,12 +6,14 @@ on:
       - "apps/windows/**"
       - "contracts/**"
       - "scripts/validate-contracts.ps1"
+      - "scripts/publish-windows-beta.ps1"
       - ".github/workflows/windows.yml"
   pull_request:
     paths:
       - "apps/windows/**"
       - "contracts/**"
       - "scripts/validate-contracts.ps1"
+      - "scripts/publish-windows-beta.ps1"
       - ".github/workflows/windows.yml"
   workflow_dispatch:
 
@@ -41,3 +43,6 @@ jobs:
         run: dotnet build apps/windows/src/Trimlet.Windows/Trimlet.Windows.csproj --configuration Release --runtime win-x64 --no-restore
       - name: Run Windows FFmpeg integration checks when tools are available
         run: dotnet run --project apps/windows/checks/Trimlet.IntegrationChecks/Trimlet.IntegrationChecks.csproj --configuration Release --no-restore
+      - name: Verify self-contained beta packaging
+        shell: pwsh
+        run: ./scripts/publish-windows-beta.ps1
