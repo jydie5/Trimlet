@@ -31,4 +31,4 @@ Retain useful historical files and links; removing them from the front page is n
 
 ## Remaining product gap
 
-The current Windows beta still requires external FFmpeg setup and is unsigned. Mac has no ready-to-run binary. Better documentation does not remove those barriers. A beginner-ready distribution needs separate implementation/release work; do not claim this documentation update completes that work.
+At the time of the documentation rewrite, Windows required manual FFmpeg setup. Beta 2 adds first-use consent and automatic upstream acquisition; it still requires initial internet access and remains unsigned. Mac has no ready-to-run binary. This separate implementation removes manual setup, not the remaining signing, offline-distribution and clean-machine verification gaps.

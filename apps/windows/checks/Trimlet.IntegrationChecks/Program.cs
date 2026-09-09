@@ -4,6 +4,13 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 var requireTools = args.Contains("--require-tools", StringComparer.OrdinalIgnoreCase);
+if (args.Contains("--prepare-video-tools", StringComparer.OrdinalIgnoreCase))
+{
+    Console.WriteLine("Explicit integration setup: downloading the pinned upstream video tools.");
+    await VideoToolSetup.InstallAsync(null, default);
+    Require(VideoToolSetup.IsInstalled, "Managed video-tool installation is incomplete.");
+    Console.WriteLine("PASS: verified download, safe extraction and atomic installation.");
+}
 var toolchain = FFmpegToolchain.Discover();
 if (toolchain is null)
 {
@@ -18,13 +25,15 @@ if (toolchain is null)
 }
 
 var checkRoot = Path.Combine(Path.GetTempPath(), $"Trimlet 日本語 'quote' 🎬 {Guid.NewGuid():N}");
+// Synthetic fixtures need libx264; it is not required in the app's LGPL toolchain.
+var fixtureFFmpeg = Environment.GetEnvironmentVariable("TRIMLET_TEST_FFMPEG") ?? toolchain.FFmpegPath;
 Directory.CreateDirectory(checkRoot);
 try
 {
     Console.WriteLine(await toolchain.VersionAsync());
     var sourcePath = Path.Combine(checkRoot, "synthetic source 日本語 🎬.mp4");
     var generation = await ProcessRunner.RunAsync(
-        toolchain.FFmpegPath,
+        fixtureFFmpeg,
         [
             "-hide_banner", "-loglevel", "error", "-y",
             "-f", "lavfi", "-i", "color=c=red:size=640x360:rate=30:duration=8",
@@ -54,7 +63,7 @@ try
 
     var vfrPath = Path.Combine(checkRoot, "variable frame rate.mp4");
     var vfrGeneration = await ProcessRunner.RunAsync(
-        toolchain.FFmpegPath,
+        fixtureFFmpeg,
         [
             "-hide_banner", "-loglevel", "error", "-y",
             "-f", "lavfi", "-i", "testsrc2=size=320x180:rate=30:duration=3",

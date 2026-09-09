@@ -77,7 +77,7 @@
   <data name="KeyframeCountFormat" xml:space="preserve"><value></value></data>
   <data name="FastCandidateFormat" xml:space="preserve"><value>Fast export range {0}–{1}</value></data>
   <data name="ToolchainMissingTitle" xml:space="preserve"><value>FFmpeg tools not found</value></data>
-  <data name="ToolchainMissingMessage" xml:space="preserve"><value>Playback remains available. Install ffmpeg and ffprobe on PATH, or set TRIMLET_FFMPEG and TRIMLET_FFPROBE, to inspect and export.</value></data>
+  <data name="ToolchainMissingMessage" xml:space="preserve"><value>Choose Video tools at the top to prepare the app. No manual configuration is needed.</value></data>
   <data name="InspectionUnavailable" xml:space="preserve"><value>Stream inspection requires ffprobe.</value></data>
   <data name="InspectionFailed" xml:space="preserve"><value>Detailed stream information is unavailable.</value></data>
   <data name="InspectionFailedTitle" xml:space="preserve"><value>Source inspection needs attention</value></data>
@@ -179,4 +179,17 @@
   <data name="TimelineFitRangeButton.Content" xml:space="preserve"><value>Fit range</value></data>
   <data name="AccurateTimelineHint" xml:space="preserve"><value>Accurate export uses the selected boundaries</value></data>
   <data name="ProjectAudioFallback" xml:space="preserve"><value>The saved audio stream is missing. The available default is selected; save to keep this change.</value></data>
+  <data name="VideoToolsButton.Content" xml:space="preserve"><value>Video tools</value></data>
+  <data name="VideoToolsTitle" xml:space="preserve"><value>Video tools and licenses</value></data>
+  <data name="VideoToolsConsent" xml:space="preserve"><value>Download about 71 MB of FFmpeg tools directly from BtbN's GitHub release. Internet is needed once. The distributor receives normal connection information, but no video is uploaded.&#10;This pinned build uses LGPL 3.0. Review the distributor and license terms; choose Agree and prepare to proceed. No manual configuration or administrator access is needed.</value></data>
+  <data name="VideoToolsPresent" xml:space="preserve"><value>Video tools are available. FFmpeg is independent of Trimlet. Manually selected tools retain their own license terms. The links below describe the automatic-download build.</value></data>
+  <data name="VideoToolsDistributor" xml:space="preserve"><value>Distributor and version</value></data>
+  <data name="VideoToolsBuildSource" xml:space="preserve"><value>Distributor build scripts and dependencies</value></data>
+  <data name="VideoToolsLocalLicense" xml:space="preserve"><value>Open downloaded license</value></data>
+  <data name="VideoToolsDownload" xml:space="preserve"><value>Agree and prepare</value></data>
+  <data name="VideoToolsPreparing" xml:space="preserve"><value>Preparing video tools</value></data>
+  <data name="VideoToolsReady" xml:space="preserve"><value>Ready. Open a video to start editing</value></data>
+  <data name="VideoToolsCancelled" xml:space="preserve"><value>Setup cancelled</value></data>
+  <data name="VideoToolsFailed" xml:space="preserve"><value>Could not prepare video tools</value></data>
+  <data name="VideoToolsRetry" xml:space="preserve"><value>Check your connection and retry from Video tools. If the upstream asset is removed or verification fails, check for a newer Trimlet release.</value></data>
 </root>

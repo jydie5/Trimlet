@@ -6,6 +6,8 @@ The Trimlet source repository does not include FFmpeg, ffprobe, codec libraries,
 
 ## FFmpeg and ffprobe
 
+Windows Beta 2 offers user-initiated acquisition directly from BtbN's GitHub release. Trimlet release archives still contain no FFmpeg executable or library. The pinned acquired package is LGPL 3.0 (not LGPL 2.1); its upstream LICENSE.txt and other files are retained unmodified. The in-app Video tools dialog identifies the distributor, version, license and source/build links before download, and exposes the local license afterward. See [acquisition record](docs/legal/VIDEO_TOOL_ACQUISITION.md). No FFmpeg ownership or endorsement is claimed; users may replace it with their own installation. These notices do not waive upstream terms or establish codec patent clearance.
+
 The macOS and Windows implementations launch separately installed `ffmpeg` or `ffprobe` executables as external processes. FFmpeg is an independent project and is available under LGPL and, depending on build configuration, GPL terms.
 
 ## Windows portable beta runtime dependencies

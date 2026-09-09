@@ -6,20 +6,21 @@ This guide is for using the Windows app without writing code.
 
 ## 1. Get the app
 
-[Download the Windows ZIP](https://github.com/jydie5/Trimlet/releases/download/v0.4.0-beta.1/Trimlet-0.4.0-beta.1-win-x64.zip), right-click it and choose **Extract All**. Keep all extracted files together; do not run from inside the ZIP.
+[Download the Windows ZIP](https://github.com/jydie5/Trimlet/releases/download/v0.4.0-beta.2/Trimlet-0.4.0-beta.2-win-x64.zip), right-click it and choose **Extract All**. Keep all extracted files together; do not run from inside the ZIP.
 
 This is an experimental x64 build, tested on the developer's Windows 11 machine. Windows 10 and ARM acceptance are not completed. There is no ready-to-run Mac download yet.
 
-## 2. Add the video tools
+## 2. Prepare the video tools once
 
-The current beta does not include FFmpeg. **No programming or PowerShell command is required, but adding files is necessary.**
+Run `Trimlet.Windows.exe` and choose **Video tools** at the top.
 
-1. Visit the [FFmpeg download page](https://ffmpeg.org/download.html). Under **Windows EXE Files**, follow a listed provider, not the “Download Source Code” link. These compiled builds are supplied by third parties.
-2. Download and extract a Windows x64 build. A **static** build avoids needing additional FFmpeg DLLs for this procedure.
-3. Find `ffmpeg.exe` and `ffprobe.exe`, usually under `bin`, and copy them into the same folder as `Trimlet.Windows.exe`.
-4. Read the provider's terms and retain its license documents. These are personal setup instructions, not permission to redistribute Trimlet with FFmpeg bundled.
+1. Review the distributor (BtbN's GitHub release) and license shown in the app.
+2. Choose **Agree and prepare** to download about 71 MB of FFmpeg tools.
+3. When setup completes, open a video and start editing.
 
-An existing FFmpeg installation may already work. If you are unsure, [ask for help](https://github.com/jydie5/Trimlet/issues/new?template=bug_report.yml).
+**No command, manual file placement or administrator access is needed.** Initial setup needs internet access; editing afterward can be offline. GitHub receives normal connection information, but no video is sent. Cancellation stops setup. An existing usable FFmpeg installation may avoid the download. Review licenses later through Video tools.
+
+Downloads can fail if the pinned upstream package is removed or the connection fails. Trimlet does not silently select a different version; retry or check for a newer Trimlet release.
 
 ## 3. Make your first edit
 
@@ -42,10 +43,10 @@ Use **Save** to create a `.trimlet` project and **Project → Open project** to 
 
 - **Unknown publisher warning:** this beta is unsigned. Check that you obtained it from the release linked above, not an unknown provider. Do not disable security features. Stop if you are unsure.
 - **A .NET installation prompt:** extract the entire current ZIP and avoid mixing it with an old EXE or a developer build.
-- **FFmpeg not found:** check that both executables are beside the Trimlet EXE, then restart Trimlet.
+- **FFmpeg not found:** choose Video tools to prepare it. On failure, check your connection and retry, or report the problem.
 - **Video will not open or export:** some formats are unsupported. Try a short video first.
 - **Report a problem:** include your Windows and Trimlet versions, what you tried and what happened in a [bug report](https://github.com/jydie5/Trimlet/issues/new?template=bug_report.yml). “Unknown” is fine where needed. Do not attach private videos or identifying screenshots.
 
 Back up important videos and projects. Broad testing across machines and media is not complete.
 
-[Release details](https://github.com/jydie5/Trimlet/releases/tag/v0.4.0-beta.1) · [Distribution terms and limitations](../apps/windows/BETA_DOWNLOAD.md)
+[Release details](https://github.com/jydie5/Trimlet/releases/tag/v0.4.0-beta.2) · [Distribution terms and limitations](../apps/windows/BETA_DOWNLOAD.md)

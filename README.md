@@ -12,9 +12,9 @@ Trimlet is a small desktop video trimmer. Choose several ranges from one video, 
 
 ## Download and use
 
-**[Download for Windows (x64 ZIP)](https://github.com/jydie5/Trimlet/releases/download/v0.4.0-beta.1/Trimlet-0.4.0-beta.1-win-x64.zip)** · [Getting started](docs/user-guide.md)
+**[Download for Windows (x64 ZIP)](https://github.com/jydie5/Trimlet/releases/download/v0.4.0-beta.2/Trimlet-0.4.0-beta.2-win-x64.zip)** · [Getting started](docs/user-guide.md)
 
-Windows **0.4.0 Beta 1** is an experimental release. It includes .NET, but **requires FFmpeg to be added separately**. It is unsigned and has not completed clean-machine testing. Read the setup guide before downloading if you are unfamiliar with adding application files.
+Windows **0.4.0 Beta 2** includes .NET. Choose **Video tools → Agree and prepare** on first use to download the video tools; no command or manual file setup is needed. This requires an internet connection and agreement to the displayed upstream terms. It remains an unsigned experimental release without clean-machine certification.
 
 For **macOS**, there is no ready-to-run download yet. The source is available for people who can build it themselves; see [development setup](DEVELOPING.md). A GitHub “Source code” ZIP is not an installable app.
 

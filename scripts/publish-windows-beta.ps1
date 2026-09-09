@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [string]$Dotnet = 'dotnet',
-    [string]$Version = '0.4.0-beta.1'
+    [string]$Version = '0.4.0-beta.2'
 )
 $ErrorActionPreference = 'Stop'
 if ($Version -notmatch '^\d+\.\d+\.\d+-beta\.\d+$') { throw 'Expected a beta version.' }

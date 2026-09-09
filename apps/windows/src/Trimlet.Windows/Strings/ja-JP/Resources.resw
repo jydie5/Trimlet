@@ -77,7 +77,7 @@
   <data name="KeyframeCountFormat" xml:space="preserve"><value></value></data>
   <data name="FastCandidateFormat" xml:space="preserve"><value>高速書き出し範囲 {0}–{1}</value></data>
   <data name="ToolchainMissingTitle" xml:space="preserve"><value>FFmpegツールが見つかりません</value></data>
-  <data name="ToolchainMissingMessage" xml:space="preserve"><value>再生はできます。解析・書き出しにはffmpegとffprobeをPATHへ追加するか、TRIMLET_FFMPEGとTRIMLET_FFPROBEを設定してください。</value></data>
+  <data name="ToolchainMissingMessage" xml:space="preserve"><value>上部の「動画ツール」から初回の準備をしてください。手動設定は不要です。</value></data>
   <data name="InspectionUnavailable" xml:space="preserve"><value>ストリーム解析にはffprobeが必要です。</value></data>
   <data name="InspectionFailed" xml:space="preserve"><value>詳しいストリーム情報を取得できませんでした。</value></data>
   <data name="InspectionFailedTitle" xml:space="preserve"><value>元動画の解析を確認してください</value></data>
@@ -179,4 +179,17 @@
   <data name="TimelineFitRangeButton.Content" xml:space="preserve"><value>範囲に合わせる</value></data>
   <data name="AccurateTimelineHint" xml:space="preserve"><value>正確モードは選択した範囲で書き出します</value></data>
   <data name="ProjectAudioFallback" xml:space="preserve"><value>保存された音声が見つからないため、標準の音声を選びました。変更を残すには保存してください。</value></data>
+  <data name="VideoToolsButton.Content" xml:space="preserve"><value>動画ツール</value></data>
+  <data name="VideoToolsTitle" xml:space="preserve"><value>動画ツールとライセンス</value></data>
+  <data name="VideoToolsConsent" xml:space="preserve"><value>解析・書き出しに使うFFmpegを、BtbNのGitHub配布ページから約71MB取得します。初回だけ通信が必要です。配布元には通常の接続情報が送られますが、動画は送信しません。&#10;この固定版はLGPL 3.0構成です。配布元・ライセンスを確認し、同意する場合は「同意して準備する」を押してください。手動設定や管理者権限は不要です。</value></data>
+  <data name="VideoToolsPresent" xml:space="preserve"><value>動画ツールは利用可能です。FFmpegはTrimletとは独立したソフトウェアです。自分で指定した版には、その版のライセンス条件が適用されます。以下は自動取得対象の配布元と条件です。</value></data>
+  <data name="VideoToolsDistributor" xml:space="preserve"><value>取得元・バージョンを確認</value></data>
+  <data name="VideoToolsBuildSource" xml:space="preserve"><value>配布元のビルド手順・依存ライブラリ</value></data>
+  <data name="VideoToolsLocalLicense" xml:space="preserve"><value>取得済みライセンスを開く</value></data>
+  <data name="VideoToolsDownload" xml:space="preserve"><value>同意して準備する</value></data>
+  <data name="VideoToolsPreparing" xml:space="preserve"><value>動画ツールを準備しています</value></data>
+  <data name="VideoToolsReady" xml:space="preserve"><value>準備できました。動画を開いて編集できます</value></data>
+  <data name="VideoToolsCancelled" xml:space="preserve"><value>準備をキャンセルしました</value></data>
+  <data name="VideoToolsFailed" xml:space="preserve"><value>動画ツールを準備できませんでした</value></data>
+  <data name="VideoToolsRetry" xml:space="preserve"><value>通信を確認して「動画ツール」から再試行してください。配布元での削除や検証失敗の場合は、最新版のTrimletを確認してください。</value></data>
 </root>

@@ -31,11 +31,11 @@ public sealed partial class MainPage : Page
     private readonly DispatcherTimer _positionTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
     private readonly DispatcherTimer _reverseShuttleTimer = new() { Interval = TimeSpan.FromMilliseconds(33) };
     private readonly ResourceLoader _resources = new();
-    private readonly FFmpegToolchain? _toolchain;
-    private readonly MediaInspector? _inspector;
-    private readonly ExportService? _exportService;
-    private readonly ThumbnailService? _thumbnailService;
-    private readonly PreviewProxyService? _proxyService;
+    private FFmpegToolchain? _toolchain;
+    private MediaInspector? _inspector;
+    private ExportService? _exportService;
+    private ThumbnailService? _thumbnailService;
+    private PreviewProxyService? _proxyService;
     private readonly ObservableCollection<ClipCardItem> _clipItems = [];
     private readonly Dictionary<Guid, ImageSource> _thumbnailImages = [];
     private readonly List<FrameworkElement> _retainedRangeMarkers = [];
