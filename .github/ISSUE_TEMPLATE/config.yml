@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: はじめて使う方へ / Getting started
+    url: https://github.com/jydie5/Trimlet/blob/main/docs/user-guide.ja.md
+    about: ダウンロード・準備・基本操作 / Download, setup and basic use
+  - name: 自分用に改造する / Develop your fork
+    url: https://github.com/jydie5/Trimlet/blob/main/DEVELOPING.ja.md
+    about: コードの場所・ビルド・AIへの依頼例 / Code map, build and AI task example

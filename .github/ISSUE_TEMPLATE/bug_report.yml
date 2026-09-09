@@ -1,44 +1,45 @@
-name: Bug report
-description: Report reproducible Trimlet behavior without attaching private media.
+name: 不具合・使い方の相談 / Bug or help
+description: コードの知識は不要です。日本語・英語で報告できます。No coding knowledge needed.
 title: "[Bug] "
 labels: ["bug"]
 body:
   - type: dropdown
     id: platform
     attributes:
-      label: Platform
-      options: ["macOS", "Windows", "Shared contract"]
+      label: お使いのOS / Platform
+      options: ["Windows", "macOS", "不明・その他 / Unknown or other"]
     validations:
       required: true
   - type: input
     id: version
     attributes:
-      label: Revision or version
+      label: Trimletのバージョン / Trimlet version
+      description: ダウンロードした版。わからなければ「不明」で構いません。Unknown is fine.
     validations:
       required: true
   - type: textarea
     id: description
     attributes:
-      label: What happened?
+      label: 起きたこと・困っていること / What happened?
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
-      label: Reproduction steps
-      description: Use synthetic media or describe stream properties. Do not upload private video.
+      label: 直前にした操作 / What did you do?
+      description: 覚えている範囲で操作や表示内容を書いてください。個人の動画は添付しないでください。Describe what you remember; do not upload private video.
     validations:
       required: true
   - type: textarea
     id: expected
     attributes:
-      label: Expected behavior
+      label: やりたかったこと / What did you want to do?
     validations:
       required: true
   - type: checkboxes
     id: safety
     attributes:
-      label: Safety check
+      label: 公開前の確認 / Privacy check
       options:
-        - label: I removed private paths, personal media, and secrets.
+        - label: 個人の動画・名前・私的なファイルパス・秘密情報を含めていません。No private media, identifying paths or secrets included.
           required: true

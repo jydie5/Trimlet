@@ -1,5 +1,9 @@
 # Windows Beta 1 — 0.4.0-beta.1
 
+[はじめて使う方へ（コード不要の手順）](../../docs/user-guide.ja.md) / [First-time setup without coding](../../docs/user-guide.md).
+
+This page records version-specific distribution requirements. Existing release ZIPs retain the documentation bundled at publication time; the current user guides above may be clearer or newer.
+
 ## 起動 / Run
 
 1. `Trimlet-0.4.0-beta.1-win-x64.zip` をフォルダーごと展開します。
@@ -16,10 +20,6 @@ Extract the entire ZIP and run `Trimlet.Windows.exe`. Keep the accompanying file
 - Expanded gesture/DPI/theme, source-relink cases, and broad real-media/HDR/interlaced testing remain pending. Back up important projects and verify exported files.
 - `LICENSE`, `THIRD_PARTY_NOTICES.md`, `licenses/`, `dependency-inventory.json` (resolved build and runtime packages), and `file-manifest.json` are included. The inventory is not a certification or a standardized SPDX/CycloneDX SBOM.
 - Bundled Microsoft components are provided under their accompanying terms in `licenses/`, not under Trimlet's MIT license. Use and redistribution of those components require agreement to those terms. Read them before using or redistributing the archive.
-
-## Demo footage / デモ動画
-
-The README screenshot uses original synthetic footage, not a downloadable tutorial video. [Generation instructions / 生成手順](https://github.com/jydie5/Trimlet/blob/main/docs/WINDOWS_DEMO.md).
 
 ## Source and feedback
 
