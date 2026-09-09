@@ -1,12 +1,14 @@
-# Trimlet for Windows — Beta
+# Windows development
 
-## Download
+## Looking for the app?
 
-[Windows 0.4.0-beta.1 x64 ZIP](https://github.com/jydie5/Trimlet/releases/download/v0.4.0-beta.1/Trimlet-0.4.0-beta.1-win-x64.zip) · [起動方法 / setup and limitations](BETA_DOWNLOAD.md).
+[Windows 0.4.0-beta.1 x64 ZIP](https://github.com/jydie5/Trimlet/releases/download/v0.4.0-beta.1/Trimlet-0.4.0-beta.1-win-x64.zip) · [はじめて使う方へ](../../docs/user-guide.ja.md) / [User guide](../../docs/user-guide.md).
 
 This unsigned portable beta includes .NET and Windows App SDK runtime files, but not FFmpeg. Extract the whole ZIP and run `Trimlet.Windows.exe`. The developer build instructions below are not required for downloaded binaries.
 
 Maintainers: `scripts/publish-windows-beta.ps1 -Dotnet <dotnet.exe>` creates the archive and checksums under ignored `dist/`, including upstream notices and dependency/file inventories. It refuses to overwrite an existing output folder.
+
+The rest of this page is for developers. Start with [the development guide](../../DEVELOPING.md) / [開発・改造ガイド](../../DEVELOPING.ja.md) for the code map and Mac setup.
 
 ## Current development update — 2026-09-09
 
@@ -37,7 +39,9 @@ Fast mode plans a keyframe-compatible candidate for every retained clip, stream-
 
 Start with [the human-check guide](HUMAN_CHECK.md). Maintainers should also read [the Windows implementation handover](handover.md).
 
-## Run Early Access
+## Run from source
+
+Prerequisites: a Windows development environment, .NET SDK 10.0.400 and separately installed FFmpeg/ffprobe. The target declares Windows 10 build 17763 as its minimum, but the published beta has only been smoke-tested on the developer's Windows 11 machine.
 
 From the repository root in PowerShell:
 
@@ -55,7 +59,7 @@ The current source has caught up with the accepted macOS Beta interaction and pr
 
 The remaining Early Access limitations are release and coverage gates rather than known Mac-baseline feature gaps:
 
-- There is no installer, MSIX, code signature, or supported prebuilt executable.
+- The x64 portable beta is available, but there is no installer, MSIX or code signature. Clean-machine acceptance remains pending.
 - Long, damaged-GOP, HDR, interlaced, and cancellation cases still need broader representative-media checks on Windows machines.
 
 ## Recommended native stack
@@ -66,7 +70,7 @@ The remaining Early Access limitations are release and coverage gates rather tha
 - `ffprobe` and FFmpeg as managed child processes for media inspection and export parity
 - `.resw` resources for English and Japanese user-facing text from the first change
 
-Pin exact SDK and package versions in the first Windows implementation change. Do not silently depend on a developer-machine FFmpeg build in distributable artifacts.
+SDK and package versions are pinned in `global.json` and project files. Do not silently depend on a developer-machine FFmpeg build in distributable artifacts.
 
 ## Implemented Windows slice
 

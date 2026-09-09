@@ -1,24 +1,24 @@
-name: Feature request
-description: Propose behavior for one or both native applications.
+name: 機能のリクエスト / Feature request
+description: できるようになってほしいことを教えてください。Tell us what you want to do.
 title: "[Feature] "
 labels: ["enhancement"]
 body:
   - type: dropdown
     id: scope
     attributes:
-      label: Scope
-      options: ["Shared behavior", "macOS", "Windows", "Unsure"]
+      label: 対象 / Platform
+      options: ["Windows", "macOS", "両方 / Both", "わからない / Unsure"]
     validations:
       required: true
   - type: textarea
     id: problem
     attributes:
-      label: User problem
+      label: いま困っていること / What is difficult today?
     validations:
       required: true
   - type: textarea
     id: proposal
     attributes:
-      label: Proposed result
+      label: できるようになってほしいこと / Desired result
     validations:
       required: true
