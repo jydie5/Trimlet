@@ -1,7 +1,7 @@
 # Trimlet Mac/Windows platform contract
 
-- Status: Draft 0.2
-- Updated: 2026-08-24
+- Status: Draft 0.4; build 10 timeline behavior implemented in the Mac development candidate
+- Updated: 2026-09-09
 - Purpose: Keep separately implemented Mac and Windows applications behaviorally aligned in one monorepo.
 
 ## 1. Boundary of this contract
@@ -30,6 +30,8 @@ Both implementations use these concepts and labels:
 | Fast mode | 高速 | Video stream copy where compatible; cut may follow keyframe constraints and audio may require conversion |
 | Accurate mode | フレーム正確 | Timestamp-prioritized export; re-encode when required |
 | Proxy | プロキシ | Temporary preview media; never the final export source |
+| Project | プロジェクト | Portable `.trimlet` JSON containing persistent edit decisions and a relative source reference |
+| Relink | 再リンク | Explicitly selecting a moved or changed source for a saved project |
 
 Names in source code may follow language conventions, but user-visible behavior and documentation must map back to these concepts.
 
@@ -53,8 +55,41 @@ Both platforms must support the same primary flow:
 14. Distinguish a valid uncommitted IN/OUT draft from retained clips by both fill semantics and boundary style; committing changes the draft presentation into the retained presentation.
 15. Run keyframe inspection without a modal panel once playable media is visible, while keeping its state visible near the source timeline.
 16. Provide J/K/L shuttle semantics and continuous scrubbing with a precise final seek. Native playback mechanisms may differ, but direction, bounded speed changes, stop behavior, and displayed position must agree.
+17. Save persistent edit decisions to `.trimlet`, warn before discarding unsaved changes, and restore a project later.
+18. Resolve the stored relative source reference automatically only when its identity hints match; otherwise request an explicit relink or continue decision.
 
 The first Mac and Windows releases may differ visually, but neither should introduce a different editing model.
+
+### Source timeline interaction (build 10)
+
+The source timeline has one time axis and two semantic lanes. The upper ruler
+lane contains a white downward-triangle playhead and is the seek surface. The
+lower lane contains one true-coordinate IN/OUT range; a valid draft is purple
+with a dashed boundary and a retained range is blue. IN is the green left
+boundary and OUT is the red right boundary. The Mac geometry is specified as an
+84 pt surface (`0–38 pt` upper lane, `40–72 pt` lower lane) with 24 pt
+horizontal content gutters. Windows may choose different dimensions but must
+preserve these roles and separation.
+
+Boundary grips are outward and same-height. Their hit intervals are exclusive:
+IN is `[xIN-24 pt,xIN)` and OUT is `[xOUT,xOUT+24 pt)`. Hit testing latches the
+target at pointer-down. A boundary gesture changes only that boundary and uses
+pointer translation from the initial boundary so padded grips do not jump. Any
+other click or drag seeks only the playhead; there is no whole-range slip gesture
+in this milestone. A very short range remains at its true time coordinates and
+must not be given a fake minimum width.
+
+`I`/`INを設定` and `O`/`OUTを設定` set the current position without requiring
+playback. If a new IN would invalidate an existing OUT, the OUT is cleared and
+the invalid state is made visible. Two-finger trackpad seeking remains a seek
+gesture. Hover and drag feedback should identify whether the target is the
+playhead, IN, or OUT and show its time where the platform permits.
+
+This interaction contract is canonical in
+[`docs/TIMELINE_INTERACTION_2026-09-09.md`](TIMELINE_INTERACTION_2026-09-09.md)
+and supersedes the build 9 split-row geometry. It is a presentation/input
+change only: the `.trimlet` schema, source timestamps, export modes, and
+contiguous editing-sequence model are unchanged.
 
 ## 4. Shared media contract
 
@@ -89,28 +124,21 @@ Platform hardware encoders may produce different binary output. Behavioral parit
 - For variable-frame-rate sources, frame display is informational; saved edit boundaries remain timestamp-based.
 - Seeking and range validation clamp positions to `[0, sourceDuration]`.
 
-If a shared project JSON format is added, timestamps should be represented as an integer value plus integer timescale to avoid floating-point drift:
+Project interchange is frozen at schema version 1 in `contracts/project.schema.json`. Canonical examples and rejected cases live in `contracts/fixtures/project-cases.json`.
 
-```json
-{
-  "schemaVersion": 1,
-  "source": {
-    "pathHint": "example.m2ts",
-    "sizeBytes": 123456789,
-    "modifiedAt": "2026-08-14T00:00:00Z"
-  },
-  "segments": [
-    {
-      "id": "intro",
-      "in": { "value": 60000, "timescale": 60000 },
-      "out": { "value": 660000, "timescale": 60000 }
-    }
-  ],
-  "exportMode": "fast"
-}
-```
+### Project persistence contract
 
-The sample is a compatibility direction, not a frozen schema until the project-save feature is accepted.
+- The file extension is `.trimlet`; the document is UTF-8 JSON.
+- `source.pathHint` uses `/` separators and is relative to the project document. It may use `..` so a `Projects` folder can refer to a sibling `Media` folder. Persisted absolute paths are forbidden.
+- `source.sizeBytes` and ISO-8601 `source.modifiedAt` are identity hints, not authentication or content hashes.
+- `editList.segments` is the explicit output order. IDs are unique UUIDs; timestamps use non-negative integer `value` and positive integer `timescale`; OUT remains exclusive.
+- Equivalent fractions compare as the same source time, but an unchanged project preserves each stored timestamp pair on round-trip rather than silently reducing or rescaling it.
+- `settings` persists Fast/Accurate and the selected audio stream identity.
+- Draft IN/OUT, playhead, thumbnails, proxies, undo/redo history, output paths, and generated files are session-only.
+- Project writes are atomic. Unsupported schema versions and invalid edit lists fail closed with a recoverable message.
+- Project codecs reject unknown fields, refuse to read or write documents larger than 8 MiB, and apply the read limit before loading the complete file; a new persisted field therefore requires a new schema version and migration decision.
+- When the hinted source is missing, the app asks for a relink. When a candidate exists but identity hints differ, it warns before using it. Relink never changes or copies the source.
+- A relink or missing saved audio stream makes the restored project dirty so Save updates the persisted reference/selection.
 
 ## 6. Export behavior contract
 
@@ -156,6 +184,8 @@ Implementations should map platform-specific errors into these user-facing categ
 | Category | Expected user action |
 |---|---|
 | Source unreadable | Check access, file existence, or damage |
+| Project unreadable | Check schema/version or choose another `.trimlet` document |
+| Source relink required | Locate the expected source or cancel opening the project |
 | Unsupported streams | Review detected codecs or create a proxy |
 | Proxy failed | View diagnostics, free space, or retry |
 | Invalid range | Put IN before OUT |
@@ -194,6 +224,8 @@ Mac and Windows builds should run the same behavioral scenarios using equivalent
 9. Repeat key scenarios with paths containing spaces, Japanese text, quotes, and emoji.
 10. Create three retained ranges, reorder them, continuously preview them, and export one combined MP4 in both modes.
 11. Select a non-default source audio stream and verify the combined output uses it.
+12. Save renamed and reordered clips, close the app, reopen the `.trimlet` file, and verify persistent state exactly.
+13. Move the source and verify explicit relink; replace it with a different-duration file and verify invalid ranges are rejected.
 
 Each platform records open-to-usable time, seek time, frame-step time, peak memory, export speed, A/V sync, and cut-boundary difference. Results may differ, but failures and accepted tolerances must be documented.
 

@@ -1,14 +1,14 @@
 # Trimlet product requirements
 
-- Status: Draft 0.2
-- Updated: 2026-08-25
-- Target: Shared product behavior and the native Mac multi-range milestone
+- Status: Draft 0.4; build 10 timeline implemented in the Mac development candidate
+- Updated: 2026-09-09
+- Target: Shared product behavior and native project persistence, implemented on Mac first
 
 ## 1. Product definition
 
 Trimlet is a focused native desktop utility for quickly extracting one or more useful sections from one large video file. It combines simple IN/OUT marking with an ordered edit list and two export modes: fast video stream-copy cutting and frame-accurate encoding.
 
-The Windows version is planned as a separate implementation by another team member. Unless a requirement is explicitly labeled Mac-only, functional behavior in this document is the shared product target for both platforms. Platform-specific implementation details are defined separately.
+The Windows version is a separate native implementation maintained by another team member. Unless a requirement is explicitly labeled Mac-only, functional behavior in this document is the shared product target for both platforms. Platform-specific implementation details are defined separately.
 
 The product is successful when a user can open a multi-gigabyte recording, collect several useful ranges without learning a full video editor, preview their sequence, and obtain one usable MP4 without risking the source file.
 
@@ -63,6 +63,7 @@ Requirement keywords follow MUST, SHOULD, and MAY.
 - FR-010: The app MUST provide play and pause.
 - FR-011: The app MUST provide timeline seeking and scrubbing.
 - FR-011A: During continuous slider scrubbing, preview seeks SHOULD be coalesced and may use a bounded tolerance for responsiveness. Releasing the slider MUST perform an exact seek to the displayed timestamp.
+- FR-011B: The source timeline MUST present the current playhead in an upper ruler lane and the selected IN/OUT range in one lower lane. Non-handle clicks and drags MUST seek only the playhead; exclusive boundary grips MUST change only their latched boundary. The build 10 geometry, hit areas, and drag semantics are canonical in [`TIMELINE_INTERACTION_2026-09-09.md`](TIMELINE_INTERACTION_2026-09-09.md).
 - FR-012: The app MUST step one displayed frame forward and backward.
 - FR-013: Left and Right Arrow MUST step one frame while paused.
 - FR-014: The app MUST display current position and total duration.
@@ -80,6 +81,7 @@ Requirement keywords follow MUST, SHOULD, and MAY.
 - FR-022: The app MUST maintain an editing sequence containing zero or more ordered clips.
 - FR-023: Every retained range MUST be visible on the source timeline and as a compact clip card in the editing sequence.
 - FR-023C: A valid draft IN/OUT range MUST use a distinct fill and dashed boundary until committed. A successful Add MUST replace that draft presentation with the retained-range presentation. Color MUST NOT be the only state cue.
+- FR-023D: The source timeline MUST draw a draft range at its true time coordinates without a fake minimum visual width. IN and OUT grips MUST remain independently targetable for narrow ranges through outward, non-overlapping hit areas and horizontal content gutters. A successful IN or OUT command MUST record the current position without starting playback; an invalid command MUST explain what to change.
 - FR-023A: Every new clip MUST receive a stable default name derived from source identity and its initial IN point. The user MUST be able to rename it. Reordering and trimming MUST preserve that name.
 - FR-023B: A clip card MUST NOT display a redundant sequence-position number; its horizontal placement already communicates sequence order.
 - FR-024: A segment MUST be rejected when IN is not earlier than OUT, lies outside the source, or overlaps another retained source range.
@@ -142,6 +144,18 @@ Requirement keywords follow MUST, SHOULD, and MAY.
 - FR-072: Relaunch after a crash MUST NOT damage the source or a previously completed output.
 - FR-073: Temporary files from interrupted work SHOULD be detected and offered for cleanup.
 
+### 5.8 Project save and resume
+
+- FR-080: The app MUST save the source reference, ordered retained clips, stable clip IDs and names, integer IN/OUT timestamps, export mode, and selected audio stream to a portable `.trimlet` JSON document.
+- FR-081: The app MUST restore the saved clip order, names, boundaries, export mode, and audio selection without changing the source file.
+- FR-082: Source paths MUST be stored as `/`-separated paths relative to the project document. Absolute local paths MUST NOT be written to the project.
+- FR-083: Source size and modification time MUST be stored as identity hints. If the source is missing or changed, the app MUST request an explicit relink or continue decision.
+- FR-084: A relinked source MUST be validated against every saved range before the project is treated as restored. A changed source reference MUST leave the project marked unsaved until saved again.
+- FR-085: Project writes MUST be atomic. Invalid schema versions, unknown fields, documents larger than 8 MiB, invalid timestamps, duplicate clip IDs, invalid ranges, and overlapping ranges MUST be rejected without crashing.
+- FR-086: Opening another video/project and terminating the app MUST warn when persisted project state has unsaved changes, with Save, Don't Save, and Cancel choices.
+- FR-087: Draft IN/OUT, playhead, thumbnails, proxies, undo/redo history, export destinations, and generated files MUST NOT be stored in the project document.
+- FR-088: macOS and Windows MUST consume the same `contracts/project.schema.json` format and fixtures. Native dialogs and storage APIs remain platform-specific.
+
 ## 6. Non-functional requirements
 
 ### Performance
@@ -174,7 +188,7 @@ Requirement keywords follow MUST, SHOULD, and MAY.
 
 ## 7. MVP acceptance scenarios
 
-The MVP is complete only when all applicable scenarios pass on an Apple silicon Mac:
+The product milestone is complete on a platform only when all applicable scenarios pass there. The current Mac 0.4 gate runs on an Apple silicon Mac; Windows records equivalent evidence through its native implementation and handover:
 
 1. Open a 5 GB or larger H.264 MP4, play it, scrub it, and step in both directions without loading the full file into memory.
 2. Open a 4K HEVC MOV/MP4 and perform the primary workflow with usable playback.
@@ -188,6 +202,9 @@ The MVP is complete only when all applicable scenarios pass on an Apple silicon 
 10. Export the same three ranges in Fast mode, see the candidate boundary difference for each range, and verify the combined output order and duration.
 11. Select a non-default audio stream from a multi-audio source and confirm that the chosen stream is present in the combined output.
 12. Add, update, remove, reorder, undo, and redo ranges without changing the source file or losing playback responsiveness.
+13. Save three renamed/reordered ranges as `.trimlet`, quit and reopen it, then verify clip identity/order, exact timestamps, export mode, and audio selection.
+14. Move or replace the source, open the project, relink explicitly, and verify that out-of-range or mismatched state is not silently accepted.
+15. On Mac, set IN while paused, seek with the upper timeline lane, set OUT without playing, and adjust a normal and very short range. Confirm that non-handle drags seek only, padded boundary grips do not jump, and IN/OUT remain independently targetable.
 
 ## 8. Explicitly out of scope for MVP
 
@@ -202,6 +219,7 @@ The MVP is complete only when all applicable scenarios pass on an Apple silicon 
 - Sharing native UI, playback, or hardware-encoder source code between macOS and Windows. The Windows application lives in this repository but remains a separate native implementation.
 - Linux, Intel Mac, iPhone, and iPad builds.
 - Plug-in architecture.
+- The build 10 source-timeline interaction does not add whole-range slipping, hover-skimming, or arbitrary sequence-time placement.
 
 ## 9. Validation media matrix
 
@@ -223,6 +241,7 @@ For each representative file, record open-to-usable time, seek time, forward and
 
 - All MUST requirements and acceptance scenarios pass or have a documented platform limitation.
 - A clean Mac can build the project using documented steps.
+- A clean Windows machine can build the Windows project using its documented toolchain before a Windows binary release.
 - Automated tests cover media inspection parsing, export planning, timestamp/range validation, and process cancellation.
 - At least the validation media matrix has a recorded test report without committing copyrighted test media.
 - FFmpeg build configuration, license notices, source-offer obligations, and redistribution method are documented.

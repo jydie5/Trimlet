@@ -32,6 +32,13 @@ public struct EditSegment: Identifiable, Codable, Hashable, Sendable {
         )
     }
 
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case inPoint = "in"
+        case outPoint = "out"
+        case name
+    }
+
     public var isValid: Bool { outPoint > inPoint }
     public var durationSeconds: Double { max(0, outPoint.seconds - inPoint.seconds) }
     public var trimRange: TrimRange {
@@ -68,6 +75,9 @@ public struct EditList: Codable, Equatable, Sendable {
     }
 
     public mutating func append(_ segment: EditSegment, sourceDuration: MediaTimestamp? = nil) throws {
+        guard !segments.contains(where: { $0.id == segment.id }) else {
+            throw EditListError.duplicateID
+        }
         try validate(segment, replacing: nil, sourceDuration: sourceDuration)
         segments.append(segment)
     }
@@ -108,6 +118,10 @@ public struct EditList: Codable, Equatable, Sendable {
     }
 
     public func validate(sourceDuration: MediaTimestamp? = nil) throws {
+        let identifiers = segments.map(\.id)
+        guard Set(identifiers).count == identifiers.count else {
+            throw EditListError.duplicateID
+        }
         for segment in segments {
             try validate(segment, replacing: segment.id, sourceDuration: sourceDuration)
         }
@@ -134,6 +148,7 @@ public enum EditListError: LocalizedError, Equatable, Sendable {
     case invalidRange
     case outsideSource
     case overlap
+    case duplicateID
     case segmentNotFound
 
     public var errorDescription: String? {
@@ -144,6 +159,8 @@ public enum EditListError: LocalizedError, Equatable, Sendable {
             "クリップが元動画の範囲外です。"
         case .overlap:
             "サブクリップが既存のクリップと重なっています。"
+        case .duplicateID:
+            "同じIDのクリップが重複しています。"
         case .segmentNotFound:
             "クリップが見つかりません。"
         }

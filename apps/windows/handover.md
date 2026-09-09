@@ -1,5 +1,18 @@
 # Trimlet Windows maintainer handover
 
+## New Mac development delta — 2026-09-09
+
+Read [TIMELINE_INTERACTION_HANDOVER.md](TIMELINE_INTERACTION_HANDOVER.md) before
+continuing UI parity work. Mac development build 10 replaces the temporary
+build 9 split-row IN/OUT controls with a distinct upper playhead and a single
+lower range with outward brackets. It includes exclusive hit testing, latched
+drag targets, no-jump boundary movement, paused IN/O workflow and target/time
+feedback. No project schema change. Geometry tests and component render checks
+passed; live Mac gesture/human acceptance remains pending. These are development
+source updates, not a new binary release or confirmed Windows implementation.
+Pull latest main before starting parity work. The historical release/status
+record below is unchanged.
+
 - Prepared: 2026-08-28
 - Published Windows release: `v0.3.0-early-access.1`
 - Current source state: caught up with the accepted Mac `v0.3.0-beta.1` behavior; feature-focused human check accepted; broad Windows release validation pending
@@ -76,13 +89,24 @@ Developer verification covers a two-clip add flow, thumbnails, distinct timeline
 
 ## Next implementation order
 
-1. Complete the Windows human-check matrix for long media, damaged GOPs, HDR/interlace, cancellation, and both UI languages.
-2. Select a Windows distribution format and complete the binary release gate in `docs/legal/RELEASE_COMPLIANCE.md`.
-3. Add original application artwork and code signing before publishing a binary.
+1. Implement shared `.trimlet` project persistence from [`PROJECT_PERSISTENCE_HANDOVER.md`](PROJECT_PERSISTENCE_HANDOVER.md), including fixtures, relink, dirty state, and native dialogs.
+2. Complete the Windows human-check matrix for project resume, long media, damaged GOPs, HDR/interlace, cancellation, and both UI languages.
+3. Select a Windows distribution format and complete the binary release gate in `docs/legal/RELEASE_COMPLIANCE.md`.
+4. Add original application artwork and code signing before publishing a binary.
 
 The shared interaction behavior remains normative in `docs/PLATFORM_CONTRACT.md`. The Mac implementation is only a behavioral reference; do not port SwiftUI or AVPlayer code into Windows.
 
 ## Collaboration rules
+
+### Playback compatibility fix — 2026-09-09
+
+Mac build 8 now checks AVFoundation `isPlayable` before accepting a video; readable metadata alone is insufficient for VP9/Opus MP4. Unsupported sources enter the existing H.264/AAC preview-proxy path while original source URLs remain authoritative for export and projects. Fast export may still retain an incompatible codec; Accurate is the compatibility option. No schema change. See [verification, UI test limitation, and Windows guidance](../../docs/PLAYBACK_COMPATIBILITY_2026-09-09.md).
+
+### macOS UI preview — 2026-09-08 (not yet accepted)
+
+The user provisionally passed the first layout without visual inspection and authorized the next step. The new **Timeline Preview** unifies source seeking and range display, adds viewport zoom/pan/fit, and lets users drag named IN/OUT handles. Draft boundaries must stay in source bounds and not cross; Apply is a single undoable edit. Preserve two-finger seek rather than silently changing it to pan. Viewport changes are transient and do not modify the project schema or playhead. Mac snapping is nominal-fps based, **not** Windows VFR frame-index parity. Unapplied trim/name drafts cannot be silently discarded by selecting or dragging another card. Reordering/deletion actions are available in the sequence header. Source and sequence clocks are labeled separately. These features remain a local development preview; see the verification record below before choosing Windows implementation scope.
+
+Mac now separates the viewer/transport, range-and-clip inspector, and sequence strip. It adds explicit trim cancellation and labels source versus sequence playback, including sequence elapsed/total time. Preserve these interaction distinctions when planning Windows parity; native layout need not match. This UI work changes no project schema or export contract. See [`UIUX_REFACTOR_PLAN_2026-09-08.md`](../../docs/UIUX_REFACTOR_PLAN_2026-09-08.md) for implementation scope, actual checks, and remaining human acceptance. Do not treat the preview as an approved release requirement yet.
 
 - Keep Windows-only code under `apps/windows`.
 - Keep native UI and playback code separate from macOS.

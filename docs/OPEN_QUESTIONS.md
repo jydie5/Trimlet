@@ -4,14 +4,14 @@ These decisions should be closed before the indicated milestone. They are intent
 
 ## Before creating the Xcode project
 
-1. What is the minimum macOS version? This determines available SwiftUI and AVFoundation APIs.
+1. Resolved 2026-08-28: the current package and application require macOS 14 or later on Apple silicon; revisit before binary distribution.
 2. Is the first distributable build signed outside the Mac App Store, or should the design satisfy Mac App Store sandboxing from day one?
 3. Should the bundle identifier use a personal reverse-domain identifier or a new project/organization domain?
-4. Should the project use an `.xcodeproj` application target with local Swift packages, or start as a simpler single target?
+4. Resolved 2026-08-16: use a Swift Package executable and local app-bundle script for PoC/Beta development; an Xcode signing project remains a distribution task.
 
 ## Before implementing M2TS export
 
-5. How is FFmpeg supplied: bundled universal/arm64 binary, downloaded dependency, or a user-installed executable?
+5. Resolved for source releases: use a separately installed FFmpeg/ffprobe executable. Bundling remains blocked on the binary-release compliance gate.
 6. Which exact FFmpeg configure flags and license profile are acceptable for GitHub releases?
 7. For interlaced sources, should Accurate mode deinterlace automatically, ask each time, or preserve interlacing?
 8. What should happen when an M2TS has multiple programs or ambiguous primary audio?
@@ -21,7 +21,7 @@ These decisions should be closed before the indicated milestone. They are intent
 
 10. Resolved 2026-08-16: Trimlet source and documentation use the MIT License with `Trimlet contributors` as the collective copyright notice.
 11. Is the public release source-only initially, or will GitHub Releases include a signed/notarized `.dmg`?
-12. Should proxy creation start automatically or require confirmation with an estimated disk size?
+12. Resolved for current source builds: create/reuse a preview proxy automatically for M2TS/MTS or after direct-playback failure, with visible progress and cancellation.
 13. How long should caches be retained, and should cleanup be automatic?
 14. What measurable thresholds define acceptable open, seek, reverse-step, and export performance?
 15. Is Japanese-only UI acceptable for the first tagged release, or is English required at launch?
@@ -30,11 +30,11 @@ These decisions should be closed before the indicated milestone. They are intent
 
 These questions do not block the Mac PoC, but Mac decisions should not silently decide them for Windows.
 
-16. Which optional project-state fields should extend the shared integer timestamp/timescale interchange direction?
+16. Resolved 2026-08-28: `.trimlet` schema version 1 stores relative source reference/identity hints, ordered clip UUID/name/rational IN/OUT, export mode, and optional audio selection. Session-only fields are listed in `PROJECT_PERSISTENCE.md`.
 17. Must Fast and Accurate exports be byte-for-byte comparable, or only behaviorally equivalent within documented timing and codec tolerances?
-18. Which keyboard shortcuts should be identical across platforms, and which should follow platform conventions?
+18. Resolved for the current milestone: Space, arrows, I/O, and J/K/L share meaning; modifier keys for Open/Save follow platform conventions.
 19. Will FFmpeg builds on Mac and Windows use the same major version and configure profile?
-20. Which Windows-native playback stack will satisfy the same seek and frame-step acceptance targets?
+20. Resolved for current Windows Early Access: WinUI `MediaPlayerElement` with native/seek fallbacks and a source-PTS index; revisit only if acceptance targets fail.
 
 ## Accurate export and FFmpeg
 

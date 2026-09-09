@@ -1,5 +1,58 @@
 # Mac verification record
 
+## Mac build 10 source-timeline interaction
+
+- Implemented: 2026-09-09
+- Current automated results: Debug build, Release build10 bundle, executable
+  permission and ad-hoc signature checks, Core checks including the new hit
+  geometry, and shared contracts passed. The generated-media integration rerun
+  passed: Accurate 3.800s / Fast 10.000s. No GitHub publication was performed.
+- Live GUI limitation: the computer-use connection timed out after a project-save
+  dialog; build10 pointer/trackpad checks remain pending. Project saving preserves
+  committed clips/settings, not an uncommitted IN/OUT draft.
+- Status: Mac build 10 development candidate built; automated geometry/core checks and offscreen component renders passed; running-app gesture verification pending
+- Canonical specification: [`TIMELINE_INTERACTION_2026-09-09.md`](TIMELINE_INTERACTION_2026-09-09.md)
+- Scope: verify the upper ruler/playhead and lower single-range lane, 24 pt edge
+  gutters, exclusive outward IN/OUT hit areas, pointer-down target latching,
+  boundary-drag translation without a jump, non-handle seek-only behavior,
+  paused I/O setting, two-finger seeking, and hover/drag time feedback.
+- Required cases: normal range, range narrower than the combined 48 pt grip
+  areas, IN-only state, valid purple draft, and retained blue range after Add.
+- Required safety check: dragging inside a range must not slip both boundaries;
+  no `.trimlet` schema or persisted draft state may change.
+- Integration regression: `swift run --package-path apps/macos TrimletIntegrationChecks`
+  passed the existing three-range export checks (Accurate `3.800 s`, Fast
+  `10.000 s`) after the build 10 implementation.
+- Component render smoke evidence (light/dark, four states; not running-app
+  screenshots): [light](images/timeline-build10-light.png),
+  [dark](images/timeline-build10-dark.png). These renders were visually inspected
+  for clipping and label collisions, but do not establish pointer/trackpad behavior.
+- Result: **PENDING**. A successful build or automated test does not constitute
+  the visual/gesture acceptance; record the user's result in `HUMAN_CHECK.md`.
+
+The build 9 split-row geometry remains documented in
+[`TIMELINE_SEEK_FIX_2026-09-09.md`](TIMELINE_SEEK_FIX_2026-09-09.md) as a
+historical diagnosis. It is superseded for implementation by the build 10
+specification.
+
+## Mac project persistence 0.4 developer verification
+
+- Verified: 2026-08-28
+- Status: automated gate passed; human check pending
+- Debug build passed with the `.trimlet` document declaration.
+- Core checks passed lossless project JSON round-trip, stable names/order, preservation of unreduced rational timestamp pairs, export/audio restoration, schema rejection, checked timestamp decoding, duplicate-ID rejection, relative path capture/resolution, and source identity matching.
+- Shared contract validation passed twelve project fixtures on the POSIX runner, including complete/minimal portable documents plus negative timestamps, zero timescales, duplicate UUIDs, unknown fields, and invalid source/audio metadata. `TrimletCoreChecks` decodes and losslessly re-encodes the same valid fixture inputs through the production Mac codec; the equivalent PowerShell validator consumes them in Windows CI.
+- Existing generated-media integration remained green for three-range Accurate/Fast output, selected audio, duration, color order, source immutability, and cleanup.
+- No FFmpeg/ffprobe binary, project sample containing a personal path, source video, thumbnail, proxy, or application bundle was added.
+- Developer interaction with generated `trimlet-sample.mp4` confirmed the 0.4 project menu and visible `未保存` state. The first red-window-close audit reproduced a silent-close defect; after adding the window-close guard, the same action displayed Save / Don't Save / Cancel, and Cancel preserved the loaded unsaved project. The final human gate repeats this path after the discard-state refinement.
+- Project Save now rejects the source URL at both the save-panel boundary and controller boundary, independently of filename-extension filtering.
+- Source replacement is now rejected before clearing the current project identity or dirty flag while loading or exporting. Open controls are disabled during those operations, and the controller keeps the same invariant for Finder/Open With and file-drop entry points.
+- Window close and Command-Q now share the same discard acknowledgement path, preventing a second unsaved prompt during termination while preserving Cancel behavior.
+- `run-poc.command` no longer force-terminates an existing Trimlet process. It waits for the app's Save / Don't Save / Cancel decision and exits without rebuilding when termination is cancelled or still awaiting input.
+- The production codec rejects unknown fields recursively, enforces an 8 MiB limit before reading/parsing a project document, and refuses to encode a document it could not reopen; core checks cover all paths.
+
+The remaining gate is the project section of `HUMAN_CHECK.md`: Save, dirty marker, quit cancellation, reopen, exact state restoration, moved-source relink, changed-source warning, and replacement cancellation.
+
 ## Mac multi-range 0.3 developer verification
 
 - Verified: 2026-08-25

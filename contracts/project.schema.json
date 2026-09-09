@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trimlet.dev/contracts/project.schema.json",
+  "title": "Trimlet project",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "source", "editList", "settings"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fileName", "pathHint"],
+      "properties": {
+        "fileName": { "type": "string", "minLength": 1 },
+        "pathHint": { "type": "string", "minLength": 1, "pattern": "^(?!/)(?![A-Za-z]:)[^\\\\]+$" },
+        "sizeBytes": { "type": "integer", "minimum": 0, "maximum": 9223372036854775807 },
+        "modifiedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "editList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["segments"],
+      "properties": {
+        "segments": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/segment" }
+        }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exportMode"],
+      "properties": {
+        "exportMode": { "enum": ["fast", "accurate"] },
+        "audio": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["streamIndex"],
+          "properties": {
+            "streamIndex": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+            "codecName": { "type": "string" },
+            "language": { "type": "string" },
+            "title": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "timestamp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "timescale"],
+      "properties": {
+        "value": { "type": "integer", "minimum": 0, "maximum": 9223372036854775807 },
+        "timescale": { "type": "integer", "minimum": 1, "maximum": 2147483647 }
+      }
+    },
+    "segment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "in", "out"],
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "in": { "$ref": "#/$defs/timestamp" },
+        "out": { "$ref": "#/$defs/timestamp" },
+        "name": { "type": "string" }
+      }
+    }
+  }
+}

@@ -19,6 +19,14 @@ The PoC validates whether the basic Trimlet interaction feels understandable and
 - See keyframe marks and every Fast-mode candidate range before export.
 - See percentage progress for export, cancel it, and verify that the UI stays responsive.
 - Validate video, selected audio, and combined duration before exposing the completed file.
+- Build 10 implements the source timeline's distinct upper playhead lane and
+  lower single-range interaction, including narrow-range boundary grips and
+  seek-only non-handle gestures. See
+  [`TIMELINE_INTERACTION_2026-09-09.md`](TIMELINE_INTERACTION_2026-09-09.md).
+  The [light](images/timeline-build10-light.png) and
+  [dark](images/timeline-build10-dark.png) component renders are visual smoke
+  evidence only; the running-app gesture check remains pending until a human
+  runs it.
 
 ## Build and launch without Xcode
 
@@ -47,4 +55,5 @@ The script does not install anything globally and does not publish anything to G
 
 These limitations are visible boundaries of the PoC, not the final product requirements.
 
-Human feedback and the next iteration are tracked in `HUMAN_CHECK.md` and `BACKLOG.md`.
+Human feedback and the next iteration are tracked in `HUMAN_CHECK.md`,
+`BACKLOG.md`, and the canonical timeline specification.

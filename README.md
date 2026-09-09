@@ -6,11 +6,32 @@ Only what you need, quickly and precisely.
 
 Trimlet is a lightweight, frame-accurate video trimming application with separate native implementations for macOS and Windows.
 
-The macOS application is at the SwiftUI Beta stage. The native C#/WinUI 3 Windows Early Access source now implements the same accepted multi-range interaction and media-processing contracts; its feature-focused human check was accepted on 2026-08-28.
+## Latest macOS UI/UX — 0.4 development build 10
 
-![Trimlet for Windows showing two retained clips, thumbnails, source ranges, and frame-aware navigation](docs/images/windows-multirange-early-access.jpg)
+Find a frame, mark IN and OUT, then add the range to your editing sequence—without needing to start playback.
 
-_Windows Early Access using generated, non-personal test media._
+![Current Mac timeline components: normal range, very short range, IN only, and source edges](docs/images/timeline-build10-light.png)
+
+_Rendered from the production UI components using synthetic positions; not a screenshot of the running app. [Dark appearance](docs/images/timeline-build10-dark.png)._
+
+- **Clear workspace:** viewer and transport on the left, IN/OUT and clip details on the right, editing sequence below; Save and Export at the top.
+- **Separate playhead and range:** scrub using the upper ruler or range body. Outward IN/OUT grips adjust only their respective boundary, even for a very short range.
+- **Visible controls:** I/O marking, J/K/L shuttle, frame/5-second navigation, two-finger seeking, zoom and Fit Range, plus target/time feedback.
+- **Resume your work:** save retained clips and export settings to a `.trimlet` project; reopen and relink moved source media. Uncommitted IN/OUT drafts are not saved.
+- **Compatibility previews:** sources the Mac player cannot play, including the tested VP9/Opus MP4, can use a generated H.264/AAC preview. The original remains unchanged; use Accurate output for H.264/AAC compatibility because Fast retains the original video codec.
+
+Build 10 is the latest development source, **not a newly published binary release**. Builds, Core/contract/export tests and component rendering checks passed. Comprehensive live gesture/human acceptance remains pending. Mac boundary snapping uses nominal fps, not a VFR frame index.
+
+[Interaction specification](docs/TIMELINE_INTERACTION_2026-09-09.md) · [Verification](docs/VERIFICATION.md) · [Human check](docs/HUMAN_CHECK.md) · [Windows handover](apps/windows/TIMELINE_INTERACTION_HANDOVER.md) · [Playback limitations](docs/PLAYBACK_COMPATIBILITY_2026-09-09.md)
+
+<details>
+<summary>Windows Early Access screenshot (earlier accepted UI)</summary>
+
+![Windows Early Access with generated test media](docs/images/windows-multirange-early-access.jpg)
+
+Windows implements the previously accepted multi-range workflow. The latest Mac timeline and project-persistence deltas are documented for the Windows maintainer; this image does not claim build 10 parity.
+
+</details>
 
 ## Product goal
 
@@ -37,12 +58,13 @@ Priority inputs are MP4, MOV, M2TS, and MTS.
 - Scrub continuously with the slider or trackpad, followed by an exact seek when the gesture ends.
 - Use Fast mode to avoid video re-encoding where possible, or Accurate mode to prioritize exact boundaries with hardware-assisted VideoToolbox encoding.
 - Select among multiple audio streams, continuously preview the sequence, monitor or cancel export, and validate the completed output.
+- On macOS development builds, save the ordered edit list as a portable `.trimlet` project, resume it later, and relink a moved or changed source explicitly.
 
 ## Repository status
 
-- macOS: native `v0.3.0-beta.1` with multiple retained ranges, an editing sequence, sequence preview, audio selection, and combined Fast/Accurate export.
+- macOS: published native `v0.3.0-beta.1`; the current 0.4 build 10 development candidate adds atomic project Save/Open, an unsaved indicator, source relinking, and the revised source-timeline interaction for human check.
 - Windows: source-only Early Access with native preview, multiple retained clips, editing-sequence operations, J/K/L shuttle controls, audio-stream selection, sequence preview, and validated combined Fast/Accurate export. Developer checks and the feature-focused human check pass.
-- Parity: the accepted macOS Beta multi-range contract is implemented on both platforms. Windows now also provides automatic preview proxies and background source-PTS frame indexing; packaging and broad real-media release validation remain platform-specific work.
+- Parity: the accepted macOS Beta multi-range contract is implemented on both platforms. Project persistence is currently Mac-first; Windows adoption is specified by the shared schema and handover. Packaging and broad real-media release validation remain platform-specific work.
 - Public source releases are published under the MIT License.
 
 Latest macOS Beta source release: [v0.3.0-beta.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-beta.1)
@@ -117,9 +139,11 @@ You can also help at no cost by starring or sharing the repository, reporting re
 - [Technical decisions](docs/DECISIONS.md)
 - [Open questions](docs/OPEN_QUESTIONS.md)
 - [Mac/Windows platform contract](docs/PLATFORM_CONTRACT.md)
+- [Project persistence architecture](docs/architecture/PROJECT_PERSISTENCE.md)
 - [Product and interface design principles](docs/PRODUCT_DESIGN.md)
 - [Windows Early Access guide](apps/windows/README.md)
 - [Windows maintainer handover](apps/windows/handover.md)
+- [Windows project-persistence handover](apps/windows/PROJECT_PERSISTENCE_HANDOVER.md)
 - [Windows-to-macOS owner handover](apps/macos/WINDOWS_EARLY_ACCESS_HANDOVER.md)
 - [Windows multi-range return handover](apps/macos/WINDOWS_MULTI_RANGE_HANDOVER.md)
 - [v0.3.0 Beta 1 release notes](docs/releases/v0.3.0-beta.1.md)
@@ -133,6 +157,7 @@ You can also help at no cost by starring or sharing the repository, reporting re
 - [Project license recommendation](docs/legal/LICENSE_DECISION.md)
 - [Project sustainability and reach](docs/development/project-sustainability.md)
 - [Development backlog](docs/BACKLOG.md)
+- [Build 10 timeline interaction specification](docs/TIMELINE_INTERACTION_2026-09-09.md)
 
 ## Privacy and safety
 

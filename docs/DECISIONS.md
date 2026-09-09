@@ -217,6 +217,27 @@ This log records decisions that define Trimlet. Change a decision by adding a ne
 - Evidence: Publish the generated-media Windows screenshot at `docs/images/windows-multirange-early-access.jpg`; it contains no personal source media.
 - Boundary: This acceptance does not publish a Windows binary or waive packaging, signing, dependency-notice, clean-machine, long-media, damaged-GOP, HDR/interlace, cancellation, or language-switch validation.
 
+### D-025: Use a shared portable project document, implemented on Mac first
+
+- Date: 2026-08-28
+- Status: Accepted for the Mac 0.4 human-check candidate
+- Decision: Persist one-source edit decisions in schema-versioned UTF-8 JSON with the `.trimlet` extension. Store an ordered edit list using UUIDs and integer rational timestamps, Fast/Accurate mode, selected audio metadata, and a relative source reference with size/modification identity hints.
+- Privacy and portability: Never persist an absolute local media path. Draft state, playhead, thumbnails, proxies, Undo/Redo history, export destinations, and generated files remain session-only.
+- Recovery: Save atomically. Warn before discarding dirty state. Auto-resolve only a matching source candidate; missing or changed media requires an explicit relink/use decision followed by range validation.
+- Cross-platform: Freeze version 1 in `contracts/project.schema.json`. macOS implements the first native flow; Windows follows `apps/windows/PROJECT_PERSISTENCE_HANDOVER.md` using WinUI/C# rather than shared native code.
+- Gate: Automated validation establishes the developer candidate. Mac human check must cover save, quit, reopen, relink, mismatch, and cancellation before release acceptance.
+
+### D-026: Separate the source playhead from the IN/OUT range in one timeline
+
+- Date: 2026-09-09
+- Status: Accepted for Mac build 10 implementation; human verification pending
+- Problem: The build 9 layout placed the playhead and boundary controls in competing rows. A user could grab an IN handle while intending to seek, then find that OUT could not be set because the current position had not moved.
+- Decision: Use one 84 pt source-timeline surface. The upper `0–38 pt` lane contains the white downward-triangle playhead and source ruler; the lower `40–72 pt` lane contains one true-coordinate IN/OUT range. Horizontal 24 pt content gutters provide room for edge grips without changing the time mapping.
+- Hit testing: IN and OUT use same-height, outward, exclusive 24 pt hit intervals (`[xIN-24,xIN)` and `[xOUT,xOUT+24)`). Pointer-down latches the target for the whole gesture. Any non-handle click or drag seeks only the playhead. A boundary drag changes only its boundary and uses pointer translation from its initial position, preventing a jump when the padded grip is grabbed.
+- Interaction: `I`/`O` and their visible buttons set the current position while paused or playing; playback is not required. There is no whole-range slip gesture in this milestone. Two-finger trackpad seeking remains seeking.
+- Contract: This is a presentation and input-model change only. It does not change `.trimlet`, retained timestamp semantics, export planning, or the contiguous editing-sequence model. Windows must implement the same behavioral roles with native controls.
+- Detail: `docs/TIMELINE_INTERACTION_2026-09-09.md` is the canonical geometry, state, and acceptance specification. It supersedes build 9 boundary geometry while retaining build 9's historical diagnosis.
+
 ## Proposed decisions awaiting validation
 
 ### P-001: Project structure

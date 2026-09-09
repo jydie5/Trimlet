@@ -1,8 +1,20 @@
 # Trimlet Mac 操作改善プラン — 2026-08-26
 
-- Status: Implemented on Mac; human check and Windows parity pending
+- Status: Historical interaction regression plan; build 10 source-timeline geometry is superseded by the canonical specification
 - Target: 次回Macヒューマンチェック
 - Shared consideration: 色の意味、ショートカット、状態遷移、受け入れ条件はWindows版とも共有し、描画と再生制御だけを各OSで実装する。
+
+## Build 10 geometry update (2026-09-09)
+
+The color, shortcut, state, and shuttle decisions below remain regression
+requirements. The earlier direct-timeline layout is no longer the current
+implementation target: build 9's separated boundary rows are superseded by one
+84 pt surface with an upper ruler/playhead lane and a lower single range lane.
+Use [`TIMELINE_INTERACTION_2026-09-09.md`](TIMELINE_INTERACTION_2026-09-09.md)
+and backlog item TRIM-026 for the exact geometry, exclusive outward grips,
+pointer-down latching, no-jump translation, seek-only non-handle behavior, and
+build 10 human-check gate. Do not copy the old 58 pt / 60–110 pt row positions
+from the historical build 9 note.
 
 ## 1. 作成中の選択範囲を塗る — TRIM-022
 

@@ -1,7 +1,7 @@
 # Multi-range editing design
 
-- Status: Accepted for Mac milestone 0.3
-- Updated: 2026-08-25
+- Status: Accepted for Mac milestone 0.3; build 10 timeline interaction accepted
+- Updated: 2026-09-09
 
 ## Model boundary
 
@@ -50,7 +50,7 @@ Progress is weighted by retained source duration across segment stages. The fina
 
 The media-first layout remains, but the editing hierarchy is explicit:
 
-1. the source timeline renders the playhead, retained segments, start/end markers, keyframes, and Fast candidates in one place;
+1. the source timeline uses an upper ruler/playhead lane and one lower true-coordinate IN/OUT range lane. The build 10 Mac surface is 84 pt high with 24 pt horizontal gutters; the upper lane is `0–38 pt`, the lower lane is `40–72 pt`, and the white downward-triangle playhead is separate from outward same-height boundary grips;
 2. new-subclip mode is a left-to-right `1 IN → 2 OUT → 3 Add to Sequence` flow;
 3. start and end are unset on source open, step 2 is unavailable before step 1, and step 3 is unavailable until the range is valid;
 4. the output section is always visible, including an empty state that points back to steps 1–3;
@@ -68,3 +68,11 @@ The current editing sequence is order-based and contiguous. Dragging changes cli
 Representative thumbnails are separate from identity. The Mac adapter uses the active playback asset (the preview proxy when one exists) and asks `AVAssetImageGenerator` for a frame just after each IN point. Results remain in a session-memory map keyed by segment UUID, are regenerated after trimming, and never affect final export. Failure leaves a placeholder. Persistent source/timestamp caching can be added with project save support.
 
 No permanent tutorial paragraph is added to the work surface.
+
+Build 10 hit testing is part of the architecture boundary: IN and OUT grips
+have exclusive outward 24 pt intervals, the pointer-down target is latched, and
+non-handle clicks/drags seek only the playhead. Boundary dragging changes only
+the latched boundary and preserves the initial pointer offset. A short range is
+drawn at its true coordinates without a fake minimum width; the gutters provide
+edge-grip space without changing timestamps. See the canonical
+[`TIMELINE_INTERACTION_2026-09-09.md`](../TIMELINE_INTERACTION_2026-09-09.md).

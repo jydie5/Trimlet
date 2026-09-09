@@ -6,11 +6,32 @@
 
 Trimletは、macOSとWindowsでそれぞれネイティブ実装する、軽量でフレーム正確な動画切り出しアプリです。
 
-macOS版はSwiftUIによるBeta段階です。Windows Early Accessのソースにも、同じ複数区間の操作仕様とメディア処理契約を実装しました。機能面のヒューマンチェックは2026-08-28に合格しました。
+## 最新のMac UI/UX — 0.4開発版ビルド10
 
-![2つのクリップ、サムネイル、元動画の範囲、実フレーム移動を表示したTrimlet Windows版](docs/images/windows-multirange-early-access.jpg)
+位置を探す → IN／OUTを設定 → 編集シーケンスへ追加。再生しなくても、見たい位置へ移動して区間を作れます。
 
-_個人情報を含まない合成テスト動画を使用したWindows Early Access画面です。_
+![最新Macタイムラインの描画部品：通常・極短区間・INのみ・先頭と末尾](docs/images/timeline-build10-light.png)
+
+_実際のUI描画部品を合成の時刻条件でレンダリングした画像です。実行中アプリのスクリーンショットではありません。[ダーク表示](docs/images/timeline-build10-dark.png)。_
+
+- **整理した作業画面：** 左に映像と再生操作、右にIN／OUTとクリップ詳細、下に編集シーケンス。保存・書き出しは上部へ集約しました。
+- **再生位置と範囲を分離：** 目盛りや帯の内部でシークし、外向きのIN／OUTつまみで片側の境界だけを調整。短い範囲でも操作対象を分けています。
+- **見える操作ヒント：** I／O、J／K／L、フレーム／5秒移動、二本指シーク、拡大・範囲に合わせる表示、操作対象と時刻の表示。
+- **編集の保存・再開：** 確定したクリップと書き出し設定を`.trimlet`に保存し、再読込・元動画の再リンクができます。追加前のIN／OUT下書きは保存対象外です。
+- **互換プレビュー：** Mac標準再生機構で読めない素材はH.264／AACプレビューを生成できます。VP9／OpusのMP4で確認済み。原本は変更しません。標準プレーヤー向けの保存には「フレーム正確」を選択してください。「高速」は元の映像コーデックを保持します。
+
+ビルド10は最新の開発ソースであり、**新しいバイナリリリースではありません**。ビルド・Core／共有契約／書き出しテスト・描画確認は成功していますが、実機ジェスチャーの包括的なヒューマンチェックは残っています。Macの境界調整は公称fps刻みで、VFRの実フレーム索引ではありません。
+
+[操作仕様](docs/TIMELINE_INTERACTION_2026-09-09.md) · [検証記録](docs/VERIFICATION.md) · [ヒューマンチェック](docs/HUMAN_CHECK.md) · [Windows向け引き継ぎ](apps/windows/TIMELINE_INTERACTION_HANDOVER.md) · [再生互換性の制限](docs/PLAYBACK_COMPATIBILITY_2026-09-09.md)
+
+<details>
+<summary>Windows Early Accessの画面（以前の受入済みUI）</summary>
+
+![合成テスト動画を使用したWindows Early Access](docs/images/windows-multirange-early-access.jpg)
+
+Windowsは以前合意した複数区間の編集フローに対応しています。最新Macのタイムラインとプロジェクト保存の差分は担当者向け文書に整理しており、この画像はビルド10との同等性を示すものではありません。
+
+</details>
 
 ## 目的
 
@@ -37,12 +58,13 @@ _個人情報を含まない合成テスト動画を使用したWindows Early Ac
 - スライダーやトラックパッドで連続シークし、操作を終えた位置で正確に合わせます。
 - 高速モードは可能な範囲で映像を再エンコードせず、フレーム正確モードはVideoToolboxによるハードウェア支援を優先して正確な境界を書き出します。
 - 複数音声ストリームの選択、連続プレビュー、進捗表示、キャンセル、書き出し後の検証に対応します。
+- macOS開発版では、編集シーケンスを持ち運べる`.trimlet`プロジェクトとして保存・再開し、移動・変更された元動画を明示的に再リンクできます。
 
 ## 現在の状態
 
-- macOS：ネイティブ`v0.3.0-beta.1`。複数区間、編集シーケンス、連続プレビュー、音声選択、複数区間の高速／正確書き出しを実装しています。
+- macOS：公開版はネイティブ`v0.3.0-beta.1`。現在の0.4 Build 10開発候補には、プロジェクトの原子的な保存／読込、未保存表示、元動画の再リンク、改訂版ソースタイムラインを実装し、ヒューマンチェック待ちです。
 - Windows：ソース配布のEarly Access。ネイティブ再生、複数クリップ、編集シーケンス操作、J/K/L、音声選択、連続プレビュー、検証付きの複数区間高速／正確書き出しまで実装しました。開発者確認と機能面のヒューマンチェックは合格しています。
-- 同等性：Mac Betaで合意した複数区間の操作仕様は両OSに実装済みです。Windowsにも自動プレビュー用プロキシと、バックグラウンドで作る実PTSフレーム索引を実装しました。配布形式と幅広い実動画でのリリース検証は引き続きOS別の作業です。
+- 同等性：Mac Betaで合意した複数区間の操作仕様は両OSに実装済みです。プロジェクト保存はMac先行で、Windows追従用の共通スキーマとhandoverを用意しました。配布形式と幅広い実動画でのリリース検証は引き続きOS別の作業です。
 - macOS最新版：[v0.3.0-beta.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-beta.1)をMIT Licenseのソースのみで公開しています。
 
 Windows Early Access：[v0.3.0-early-access.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-early-access.1)（ソースのみ。インストーラーやビルド済み実行ファイルはありません）
@@ -115,9 +137,11 @@ TrimletはMIT Licenseの無料ソフトウェアです。役立った場合は�
 - [設計・製品判断](docs/DECISIONS.md)
 - [未決事項](docs/OPEN_QUESTIONS.md)
 - [Mac／Windows共通契約](docs/PLATFORM_CONTRACT.md)
+- [プロジェクト保存設計](docs/architecture/PROJECT_PERSISTENCE.md)
 - [製品・インターフェース設計原則](docs/PRODUCT_DESIGN.md)
 - [Windows Early Accessガイド](apps/windows/README.md)
 - [Windows保守担当へのhandover](apps/windows/handover.md)
+- [Windowsプロジェクト保存handover](apps/windows/PROJECT_PERSISTENCE_HANDOVER.md)
 - [WindowsからmacOS担当へのhandover](apps/macos/WINDOWS_EARLY_ACCESS_HANDOVER.md)
 - [Windows複数区間追従後のhandover](apps/macos/WINDOWS_MULTI_RANGE_HANDOVER.md)
 - [v0.3.0 Beta 1リリースノート](docs/releases/v0.3.0-beta.1.md)
@@ -130,6 +154,7 @@ TrimletはMIT Licenseの無料ソフトウェアです。役立った場合は�
 - [名称・商標の事前調査](docs/legal/TRADEMARK_SEARCH_2026-08-16.md)
 - [ライセンス判断](docs/legal/LICENSE_DECISION.md)
 - [開発バックログ](docs/BACKLOG.md)
+- [Build 10ソースタイムライン操作仕様](docs/TIMELINE_INTERACTION_2026-09-09.md)
 
 ## プライバシーと安全
 

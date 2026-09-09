@@ -14,6 +14,7 @@ final class PlayerController: ObservableObject {
     @Published private(set) var nominalFrameRate = 30.0
     @Published private(set) var playbackState: PlaybackState = .paused
     @Published private(set) var isLoading = false
+    @Published private(set) var usesCompatibilityPreview = false
     @Published private(set) var isExporting = false
     @Published private(set) var isDropTargeted = false
     @Published private(set) var statusMessage = "動画をドロップするか、「動画を開く」を選んでください。"
@@ -27,10 +28,26 @@ final class PlayerController: ObservableObject {
     @Published private(set) var isScrubbing = false
     @Published private(set) var clipThumbnails: [UUID: NSImage] = [:]
     @Published private(set) var audioStreams: [MediaProbe.AudioStreamInfo] = []
+    @Published private(set) var playbackContextLabel = "元動画"
+    @Published private(set) var playbackProgressText = "--:--:--:-- / --:--:--:--"
+    @Published private(set) var projectURL: URL?
+    @Published private(set) var isProjectDirty = false
     @Published var trimRange = TrimRange()
     @Published var clipNameDraft = ""
-    @Published var exportMode: ExportMode = .fast
-    @Published var selectedAudioStreamIndex: Int?
+    @Published var exportMode: ExportMode = .fast {
+        didSet {
+            if oldValue != exportMode, hasMedia, !isApplyingProjectState {
+                isProjectDirty = true
+            }
+        }
+    }
+    @Published var selectedAudioStreamIndex: Int? {
+        didSet {
+            if oldValue != selectedAudioStreamIndex, hasMedia, !isApplyingProjectState {
+                isProjectDirty = true
+            }
+        }
+    }
 
     private var progressTask: Task<Void, Never>?
     private var playbackIntent = false
@@ -57,6 +74,10 @@ final class PlayerController: ObservableObject {
     private var scrubSeekTask: Task<Void, Never>?
     private var pendingScrubSeconds: Double?
     private var lastScrubSeekUptime = 0.0
+    private var exactSeekID: UUID?
+    private var pendingProjectRestore: PendingProjectRestore?
+    private var isApplyingProjectState = false
+    private var playbackContext: PlaybackContext = .source
 
     private static let shuttleRates: [Float] = [1, 2, 4, 8]
 
@@ -65,10 +86,29 @@ final class PlayerController: ObservableObject {
     }
 
     var canExport: Bool {
-        hasMedia
-            && !editList.isEmpty
-            && !isExporting
-            && (exportMode == .accurate || fastCandidates.values.allSatisfy { $0 != nil })
+        exportUnavailableReason == nil
+    }
+
+    var exportUnavailableReason: String? {
+        if isLoading {
+            return "動画の読み込みが完了するまで書き出せません。"
+        }
+        if isExporting {
+            return "書き出し中です。"
+        }
+        if !hasMedia {
+            return "書き出す元動画を開いてください。"
+        }
+        if editList.isEmpty {
+            return "書き出すクリップを編集シーケンスへ追加してください。"
+        }
+        if exportMode == .fast, fastCandidates.values.contains(where: { $0 == nil }) {
+            if case .ready = keyframeAnalysisState {
+                return "高速で切り出せない範囲があります。「フレーム正確」へ変更してください。"
+            }
+            return "キーフレーム解析を待つか、「フレーム正確」へ変更してください。"
+        }
+        return nil
     }
 
     var isPlaybackActive: Bool { playbackIntent }
@@ -92,6 +132,15 @@ final class PlayerController: ObservableObject {
     var selectedSegment: EditSegment? { editList.segment(id: selectedSegmentID) }
     var canUndoEdit: Bool { !editUndoStack.isEmpty }
     var canRedoEdit: Bool { !editRedoStack.isEmpty }
+    var canOpenMedia: Bool { !isLoading && !isExporting }
+    var canSaveProject: Bool { hasMedia && !isLoading && !isExporting }
+
+    var projectDisplayName: String {
+        if let projectURL {
+            return projectURL.deletingPathExtension().lastPathComponent
+        }
+        return currentURL?.deletingPathExtension().lastPathComponent ?? "新規プロジェクト"
+    }
 
     var currentTimecode: String {
         TimecodeFormatter.string(seconds: currentSeconds, framesPerSecond: nominalFrameRate)
@@ -129,12 +178,100 @@ final class PlayerController: ObservableObject {
     }
 
     func open(_ url: URL) {
+        guard validateSourceOpenRequest(url) else { return }
+        pendingProjectRestore = nil
+        isApplyingProjectState = false
+        projectURL = nil
+        isProjectDirty = false
+        openSource(url)
+    }
+
+    func openProject(
+        _ project: TrimletProject,
+        projectURL: URL,
+        sourceURL: URL,
+        sourceIdentityChanged: Bool
+    ) {
+        do {
+            try project.validate()
+        } catch {
+            statusMessage = error.localizedDescription
+            return
+        }
+        guard validateSourceOpenRequest(sourceURL) else { return }
+        pendingProjectRestore = PendingProjectRestore(
+            project: project,
+            projectURL: projectURL,
+            sourceIdentityChanged: sourceIdentityChanged
+        )
+        isApplyingProjectState = true
+        self.projectURL = nil
+        isProjectDirty = false
+        openSource(sourceURL)
+    }
+
+    func saveProject(to destinationURL: URL) throws {
+        guard let sourceURL = currentURL, hasMedia else {
+            throw PlayerError.noPlayableVideo
+        }
+        guard destinationURL.standardizedFileURL != sourceURL.standardizedFileURL else {
+            throw PlayerError.projectDestinationMatchesSource
+        }
+        let selectedStream = audioStreams.first { $0.index == selectedAudioStreamIndex }
+        let audio = selectedStream.map {
+            ProjectAudioSelection(
+                streamIndex: $0.index,
+                codecName: $0.codecName,
+                language: $0.language,
+                title: $0.title
+            )
+        }
+        let project = TrimletProject(
+            source: try ProjectSourceReference.capture(
+                sourceURL: sourceURL,
+                relativeTo: destinationURL
+            ),
+            editList: editList,
+            settings: ProjectSettings(exportMode: exportMode, audio: audio)
+        )
+        try project.validate(sourceDuration: MediaTimestamp(seconds: durationSeconds))
+        try TrimletProjectCodec.write(project, to: destinationURL)
+        projectURL = destinationURL
+        isProjectDirty = false
+        statusMessage = "プロジェクトを「\(destinationURL.lastPathComponent)」へ保存しました。"
+    }
+
+    func acknowledgeDiscardingProjectChanges() {
+        isProjectDirty = false
+    }
+
+    private func validateSourceOpenRequest(_ url: URL) -> Bool {
         guard !isExporting else {
             statusMessage = "書き出し完了後に別の動画を開いてください。"
+            return false
+        }
+        guard !isLoading else {
+            statusMessage = "動画の読み込み完了後に別の動画を開いてください。"
+            return false
+        }
+        guard url.isFileURL else {
+            statusMessage = "ローカル動画ファイルを選んでください。"
+            return false
+        }
+        return true
+    }
+
+    private func openSource(_ url: URL) {
+        guard !isExporting else {
+            statusMessage = "書き出し完了後に別の動画を開いてください。"
+            pendingProjectRestore = nil
+            isApplyingProjectState = false
             return
         }
         guard url.isFileURL else {
             statusMessage = "ローカル動画ファイルを選んでください。"
+            pendingProjectRestore = nil
+            isApplyingProjectState = false
             return
         }
 
@@ -146,6 +283,7 @@ final class PlayerController: ObservableObject {
         cancelPreviewSequence()
         cancelAnalysis()
         isLoading = true
+        usesCompatibilityPreview = false
         statusMessage = "動画を解析しています…"
         trimRange.reset()
         editList = EditList()
@@ -184,8 +322,17 @@ final class PlayerController: ObservableObject {
 
         Task { @MainActor [weak self] in
             guard let self else { return }
+            var knownDuration: Double?
             do {
                 let duration = try await asset.load(.duration)
+                if duration.seconds.isFinite, duration.seconds > 0 {
+                    knownDuration = duration.seconds
+                }
+                // A container can expose tracks and duration even when AVPlayer
+                // cannot decode it (for example VP9/Opus inside MP4).
+                guard try await asset.load(.isPlayable) else {
+                    throw PlayerError.noPlayableVideo
+                }
                 let tracks = try await asset.loadTracks(withMediaType: .video)
                 let audioTracks = try await asset.loadTracks(withMediaType: .audio)
                 let seconds = duration.seconds
@@ -203,6 +350,7 @@ final class PlayerController: ObservableObject {
                 }
 
                 self.currentURL = sourceURL
+                self.usesCompatibilityPreview = usesProxy
                 self.durationSeconds = seconds
                 self.nominalFrameRate = frameRate
                 self.trimRange.reset()
@@ -223,25 +371,85 @@ final class PlayerController: ObservableObject {
                 } else {
                     self.statusMessage = "\(sourceURL.lastPathComponent) — \(Self.fileSizeText(for: sourceURL))"
                 }
+                if self.pendingProjectRestore != nil {
+                    self.applyPendingProjectRestore()
+                } else {
+                    self.isProjectDirty = true
+                }
                 self.analyzeKeyframes(sourceURL: sourceURL)
             } catch {
                 if allowProxyFallback {
-                    self.createProxy(for: sourceURL)
+                    self.createProxy(for: sourceURL, knownDuration: knownDuration)
                 } else {
                     self.currentURL = nil
                     self.player.replaceCurrentItem(with: nil)
                     self.isLoading = false
+                    self.pendingProjectRestore = nil
+                    self.isApplyingProjectState = false
                     self.statusMessage = "動画または生成したプロキシを再生できませんでした。"
                 }
             }
         }
     }
 
-    private func createProxy(for sourceURL: URL) {
+    private func applyPendingProjectRestore() {
+        guard let pendingProjectRestore else { return }
+        defer {
+            self.pendingProjectRestore = nil
+            isApplyingProjectState = false
+        }
+
+        do {
+            try pendingProjectRestore.project.validate(
+                sourceDuration: MediaTimestamp(seconds: durationSeconds)
+            )
+            editList = pendingProjectRestore.project.editList
+            editUndoStack.removeAll()
+            editRedoStack.removeAll()
+            selectedSegmentID = nil
+            trimmingSegmentID = nil
+            trimRange.reset()
+            clipNameDraft = ""
+            exportMode = pendingProjectRestore.project.settings.exportMode
+
+            var selectionChanged = false
+            if let storedAudio = pendingProjectRestore.project.settings.audio {
+                if audioStreams.contains(where: { $0.index == storedAudio.streamIndex }) {
+                    selectedAudioStreamIndex = storedAudio.streamIndex
+                } else {
+                    selectedAudioStreamIndex = audioStreams.first?.index
+                    selectionChanged = true
+                }
+            } else {
+                selectedAudioStreamIndex = nil
+            }
+
+            projectURL = pendingProjectRestore.projectURL
+            isProjectDirty = pendingProjectRestore.sourceIdentityChanged || selectionChanged
+            for segment in editList.segments {
+                generateThumbnail(for: segment)
+            }
+            if pendingProjectRestore.sourceIdentityChanged {
+                statusMessage = "プロジェクトを再リンクした元動画で開きました。保存すると参照を更新します。"
+            } else if selectionChanged {
+                statusMessage = "保存時の音声トラックが見つからないため、選択を更新しました。"
+            } else {
+                statusMessage = "プロジェクト「\(pendingProjectRestore.projectURL.lastPathComponent)」を開きました。"
+            }
+        } catch {
+            projectURL = nil
+            isProjectDirty = true
+            statusMessage = "プロジェクトを復元できませんでした：\(error.localizedDescription)"
+        }
+    }
+
+    private func createProxy(for sourceURL: URL, knownDuration: Double? = nil) {
         guard let ffmpegURL = Self.ffmpegURL(),
               let proxyURL = Self.proxyURL(for: sourceURL) else {
             currentURL = nil
             isLoading = false
+            pendingProjectRestore = nil
+            isApplyingProjectState = false
             statusMessage = "プロキシ生成に必要なFFmpegまたは保存先を準備できません。"
             return
         }
@@ -285,13 +493,13 @@ final class PlayerController: ObservableObject {
         proxyProcess = process
         proxyWasCancelled = false
         isLoading = true
-        statusMessage = "プレビュー用プロキシを生成しています…"
+        statusMessage = "Macで再生できるプレビューを準備しています。元動画は変更しません…"
         beginOperation(
             kind: .proxy,
             title: "プレビューを準備中",
-            detail: sourceURL.lastPathComponent,
+            detail: "初回は変換が必要です。元動画は変更せず、書き出しには原本を使用します。",
             progressURL: progressURL,
-            expectedDuration: nil
+            expectedDuration: knownDuration
         )
 
         process.terminationHandler = { [weak self] completedProcess in
@@ -304,6 +512,8 @@ final class PlayerController: ObservableObject {
                     try? FileManager.default.removeItem(at: proxyURL)
                     self.currentURL = nil
                     self.isLoading = false
+                    self.pendingProjectRestore = nil
+                    self.isApplyingProjectState = false
                     self.statusMessage = "プロキシ生成をキャンセルしました。"
                     self.finishOperation(.cancelled, detail: self.statusMessage)
                     self.proxyWasCancelled = false
@@ -321,6 +531,8 @@ final class PlayerController: ObservableObject {
                     try? FileManager.default.removeItem(at: proxyURL)
                     self.currentURL = nil
                     self.isLoading = false
+                    self.pendingProjectRestore = nil
+                    self.isApplyingProjectState = false
                     let lastLine = details
                         .split(separator: "\n")
                         .last
@@ -337,6 +549,8 @@ final class PlayerController: ObservableObject {
             proxyProcess = nil
             currentURL = nil
             isLoading = false
+            pendingProjectRestore = nil
+            isApplyingProjectState = false
             statusMessage = "プロキシ生成を開始できませんでした：\(error.localizedDescription)"
             finishOperation(.failed, detail: statusMessage)
         }
@@ -344,6 +558,7 @@ final class PlayerController: ObservableObject {
 
     func togglePlayback() {
         guard hasMedia else { return }
+        endScrubbing()
         cancelPreviewSequence()
 
         if playbackIntent {
@@ -396,6 +611,7 @@ final class PlayerController: ObservableObject {
 
     func stopShuttle() {
         guard hasMedia else { return }
+        cancelPreviewSequence()
         player.pause()
         resetShuttleState()
         playbackIntent = false
@@ -405,6 +621,7 @@ final class PlayerController: ObservableObject {
 
     func beginScrubbing() {
         guard hasMedia else { return }
+        exactSeekID = nil
         cancelPreviewSequence()
         player.pause()
         resetShuttleState()
@@ -450,7 +667,15 @@ final class PlayerController: ObservableObject {
         guard hasMedia else { return }
         let clamped = min(max(0, seconds), durationSeconds)
         let time = CMTime(seconds: clamped, preferredTimescale: 60_000)
-        player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
+        let seekID = UUID()
+        exactSeekID = seekID
+        player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, self.exactSeekID == seekID else { return }
+                self.exactSeekID = nil
+                self.refreshPlaybackPosition()
+            }
+        }
         currentSeconds = clamped
     }
 
@@ -466,6 +691,7 @@ final class PlayerController: ObservableObject {
     }
 
     private func cancelScrubbingState() {
+        exactSeekID = nil
         scrubSeekTask?.cancel()
         scrubSeekTask = nil
         pendingScrubSeconds = nil
@@ -573,6 +799,20 @@ final class PlayerController: ObservableObject {
         statusMessage = "IN点を \(currentTimecode) に設定しました。次にOUT点を決めてください。"
     }
 
+    typealias DraftBoundary = TrimRange.Boundary
+
+    /// Only changes the draft. Existing clips still require an explicit Apply command.
+    /// This uses nominal-frame intervals, not a VFR frame index.
+    func moveDraftBoundary(_ boundary: DraftBoundary, to seconds: Double) {
+        guard hasMedia, !isLoading, !isExporting, seconds.isFinite else { return }
+        trimRange = trimRange.movingBoundary(boundary, to: seconds, duration: durationSeconds, frameRate: nominalFrameRate)
+        guard let point = boundary == .start ? trimRange.inPoint : trimRange.outPoint else { return }
+        updateScrubbingPosition(to: point)
+        statusMessage = trimmingSegmentID == nil
+            ? "範囲を調整中です。決まったら「シーケンスへ追加」を押してください。"
+            : "トリム下書きを調整中です。「適用」するまで元のクリップは変わりません。"
+    }
+
     func setOutPoint() {
         guard hasMedia else { return }
         guard let inPoint = trimRange.inPoint else {
@@ -645,6 +885,16 @@ final class PlayerController: ObservableObject {
 
     func selectSegment(_ id: UUID) {
         guard let segment = editList.segment(id: id) else { return }
+        guard selectedSegmentID != id else { return }
+        if let trimmingSegmentID, let original = editList.segment(id: trimmingSegmentID),
+           trimRange != original.trimRange {
+            statusMessage = "編集中のトリムを「適用」または「取消」してから、別のクリップを選んでください。"
+            return
+        }
+        if let selectedSegment, clipNameDraft != (selectedSegment.name ?? "") {
+            statusMessage = "クリップ名を「名前を適用」または「元に戻す」で確定してください。"
+            return
+        }
         if let trimmingSegmentID, trimmingSegmentID != id {
             self.trimmingSegmentID = nil
             trimRange.reset()
@@ -662,6 +912,13 @@ final class PlayerController: ObservableObject {
         trimmingSegmentID = selectedSegment.id
         trimRange = selectedSegment.trimRange
         statusMessage = "クリップをトリム中です。IN／OUTを変更してから「トリムを適用」を押してください。"
+    }
+
+    func cancelTrimming() {
+        guard trimmingSegmentID != nil else { return }
+        trimmingSegmentID = nil
+        trimRange.reset()
+        statusMessage = "トリム編集をキャンセルしました。選択したクリップは変更されていません。"
     }
 
     func startNewSegment() {
@@ -729,6 +986,15 @@ final class PlayerController: ObservableObject {
 
     @discardableResult
     func moveSegment(_ id: UUID, to destinationIndex: Int) -> Bool {
+        if let trimmingSegmentID, let original = editList.segment(id: trimmingSegmentID),
+           trimRange != original.trimRange {
+            statusMessage = "トリムを「適用」または「取消」してからドラッグで並べ替えてください。"
+            return false
+        }
+        if let selectedSegment, clipNameDraft != (selectedSegment.name ?? "") {
+            statusMessage = "名前を「適用」または「元に戻す」で確定してから並べ替えてください。"
+            return false
+        }
         do {
             var next = editList
             try next.move(id: id, to: destinationIndex)
@@ -752,6 +1018,7 @@ final class PlayerController: ObservableObject {
         guard let previous = editUndoStack.popLast() else { return }
         editRedoStack.append(editList)
         editList = previous
+        isProjectDirty = true
         reconcileSegmentEditingStateAfterHistoryChange()
         cancelPreviewSequence()
         statusMessage = "区間編集を取り消しました。"
@@ -761,6 +1028,7 @@ final class PlayerController: ObservableObject {
         guard let next = editRedoStack.popLast() else { return }
         editUndoStack.append(editList)
         editList = next
+        isProjectDirty = true
         reconcileSegmentEditingStateAfterHistoryChange()
         cancelPreviewSequence()
         statusMessage = "区間編集をやり直しました。"
@@ -835,6 +1103,7 @@ final class PlayerController: ObservableObject {
         if editUndoStack.count > 100 { editUndoStack.removeFirst() }
         editRedoStack.removeAll()
         editList = next
+        isProjectDirty = true
         cancelPreviewSequence()
     }
 
@@ -844,7 +1113,11 @@ final class PlayerController: ObservableObject {
             return
         }
 
-        startPreview(ranges: [trimRange], message: "選択範囲をプレビューしています。")
+        startPreview(
+            ranges: [trimRange],
+            context: .draftPreview,
+            message: "選択範囲をプレビューしています。"
+        )
     }
 
     func previewSelectedSegment() {
@@ -852,7 +1125,11 @@ final class PlayerController: ObservableObject {
             statusMessage = "プレビューするクリップを選択してください。"
             return
         }
-        startPreview(ranges: [selectedSegment.trimRange], message: "クリップをプレビューしています。")
+        startPreview(
+            ranges: [selectedSegment.trimRange],
+            context: .selectedClip(selectedSegment.id),
+            message: "クリップをプレビューしています。"
+        )
     }
 
     func previewAllSegments() {
@@ -862,17 +1139,24 @@ final class PlayerController: ObservableObject {
         }
         startPreview(
             ranges: editList.segments.map(\.trimRange),
+            context: .wholeSequence,
             message: "編集シーケンスを連続プレビューしています。"
         )
     }
 
-    private func startPreview(ranges: [TrimRange], message: String) {
+    private func startPreview(
+        ranges: [TrimRange],
+        context: PlaybackContext,
+        message: String
+    ) {
         guard let first = ranges.first, let inPoint = first.inPoint else { return }
+        cancelPreviewSequence()
         player.pause()
         resetShuttleState()
         cancelScrubbingState()
         previewRanges = ranges
         previewRangeIndex = 0
+        setPlaybackContext(context)
         seekWithoutCancellingPreview(to: inPoint)
         playbackIntent = true
         playbackState = .waiting
@@ -883,6 +1167,7 @@ final class PlayerController: ObservableObject {
     private func cancelPreviewSequence() {
         previewRanges.removeAll()
         previewRangeIndex = nil
+        setPlaybackContext(.source)
     }
 
     func export(to destination: URL) {
@@ -1154,7 +1439,11 @@ final class PlayerController: ObservableObject {
     }
 
     private func refreshPlaybackPosition() {
+        defer { refreshPlaybackContext() }
         guard currentURL != nil else { return }
+        // During a drag AVPlayer may still report an older asynchronous seek.
+        // Keep the user's requested cursor, including the final exact-seek target.
+        if isScrubbing || exactSeekID != nil { return }
         if seekBasedShuttleTask != nil {
             playbackState = .playing
             return
@@ -1187,6 +1476,7 @@ final class PlayerController: ObservableObject {
                let nextInPoint = previewRanges[nextIndex].inPoint {
                 self.previewRangeIndex = nextIndex
                 seekWithoutCancellingPreview(to: nextInPoint)
+                refreshPlaybackContext()
                 playbackIntent = true
                 playbackState = .waiting
                 player.play()
@@ -1213,6 +1503,108 @@ final class PlayerController: ObservableObject {
                 playbackState = playbackIntent ? .waiting : .paused
             }
         }
+    }
+
+    private func setPlaybackContext(_ context: PlaybackContext) {
+        playbackContext = context
+        refreshPlaybackContext()
+    }
+
+    private func refreshPlaybackContext() {
+        let label: String
+        let progress: String
+
+        switch playbackContext {
+        case .source:
+            label = "元動画"
+            progress = playbackProgressText(elapsed: currentSeconds, total: durationSeconds)
+        case .draftPreview:
+            label = "ドラフトプレビュー"
+            progress = rangePlaybackProgress(for: previewRanges.first)
+        case .selectedClip(let segmentID):
+            if let name = editList.segment(id: segmentID)?.name,
+               !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                label = "選択クリップ「" + name + "」"
+            } else {
+                label = "選択クリッププレビュー"
+            }
+            progress = rangePlaybackProgress(for: previewRanges.first)
+        case .wholeSequence:
+            label = "シーケンスプレビュー"
+            progress = sequencePlaybackProgress()
+        }
+
+        if playbackContextLabel != label {
+            playbackContextLabel = label
+        }
+        if playbackProgressText != progress {
+            playbackProgressText = progress
+        }
+    }
+
+    private func rangePlaybackProgress(for range: TrimRange?) -> String {
+        guard let range,
+              let inPoint = range.inPoint,
+              let outPoint = range.outPoint,
+              outPoint > inPoint else {
+            return "--:--:--:-- / --:--:--:--"
+        }
+
+        let duration = outPoint - inPoint
+        let elapsed = min(max(0, currentSeconds - inPoint), duration)
+        return playbackProgressText(elapsed: elapsed, total: duration)
+    }
+
+    private func sequencePlaybackProgress() -> String {
+        guard !previewRanges.isEmpty else {
+            return "--:--:--:-- / --:--:--:--"
+        }
+
+        let index = min(
+            max(previewRangeIndex ?? 0, 0),
+            previewRanges.count - 1
+        )
+        let activeRange = previewRanges[index]
+        let activeStart = activeRange.inPoint ?? 0
+        let activeDuration = max(0, activeRange.duration ?? 0)
+        let activeElapsed = min(max(0, currentSeconds - activeStart), activeDuration)
+        let elapsedBeforeActive = previewRanges.prefix(index).reduce(0) {
+            $0 + max(0, $1.duration ?? 0)
+        }
+        let sequenceElapsed = elapsedBeforeActive + activeElapsed
+        let sequenceTotal = previewRanges.reduce(0) {
+            $0 + max(0, $1.duration ?? 0)
+        }
+        let currentClip = sequenceClipLabel(at: index)
+        let baseProgress = playbackProgressText(elapsed: sequenceElapsed, total: sequenceTotal)
+        return baseProgress + " · " + currentClip
+    }
+
+    private func sequenceClipLabel(at index: Int) -> String {
+        let position = "クリップ " + String(index + 1) + " / " + String(previewRanges.count)
+        guard editList.segments.indices.contains(index) else { return position }
+        guard let name = editList.segments[index].name,
+              !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return position
+        }
+        return position + "「" + name + "」"
+    }
+
+    private func playbackProgressText(elapsed: Double, total: Double) -> String {
+        guard total.isFinite, total > 0 else {
+            return "--:--:--:-- / --:--:--:--"
+        }
+
+        let clampedElapsed = min(max(0, elapsed), total)
+        let elapsedText = TimecodeFormatter.string(
+            seconds: clampedElapsed,
+            framesPerSecond: nominalFrameRate
+        )
+        let totalText = TimecodeFormatter.string(
+            seconds: total,
+            framesPerSecond: nominalFrameRate
+        )
+        return elapsedText + " / " + totalText
     }
 
     private func analyzeKeyframes(sourceURL: URL) {
@@ -1422,6 +1814,29 @@ final class PlayerController: ObservableObject {
     }
 }
 
-private enum PlayerError: Error {
+private enum PlaybackContext: Equatable {
+    case source
+    case draftPreview
+    case selectedClip(UUID)
+    case wholeSequence
+}
+
+private struct PendingProjectRestore {
+    let project: TrimletProject
+    let projectURL: URL
+    let sourceIdentityChanged: Bool
+}
+
+private enum PlayerError: LocalizedError {
     case noPlayableVideo
+    case projectDestinationMatchesSource
+
+    var errorDescription: String? {
+        switch self {
+        case .noPlayableVideo:
+            "再生可能な動画が開かれていません。"
+        case .projectDestinationMatchesSource:
+            "元動画と同じ場所へプロジェクトを保存することはできません。"
+        }
+    }
 }

@@ -1,7 +1,7 @@
 # Trimlet development backlog
 
-- Current milestone: Windows parity with Mac `v0.3.0-beta.1`
-- Updated: 2026-08-28
+- Current milestone: Mac build 10 source-timeline interaction implemented; Mac human check, then Windows parity
+- Updated: 2026-09-09
 - Source: `HUMAN_CHECK.md`
 
 優先度はP0（次回確認を妨げる）、P1（次回確認に必要）、P2（その後の改善）の順。
@@ -11,13 +11,13 @@
 ### TRIM-010 — 複数の残す区間を編集する
 
 - Priority: P0
-- Status: Implemented on both platforms; Mac focused human check passed, Windows developer checks passed and user human check is pending
+- Status: Implemented and human-accepted on both platforms
 - Scope: integer timestamp segments, overlap rejection, selection, update, delete, output-order move, Undo/Redo
 
 ### TRIM-011 — 編集シーケンスを連続プレビューする
 
 - Priority: P0
-- Status: Implemented on both platforms; Windows developer sequence-preview check passed, broader human timing check pending
+- Status: Implemented and feature-focused human check accepted on both platforms; broader timing matrix remains
 - Scope: selected-segment preview, ordered sequence preview, gap skipping, final-OUT stop, manual-operation cancellation
 
 ### TRIM-012 — 複数区間を1本へ書き出す
@@ -31,6 +31,15 @@
 - Priority: P1
 - Status: Implemented; multi-audio human check pending
 - Scope: ffprobe stream inspection, Japanese display labels, absolute FFmpeg stream mapping
+
+### TRIM-025 — プロジェクトを保存して再開する
+
+- Priority: P0
+- Status: Shared contract and Mac implementation complete; Mac human check and Windows implementation pending
+- Platform: Shared `.trimlet` format; native file dialogs and source loading per platform
+- Scope: atomic Save/Save As/Open, relative source reference, source fingerprint, explicit relink, unsaved-change confirmation, restored clip order/name/timestamps/export mode/audio selection
+- Contract: `contracts/project.schema.json` and `contracts/fixtures/project-cases.json`
+- Boundary: draft range, playhead, thumbnails, proxies, Undo/Redo history, and generated output paths remain session-only
 
 ### TRIM-014 — 長尺向け専用タイムライン
 
@@ -110,6 +119,18 @@
 - Reported: フレーム／5秒移動に加えて、映像を見ながら前後へ高速かつ自由に探索したい。
 - Scope: Premiere Pro／Final Cut Proで共通するJ（逆方向）、K（停止）、L（順方向）のシャトル操作をTrimletの操作体系へ追加する。タイムラインのドラッグ中は軽量な近似シーク、離した時点で正確なシークを行い、長尺・長GOPでも追従させる。ホバースキミングは専用タイムラインTRIM-014まで保留する。
 - Plan: [`INTERACTION_PLAN_2026-08-26.md`](INTERACTION_PLAN_2026-08-26.md)
+
+### TRIM-026 — ソースタイムラインの再生ヘッドとIN／OUT操作を分離する
+
+- Priority: P0
+- Status: Implemented in the Mac build 10 development candidate; automated and offscreen component checks passed; human check pending
+- Platform: Shared interaction semantics; native rendering and pointer APIs per platform
+- Reported: Build 9's vertically separated controls still made the playhead, IN, and OUT relationship difficult to understand. A paused user could set IN, attempt to drag the apparent cursor, and then receive the valid-but-misleading “OUT must be after IN” result because the playhead had not moved.
+- Scope: One 84 pt source-timeline surface with an upper `0–38 pt` ruler/playhead lane and lower `40–72 pt` range lane, 24 pt horizontal content gutters, a white downward-triangle playhead, and one true-coordinate purple draft range. Same-height outward IN/OUT grips use exclusive 24 pt hit areas. Non-handle clicks/drags seek only; boundary drags change only the pointer-down-latched boundary and do not slip the whole range. Hover/drag feedback identifies the action and time. I/O remains visible and works without playback; two-finger seek remains unchanged.
+- Boundary: No fake minimum range width, no schema change, no new sequence-time placement, no whole-range slip, and no hover-skimmer. Existing clip changes remain explicit Trim Edit → Apply/Cancel operations.
+- Canonical design: [`TIMELINE_INTERACTION_2026-09-09.md`](TIMELINE_INTERACTION_2026-09-09.md)
+- Visual smoke evidence (generated component renders, not running-app screenshots): [light](images/timeline-build10-light.png), [dark](images/timeline-build10-dark.png)
+- Acceptance: Set IN while paused, seek on the upper lane, set OUT, then drag the fill and both boundaries on normal and sub-48 pt ranges. Confirm non-handle gestures move only the playhead, boundary grips are independently targetable without a jump, constraints hold, and I/O/two-finger seek agree with the visible state.
 
 ## PoC 0.2
 

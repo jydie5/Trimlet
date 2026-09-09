@@ -40,7 +40,7 @@ public struct TrimRange: Equatable, Sendable {
     }
 }
 
-public enum ExportMode: String, CaseIterable, Identifiable, Sendable {
+public enum ExportMode: String, CaseIterable, Codable, Identifiable, Sendable {
     case fast
     case accurate
 
@@ -75,7 +75,15 @@ public enum TimecodeFormatter {
         let minutes = (wholeSeconds % 3_600) / 60
         let secondsPart = wholeSeconds % 60
         let fractional = seconds - Double(wholeSeconds)
-        let frame = min(fps - 1, max(0, Int((fractional * Double(fps)).rounded(.down))))
+        let framePosition = fractional * Double(fps)
+        let nearestFrame = framePosition.rounded()
+        // AVFoundation can report a timestamp a few ulps below an exact
+        // frame boundary. Correct only that tiny error; a real sub-frame
+        // position must continue to display the preceding frame.
+        let displayFramePosition = abs(framePosition - nearestFrame) <= 1e-7
+            ? nearestFrame
+            : framePosition
+        let frame = min(fps - 1, max(0, Int(displayFramePosition.rounded(.down))))
 
         return String(
             format: "%02d:%02d:%02d:%02d",
