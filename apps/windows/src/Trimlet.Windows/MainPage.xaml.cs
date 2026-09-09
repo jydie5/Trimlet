@@ -588,8 +588,11 @@ public sealed partial class MainPage : Page
             CurrentTimeText.Text = FormatTime(position);
         }
 
-        UpdatePlayhead(position);
-        UpdateSequenceClock(position);
+        if (!_isScrubbing)
+        {
+            UpdatePlayhead(position);
+            UpdateSequenceClock(position);
+        }
     }
 
     private void OnTimelinePointerPressed(object sender, PointerRoutedEventArgs e)
@@ -1265,7 +1268,7 @@ public sealed partial class MainPage : Page
     }
 
     private bool KeyboardCommandAllowed() =>
-        _mediaReady && !_isExporting && !_projectBusy && !_confirmingClose
+        _mediaReady && !_isExporting && !_projectBusy && !_confirmingClose && _timelinePointer is null
         && FocusManager.GetFocusedElement(XamlRoot) is not TextBox and not ComboBox;
 
     private void OnSetInAccelerator(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
@@ -1305,7 +1308,7 @@ public sealed partial class MainPage : Page
 
     private void OnPageKeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (!_mediaReady || _isExporting || _projectBusy || _confirmingClose || e.OriginalSource is TextBox or ComboBox)
+        if (!_mediaReady || _isExporting || _projectBusy || _confirmingClose || _timelinePointer is not null || e.OriginalSource is TextBox or ComboBox)
         {
             return;
         }
@@ -1688,6 +1691,9 @@ public sealed partial class MainPage : Page
 
     private void ResetPlayer()
     {
+        _timelinePointer = null;
+        _isScrubbing = false;
+        RangeTrackCanvas.ReleasePointerCaptures();
         _projectPath = null;
         _loadedProject = null;
         _sourceChanged = false;
