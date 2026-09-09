@@ -6,11 +6,13 @@ Only what you need, quickly and precisely.
 
 Trimlet is a lightweight, frame-accurate video trimming application with separate native implementations for macOS and Windows.
 
+**[Download Windows Beta 1 (x64 ZIP)](https://github.com/jydie5/Trimlet/releases/download/v0.4.0-beta.1/Trimlet-0.4.0-beta.1-win-x64.zip)** · [Setup and limitations](apps/windows/BETA_DOWNLOAD.md). Unsigned portable beta; .NET included, FFmpeg installed separately. macOS binaries are not included in this release.
+
 ## The editing workspace
 
 ![Trimlet on Windows: source preview, independent IN/OUT boundaries, named clips, project saving, and export](docs/images/windows-workspace-2026-09.png)
 
-_Screenshot of the running Windows development app with original, procedurally generated demo footage. It shows the whole editing workflow; no third-party video is included. [Demo recipe](scripts/create-windows-demo.ps1)._
+_Screenshot of the running Windows app with original, procedurally generated demo footage. It shows the whole editing workflow; no third-party video is included. [How to generate the demo footage](docs/WINDOWS_DEMO.md) (instructions, not a video)._
 
 Open a video, collect the moments you want, arrange the clips, save your project, and export one MP4. Current Windows source adds portable `.trimlet` Open/Save/Save As, source relinking, unsaved-change prompts, and the revised timeline with independent outward IN/OUT grips. Use the ruler or range body to seek; zoom, pan, and fit never change the saved ranges.
 
@@ -78,15 +80,15 @@ Priority inputs are MP4, MOV, M2TS, and MTS.
 ## Repository status
 
 - macOS: published native `v0.3.0-beta.1`; the current 0.4 build 10 development candidate adds atomic project Save/Open, an unsaved indicator, source relinking, and the revised source-timeline interaction for human check.
-- Windows: source-only Early Access; current development source adds project persistence and the build 10 timeline semantics to the accepted multi-range workflow. Developer UI checks cover paused marking, independent grips, zoom, project save/resume, and unsaved-close confirmation. New human acceptance remains pending.
-- Parity: shared project version 1 and the revised interaction semantics are implemented on both platforms. Windows retains source-presentation-timestamp navigation. Packaging and broad real-media release validation remain platform-specific work; this source update is not a new binary release.
+- Windows: `v0.4.0-beta.1` adds an unsigned, self-contained x64 portable ZIP, project persistence and the build 10 timeline semantics. Developer UI checks cover paused marking, independent grips, zoom, project save/resume, and unsaved-close confirmation. Expanded human acceptance remains pending.
+- Parity: shared project version 1 and the revised interaction semantics are implemented on both platforms. Windows retains source-presentation-timestamp navigation. Signing, clean-machine and broad real-media release validation remain platform-specific work.
 - Public source releases are published under the MIT License.
 
 Latest macOS Beta source release: [v0.3.0-beta.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-beta.1)
 
-Windows Early Access: [v0.3.0-early-access.1](https://github.com/jydie5/Trimlet/releases/tag/v0.3.0-early-access.1) (source only; no installer or prebuilt executable)
+Windows Beta: [v0.4.0-beta.1](https://github.com/jydie5/Trimlet/releases/tag/v0.4.0-beta.1) (portable x64 binary). Historical Early Access releases remain source-only.
 
-This repository does **not** contain or redistribute FFmpeg, ffprobe, sample videos, or generated application bundles. The current PoC uses a separately installed FFmpeg executable.
+The source tree does **not** contain FFmpeg, ffprobe, sample videos, or generated application bundles. Windows release assets contain the app and runtime files, but no FFmpeg/ffprobe or media. Install FFmpeg separately.
 
 ## Repository layout
 

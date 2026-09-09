@@ -6,7 +6,11 @@ The Trimlet source repository does not include FFmpeg, ffprobe, codec libraries,
 
 ## FFmpeg and ffprobe
 
-The macOS proof of concept launches a separately installed `ffmpeg` or `ffprobe` executable as an external process. FFmpeg is an independent project and is available under LGPL and, depending on build configuration, GPL terms.
+The macOS and Windows implementations launch separately installed `ffmpeg` or `ffprobe` executables as external processes. FFmpeg is an independent project and is available under LGPL and, depending on build configuration, GPL terms.
+
+## Windows portable beta runtime dependencies
+
+Windows binary release archives include the .NET runtime and Windows App SDK runtime dependencies resolved by NuGet. Their upstream license/notice texts and package metadata are included in the archive's `licenses/` directory; see `dependency-inventory.json` for exact package versions and source links. These components retain their upstream licensing; the Trimlet MIT license does not replace it. FFmpeg is not part of this archive.
 
 - Project: https://ffmpeg.org/
 - License and legal information: https://ffmpeg.org/legal.html

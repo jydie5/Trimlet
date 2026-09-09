@@ -1,7 +1,7 @@
 # GitHub release compliance checklist
 
-- Status: macOS Beta and Windows Early Access approved for source-only prereleases when the automated gate passes
-- Updated: 2026-08-28
+- Status: historical source-only releases; Windows unsigned portable Beta 1 authorized on 2026-09-09
+- Updated: 2026-09-09
 
 This is an engineering compliance gate, not legal advice.
 
@@ -43,6 +43,14 @@ The first public publication is source-only. It must not attach `dist/Trimlet.ap
 README installation instructions may direct users to obtain FFmpeg separately, but must not imply that the FFmpeg project endorses Trimlet.
 
 ## Future binary release gate
+
+### Windows unsigned portable beta exception — 2026-09-09
+
+The repository owner explicitly requested a downloadable Windows binary beta. `v0.4.0-beta.1` therefore permits a self-contained, unsigned x64 ZIP as a GitHub prerelease. This does not change the historical source-only tags or approve a signed/production release. No Mac binary is published under this tag.
+
+The archive must contain no FFmpeg/ffprobe, sample media, credentials or developer caches. Include the MIT license, resolved NuGet package license/notice files, a dependency inventory and per-file hashes, plus an archive SHA-256. Runtime files are obtained by the pinned project's .NET publish pipeline, not copied from arbitrary machine installations. Publish with trimming disabled to retain JSON/XAML reflection support.
+
+Document the unsigned status, separate FFmpeg requirement and outstanding clean-machine, original artwork/signing and expanded human/media verification. A successful developer-machine archive test is not clean-machine certification. The full production gate below remains open; the FFmpeg redistribution steps apply only if future artifacts actually bundle FFmpeg.
 
 Before publishing a signed macOS or Windows binary:
 
